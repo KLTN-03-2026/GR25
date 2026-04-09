@@ -15,7 +15,27 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call([
+            TinhThanhSeeder::class,
+            QuanHuyenSeeder::class,
+            ChucNangSeeder::class,
+            PhanQuyenSeeder::class,
+            LoaiBatDongSanSeeder::class,
+            TrangThaiBatDongSanSeeder::class,
+            GoiTinSeeder::class,
+            AdminSeeder::class,
+            MoiGioiSeeder::class,
+            KhachHangSeeder::class,
+            DiaChiSeeder::class,
+            BatDongSanSeeder::class,
+            GiaoDichSeeder::class,
+            HinhAnhBatDongSanSeeder::class,
+            LichSuGoiTinSeeder::class,
+            YeuThichSeeder::class,
+            ThongBaoSeeder::class,
+            AIDinhGiaSeeder::class,
+            LichSuDinhGiaSeeder::class,
+        ]);
 
         User::factory()->create([
             'name' => 'Test User',

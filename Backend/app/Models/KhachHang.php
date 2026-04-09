@@ -5,20 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Sanctum\HasApiTokens;
 
-class Admin extends Authenticatable
+class KhachHang extends Authenticatable
 {
     use Notifiable,HasApiTokens;
 
-    protected $table = 'admins';
+    protected $table = 'khach_hangs';
 
     protected $fillable = [
         'ten',
         'email',
+        'so_dien_thoai',
         'password',
-        'is_super',
+        'is_active',
     ];
 
     protected $hidden = [
@@ -26,6 +27,11 @@ class Admin extends Authenticatable
     ];
 
     protected $casts = [
-        'is_super' => 'boolean',
+        'is_active' => 'boolean',
     ];
+
+    public function yeuThichs(): HasMany
+    {
+        return $this->hasMany(YeuThich::class, 'khach_hang_id');
+    }
 }
