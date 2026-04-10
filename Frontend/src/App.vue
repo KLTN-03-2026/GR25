@@ -1,7 +1,17 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <HelloWorld />
+  <component :is="layout">
+    <router-view />
+  </component>
 </template>
+
+<script>
+const default_layout = "wrapper";
+
+export default {
+  computed: {
+    layout() {
+      return (this.$route.meta.layout || default_layout) + "-layout";
+    },
+  },
+};
+</script>
