@@ -64,7 +64,7 @@ const route = useRoute();
 
 const primaryItems = [
   { id: "dashboard", label: "Dashboard", icon: "dashboard", route: "/admin/dashboard" },
-  { id: "customers", label: "Quản lý khách hàng", icon: "group" },
+  { id: "customers", label: "Quản lý khách hàng", icon: "group" , route: "/admin/khach-hang" },
   { id: "brokers", label: "Quản lý môi giới", icon: "handshake" },
   { id: "properties", label: "Quản lý bất động sản", icon: "domain" },
   { id: "packages", label: "Quản lý gói tin", icon: "inventory_2" },

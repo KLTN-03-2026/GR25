@@ -12,12 +12,22 @@ const routes = [
 	},
 
   {
+		path: "/admin/dashboard",
+		component: () => import("../components/Admin/Dashboard/index.vue"),
+		meta: { middleware: checkAdmin },
+	},
+
+  {
     path : '/admin/chuc-vu',
-    component: ()=>import('../components/Admin/ChucVu/index.vue'),
+    component: ()=>import('../components/Admin/HeThong/ChucVu/index.vue'),
     meta: { middleware: checkAdmin },
-    
   },
   
+  {
+    path : '/admin/khach-hang',
+    component: ()=>import('../components/Admin/QuanLyNguoiDung/KhachHang/index.vue'),
+    meta: { middleware: checkAdmin },
+  },
 ]
 
 const router = createRouter({
