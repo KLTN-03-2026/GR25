@@ -74,8 +74,8 @@ const primaryItems = [
 
 const secondaryItems = [
   { id: "roles", label: "Chức vụ", icon: "badge", route: "/admin/chuc-vu" },
-  { id: "permissions", label: "Phân quyền", icon: "admin_panel_settings" },
-  { id: "profile", label: "Hồ sơ admin", icon: "account_circle" },
+  { id: "permissions", label: "Phân quyền", icon: "admin_panel_settings" ,route: "/admin/phan-quyen" },
+  { id: "profile", label: "Hồ sơ admin", icon: "account_circle", route: "/admin/hoso" },
 ];
 </script>
 

@@ -13,7 +13,13 @@ const routes = [
 
   {
     path : '/admin/chuc-vu',
-    component: ()=>import('../components/Admin/ChucVu/index.vue'),
+    component: ()=>import('../components/Admin/HeThong/ChucVu/index.vue'),
+    meta: { middleware: checkAdmin },
+    
+  },
+  {
+    path : '/admin/phan-quyen',
+    component: ()=>import('../components/Admin/HeThong/PhanQuyen/index.vue'),
     meta: { middleware: checkAdmin },
     
   },
