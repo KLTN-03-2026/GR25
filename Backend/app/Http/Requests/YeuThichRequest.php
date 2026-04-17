@@ -7,23 +7,24 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class YeuThichRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'bds_id' => 'required|integer|exists:bat_dong_sans,id',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'bds_id.required' => 'Vui lòng truyền id bất động sản',
+            'bds_id.integer' => 'ID BĐS phải là số',
+            'bds_id.exists' => 'BĐS không tồn tại',
         ];
     }
 }

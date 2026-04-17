@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\SearchBatDongSanRequest;
 use App\Models\BatDongSan;
+use App\Models\LoaiBatDongSan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -17,38 +18,49 @@ class ClientHomeController extends Controller
      */
     private function prepareData($bds)
     {
-        // Kiểm tra xem user đã đăng nhập chưa (dùng guard sanctum)
         $isGuest = !Auth::guard('sanctum')->check();
 
-        // Nếu là guest, ẩn thông tin liên hệ
         if ($isGuest) {
-            // 1. Ẩn SĐT môi giới
-            if ($bds->moiGioi) {
-                $bds->moiGioi->so_dien_thoai = 'Đăng nhập để xem SĐT';
-                $bds->moiGioi->zalo_link = null;
-            }
+            // // 1. Ẩn SĐT môi giới
+            // if ($bds->moiGioi) {
+            //     $bds->moiGioi->so_dien_thoai = 'Đăng nhập để xem SĐT';
+            //     $bds->moiGioi->zalo_link = null;
+            // }
 
-            // 2. Ẩn địa chỉ chi tiết (chỉ giữ lại Quận/Tỉnh)
-            if ($bds->diaChi) {
-                $bds->diaChi->dia_chi_chi_tiet = 'Vui lòng đăng nhập để xem địa chỉ chính xác';
-            }
+            // // 2. Ẩn địa chỉ chi tiết
+            // if ($bds->diaChi) {
+            //     $bds->diaChi->dia_chi_chi_tiet = Str::limit($bds->diaChi->dia_chi_chi_tiet, '20', '...');
+            // }
 
-            // 3. Cắt ngắn mô tả để kích thích tò mò (chỉ nếu có trường mo_ta)
-            if (isset($bds->mo_ta)) {
-                $bds->mo_ta = Str::limit($bds->mo_ta, 150);
-            }
+            // // 3. Cắt ngắn mô tả
+            // if (isset($bds->mo_ta)) {
+            //     $bds->mo_ta = Str::limit($bds->mo_ta, 150);
+            // }
 
-            // 4. Flag gửi về để FE biết hiển thị nút Login
-            $bds->is_guest_view = true;
+            // // 4. ✅ MASK GIÁ - Chỉ hiện số đầu, còn lại là xxxx
+            // if (isset($bds->gia) && $bds->gia > 0) {
+            //     $giaStr = (string)$bds->gia;
+            //     $firstDigit = $giaStr[0];
+            //     $remainingDigits = strlen($giaStr) - 1;
+            //     $bds->gia_display = $firstDigit . str_repeat('x', $remainingDigits);
+            //     $bds->gia_original = $bds->gia; // Lưu giá gốc để xử lý sau
+            //     $bds->gia = null; // Xóa giá gốc
+            // }
+
+            // 5. Flag gửi về để FE biết hiển thị nút Login
+            // $bds->is_guest_view = true;
         } else {
-            // Nếu là user đăng nhập
-            $bds->is_guest_view = false;
+            // $bds->is_guest_view = false;
+            // $bds->gia_display = null;
         }
 
         return $bds;
     }
 
-    // Danh sách BĐS
+    /**
+     * Public: Danh sách BĐS
+     * GET /api/bat-dong-san
+     */
     public function getAllPublic(Request $request)
     {
         $query = BatDongSan::with([
@@ -57,7 +69,7 @@ class ClientHomeController extends Controller
             'hinhAnh'
         ])->where('is_duyet', true);
 
-        $data = $query->paginate(10);
+        $data = $query->paginate(6);
 
         // Áp dụng mask cho từng item trong danh sách nếu là guest
         if (!Auth::guard('sanctum')->check()) {
@@ -67,7 +79,10 @@ class ClientHomeController extends Controller
         return response()->json(['status' => true, 'data' => $data]);
     }
 
-    //Chi tiết BĐS
+    /**
+     * Public: Chi tiết BĐS
+     * GET /api/bat-dong-san/{id}
+     */
     public function xemChiTiet($id)
     {
         $bds = BatDongSan::with([
@@ -119,5 +134,15 @@ class ClientHomeController extends Controller
         }
 
         return response()->json(['status' => true, 'data' => $data]);
+    }
+
+    // Lấy dữ liệu loại BĐS 
+    public function getLoaiBDS(Request $request)
+    {
+        $data = LoaiBatDongSan::all();
+        return response()->json([
+            'status' => true,
+            'data' => $data
+        ]);
     }
 }

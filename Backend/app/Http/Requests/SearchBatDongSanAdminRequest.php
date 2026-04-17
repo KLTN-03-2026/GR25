@@ -12,7 +12,7 @@ class SearchBatDongSanAdminRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,16 @@ class SearchBatDongSanAdminRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'keyword' => 'required|string|max:255',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'keyword.required' => 'Vui lòng nhập từ khóa tìm kiếm.',
+            'keyword.string' => 'Từ khóa phải là một chuỗi.',
+            'keyword.max' => 'Từ khóa không được vượt quá 255 ký tự.',
         ];
     }
 }

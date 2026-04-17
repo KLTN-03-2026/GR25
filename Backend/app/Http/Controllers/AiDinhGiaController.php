@@ -2,63 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BatDongSan;
+use App\Models\LoaiBatDongSan;
+use App\Models\DiaChi;
+use App\Models\TinhThanh;
+use App\Models\QuanHuyen;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
-class AiDinhGiaController extends Controller
+class AIDinhGiaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function predictPrice(Request $request)
     {
-        //
-    }
+        $user = Auth::guard('sanctum')->user();
+        if ($user) {
+            $loai_id = $request->input('loai_id');
+            $dien_tich = $request->input('dien_tich');
+            $tinh_id = $request->input('tinh_id');
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+            if (empty($loai_id) || empty($dien_tich) || empty($tinh_id)) {
+                return response()->json(['status' => false, 'message' => 'Vui lòng nhập đủ thông tin loại, tỉnh, diện tích']);
+            }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+            // Simple ML placeholder - mean price by loai/dien_tich/tinh
+            $avgPrice = BatDongSan::where('loai_id', $loai_id)
+                ->where('tinh_id', $tinh_id)
+                ->avg('gia') * ($dien_tich / 100);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+            $predicted = $avgPrice ?: 0;
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'gia_du_doan' => $predicted,
+                    'note' => 'Cần ML model thật (php-ml or Python API)',
+                ]
+            ]);
+        } else {
+            return response()->json(['status' => false, 'message' => "Có lỗi xảy ra"]);
+        }
     }
 }

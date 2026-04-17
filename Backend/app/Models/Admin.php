@@ -10,7 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Admin extends Authenticatable
 {
-    use Notifiable,HasApiTokens;
+    use Notifiable, HasApiTokens;
 
     protected $table = 'admins';
 
@@ -19,6 +19,8 @@ class Admin extends Authenticatable
         'email',
         'password',
         'is_super',
+        'mo_ta',
+        'so_dien_thoai',
     ];
 
     protected $hidden = [

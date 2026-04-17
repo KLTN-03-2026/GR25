@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seed dữ liệu cơ bản
         $this->call([
             TinhThanhSeeder::class,
             QuanHuyenSeeder::class,
@@ -37,6 +38,7 @@ class DatabaseSeeder extends Seeder
             LichSuDinhGiaSeeder::class,
         ]);
 
+        // Seed user test
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',

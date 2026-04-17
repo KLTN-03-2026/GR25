@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class LichSuDinhGiaSeeder extends Seeder
 {
@@ -12,6 +12,19 @@ class LichSuDinhGiaSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        DB::table('lich_su_dinh_gias')->insert([
+            [
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
     }
 }
