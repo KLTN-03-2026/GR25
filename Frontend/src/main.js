@@ -1,20 +1,40 @@
+// main.js
 import { createApp } from "vue";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import App from "./App.vue";
 import router from "./router";
-import Toaster from "@meforma/vue-toaster";
+import VueToaster from "@meforma/vue-toaster";
 import "./style.css";
+import Swal from "sweetalert2";
+import 'leaflet/dist/leaflet.css'
 
+// ✅ IMPORT axios instance ĐÃ CẤU HÌNH từ config.js
+import api from "./axios/config";
 
-import WrapperLayout from "./layout/wrapper/Admin/index.vue";
+// IMPORT LAYOUT
+import AdminLayout from "./layout/wrapper/Admin/index.vue";
+import BlankLayout from "./layout/wrapper/Blank/index.vue";
+import KhachHangLayout from "./layout/wrapper/KhachHang/index.vue";
+import VueApexCharts from 'vue3-apexcharts';
 
 const app = createApp(App);
 
-app.component("wrapper-layout", WrapperLayout);
-app.use(Toaster, {
+// Register components
+app.component("admin-layout", AdminLayout);
+app.component("blank-layout", BlankLayout);
+app.component("khach-hang-layout", KhachHangLayout);
+
+// Plugins
+app.use(VueApexCharts);
+app.use(VueToaster, {
   position: "top-right",
   duration: 3500,
 });
+app.use(router);
 
-app.use(router).mount("#app");
+// ✅ Export api để dùng trong component
+app.config.globalProperties.$axios = api;
+export { api };
+
+app.mount("#app");
