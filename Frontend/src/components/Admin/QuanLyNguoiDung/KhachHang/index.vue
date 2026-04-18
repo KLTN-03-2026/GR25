@@ -1,532 +1,1000 @@
 <template>
-    <div class="p-8 bg-[#F8F9FC] min-h-screen font-sans text-gray-800">
-
-        <div class="flex justify-between items-end mb-8">
-            <div>
-                <h2 class="text-3xl font-bold text-[#202B5D]">Quản lý khách hàng</h2>
-                <p class="text-gray-500 text-sm mt-2">Duy trì và quản lý cơ sở dữ liệu khách hàng tiềm năng.</p>
+  <div class="customer-management p-4">
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm custom-header-card">
+          <div
+            class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3 gap-3"
+          >
+            <div class="p-2">
+              <h4 class="mb-0 fw-bold text-primary">
+                <i class="bi bi-people-fill me-2"></i>Quản lý khách hàng
+              </h4>
+              <small class="text-muted"
+                >Duy trì và quản lý cơ sở dữ liệu khách hàng tiềm năng.</small
+              >
             </div>
-            <div class="flex gap-3">
+
+            <div class="d-flex justify-content-center align-items-center gap-2">
+              <div class="input-group" style="max-width: 200px">
+                <select
+                  v-model="statusFilter"
+                  @change="applyFilter"
+                  class="form-select custom-input text-muted rounded-pill"
+                >
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="active">Đang hoạt động</option>
+                  <option value="inactive">Bị khóa</option>
+                </select>
+              </div>
+
+              <div class="input-group" style="max-width: 250px">
+                <input
+                  v-model="search"
+                  @input="onSearchInput"
+                  type="text"
+                  class="form-control custom-input rounded-start-pill"
+                  placeholder="Tìm tên, email..."
+                />
                 <button
-                    class="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                    </svg>
-                    Export CSV
+                  class="btn btn-outline-secondary shadow-none rounded-end-circle"
+                  type="button"
+                >
+                  <i class="bi bi-search"></i>
                 </button>
-                <button @click="showAdd = true"
-                    class="bg-[#202B5D] text-white hover:bg-blue-900 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-md">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Thêm khách hàng
+              </div>
+
+              <!-- Export Dropdown -->
+              <div class="position-relative">
+                <button
+                  @click="showExportMenu = !showExportMenu"
+                  class="btn btn-success btn-lg text-nowrap px-4 shadow-sm fw-bold rounded-pill"
+                >
+                  <i class="bi bi-download me-1"></i> Export
+                  <i
+                    class="bi bi-chevron-down ms-1"
+                    style="font-size: 12px"
+                  ></i>
                 </button>
+                <div
+                  v-if="showExportMenu"
+                  class="dropdown-menu show position-absolute end-0 mt-2 shadow-sm border-0 rounded-3 p-2 z-3"
+                  style="min-width: 200px"
+                >
+                  <a
+                    href="#"
+                    @click.prevent="exportData('csv')"
+                    class="dropdown-item rounded py-2 d-flex align-items-center"
+                  >
+                    <i class="bi bi-filetype-csv text-success fs-5 me-2"></i>
+                    Xuất file CSV
+                  </a>
+                  <a
+                    href="#"
+                    @click.prevent="exportData('excel')"
+                    class="dropdown-item rounded py-2 d-flex align-items-center"
+                  >
+                    <i
+                      class="bi bi-file-earmark-excel text-primary fs-5 me-2"
+                    ></i>
+                    Xuất file Excel
+                  </a>
+                  <a
+                    href="#"
+                    @click.prevent="exportData('pdf')"
+                    class="dropdown-item rounded py-2 d-flex align-items-center"
+                  >
+                    <i class="bi bi-filetype-pdf text-danger fs-5 me-2"></i>
+                    Xuất file PDF
+                  </a>
+                </div>
+                <div
+                  v-if="showExportMenu"
+                  @click="showExportMenu = false"
+                  class="position-fixed top-0 start-0 w-100 h-100 z-2"
+                ></div>
+              </div>
             </div>
+          </div>
         </div>
-
-        <div class="grid grid-cols-4 gap-4 mb-6">
-            <div class="bg-white p-5 rounded-xl border-l-4 border-[#202B5D] shadow-sm">
-                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Tổng khách hàng</p>
-                <h3 class="text-2xl font-bold text-gray-900">1,284</h3>
-                <p class="text-xs text-green-600 mt-2 flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                    </svg>
-                    12% so với tháng trước
-                </p>
-            </div>
-            <div class="bg-white p-5 rounded-xl border-l-4 border-green-500 shadow-sm">
-                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Đang hoạt động</p>
-                <h3 class="text-2xl font-bold text-gray-900">1,102</h3>
-                <p class="text-xs text-green-600 mt-2 flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clip-rule="evenodd"></path>
-                    </svg>
-                    86% tỷ lệ duy trì
-                </p>
-            </div>
-            <div class="bg-white p-5 rounded-xl border-l-4 border-yellow-500 shadow-sm">
-                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Khách hàng mới</p>
-                <h3 class="text-2xl font-bold text-gray-900">48</h3>
-                <p class="text-xs text-green-600 mt-2 flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clip-rule="evenodd"></path>
-                    </svg>
-                    Trong 7 ngày qua
-                </p>
-            </div>
-            <div class="bg-white p-5 rounded-xl border-l-4 border-red-500 shadow-sm">
-                <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Bị khóa</p>
-                <h3 class="text-2xl font-bold text-gray-900">12</h3>
-                <p class="text-xs text-red-500 mt-2 flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd"
-                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                            clip-rule="evenodd"></path>
-                    </svg>
-                    Cần xem xét lại
-                </p>
-            </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-xl shadow-sm mb-4 flex justify-between items-center">
-            <div class="flex gap-4">
-                <div class="flex flex-col">
-                    <label class="text-[10px] text-gray-500 uppercase font-semibold mb-1">Trạng thái</label>
-                    <select
-                        class="bg-gray-50 border border-gray-200 text-sm rounded-lg px-3 py-2 w-40 focus:outline-none focus:ring-1 focus:ring-[#202B5D]">
-                        <option>Tất cả trạng thái</option>
-                        <option>Đang hoạt động</option>
-                        <option>Ngừng hoạt động</option>
-                        <option>Bị khóa</option>
-                    </select>
-                </div>
-                <div class="flex flex-col">
-                    <label class="text-[10px] text-gray-500 uppercase font-semibold mb-1">Ngày tham gia</label>
-                    <select
-                        class="bg-gray-50 border border-gray-200 text-sm rounded-lg px-3 py-2 w-40 focus:outline-none focus:ring-1 focus:ring-[#202B5D]">
-                        <option>Mọi thời gian</option>
-                        <option>Tháng này</option>
-                        <option>Tuần này</option>
-                    </select>
-                </div>
-                <div class="flex flex-col">
-                    <label class="text-[10px] text-gray-500 uppercase font-semibold mb-1">Sắp xếp theo</label>
-                    <select
-                        class="bg-gray-50 border border-gray-200 text-sm rounded-lg px-3 py-2 w-40 focus:outline-none focus:ring-1 focus:ring-[#202B5D]">
-                        <option>Mới nhất</option>
-                        <option>Cũ nhất</option>
-                    </select>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="text-sm text-gray-500">Bulk:</span>
-                <button class="text-gray-400 hover:text-gray-700"><svg class="w-5 h-5" fill="currentColor"
-                        viewBox="0 0 20 20">
-                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
-                    </svg></button>
-                <button class="text-gray-400 hover:text-gray-700"><svg class="w-5 h-5" fill="currentColor"
-                        viewBox="0 0 20 20">
-                        <path fill-rule="evenodd"
-                            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                            clip-rule="evenodd"></path>
-                    </svg></button>
-                <button class="text-red-400 hover:text-red-600"><svg class="w-5 h-5" fill="currentColor"
-                        viewBox="0 0 20 20">
-                        <path fill-rule="evenodd"
-                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                            clip-rule="evenodd"></path>
-                    </svg></button>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-white border-b border-gray-100">
-                    <tr>
-                        <th class="py-4 px-6 w-12"><input type="checkbox"
-                                class="rounded border-gray-300 text-[#202B5D] focus:ring-[#202B5D]"></th>
-                        <th class="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Khách hàng
-                        </th>
-                        <th class="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Liên hệ</th>
-                        <th class="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Ngày tham gia
-                        </th>
-                        <th class="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-wider text-center">
-                            BĐS Đã lưu</th>
-                        <th class="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-wider text-center">
-                            Trạng thái</th>
-                        <th class="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-wider text-right">
-                            Hành động</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
-
-                    <tr v-if="isLoading">
-                        <td colspan="7" class="text-center py-8 text-gray-500">Đang tải dữ liệu...</td>
-                    </tr>
-
-                    <tr v-for="(v, index) in danhSachKhachHang" :key="v.id || index"
-                        class="hover:bg-gray-50 transition-colors">
-                        <td class="py-4 px-6"><input type="checkbox"
-                                class="rounded border-gray-300 text-[#202B5D] focus:ring-[#202B5D]"></td>
-
-                        <td class="py-4 px-6 flex items-center gap-3">
-                            <div class="relative">
-                                <img :src="`https://ui-avatars.com/api/?name=${v.ten}&background=random`"
-                                    class="w-10 h-10 rounded-full object-cover">
-                                <span v-if="index === 0"
-                                    class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
-                            </div>
-                            <div>
-                                <p class="text-sm font-bold text-gray-900">{{ v.ten }}</p>
-                                <p class="text-xs text-gray-400">ID: CUS-{{ String(v.id || index + 1).padStart(3, '0')
-                                    }}</p>
-                            </div>
-                        </td>
-
-                        <td class="py-4 px-6">
-                            <p class="text-sm font-medium text-gray-800">{{ v.email }}</p>
-                            <p class="text-xs text-gray-400">{{ v.so_dien_thoai }}</p>
-                        </td>
-
-                        <td class="py-4 px-6 text-sm text-gray-600 font-medium">
-                            {{ v.created_at || '12/04/2023' }}
-                        </td>
-
-                        <td class="py-4 px-6 text-center">
-                            <span
-                                class="inline-flex items-center justify-center w-8 h-8 rounded bg-indigo-50 text-[#202B5D] font-bold text-xs">
-                                {{ v.bds_da_luu || Math.floor(Math.random() * 20) }}
-                            </span>
-                        </td>
-
-                        <td class="py-4 px-6 text-center">
-                            <span v-if="index === 0"
-                                class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-green-100 text-green-700">Đang
-                                hoạt động</span>
-                            <span v-else-if="index === 1"
-                                class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-gray-100 text-gray-600">Ngừng
-                                hoạt động</span>
-                            <span v-else
-                                class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-red-100 text-red-700">Bị
-                                khóa</span>
-                        </td>
-
-                        <td class="py-4 px-6 text-right">
-                            <div class="flex justify-end gap-2">
-                                <button class="p-1.5 text-gray-400 hover:text-[#202B5D] hover:bg-gray-100 rounded">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                        </path>
-                                    </svg>
-                                </button>
-                                <button @click="openEdit(v)"
-                                    class="p-1.5 text-gray-400 hover:text-[#202B5D] hover:bg-gray-100 rounded">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
-                                        </path>
-                                    </svg>
-                                </button>
-                                <button class="p-1.5 text-gray-400 hover:text-[#202B5D] hover:bg-gray-100 rounded"
-                                    @click="xoaKhachHang(v)">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <tr v-if="!isLoading && danhSachKhachHang.length === 0">
-                        <td colspan="7" class="text-center py-8 text-gray-500">
-                            Không có dữ liệu khách hàng
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-                <span class="text-sm text-gray-500">Hiển thị <span class="font-bold text-gray-800">1 - 3</span> trên
-                    <span class="font-bold text-gray-800">1,284</span> khách hàng</span>
-                <div class="flex gap-1">
-                    <button
-                        class="w-8 h-8 flex items-center justify-center rounded text-gray-400 hover:bg-gray-100"><svg
-                            class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
-                            </path>
-                        </svg></button>
-                    <button
-                        class="w-8 h-8 flex items-center justify-center rounded bg-[#202B5D] text-white font-medium text-sm shadow-sm">1</button>
-                    <button
-                        class="w-8 h-8 flex items-center justify-center rounded text-gray-600 hover:bg-gray-100 font-medium text-sm">2</button>
-                    <button
-                        class="w-8 h-8 flex items-center justify-center rounded text-gray-600 hover:bg-gray-100 font-medium text-sm">3</button>
-                    <span class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>
-                    <button
-                        class="w-8 h-8 flex items-center justify-center rounded text-gray-600 hover:bg-gray-100 font-medium text-sm">42</button>
-                    <button
-                        class="w-8 h-8 flex items-center justify-center rounded text-gray-400 hover:bg-gray-100"><svg
-                            class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
-                            </path>
-                        </svg></button>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-[#F1F3F8] rounded-xl p-6 flex gap-4 border border-[#E2E8F0]">
-            <div class="bg-[#202B5D] w-12 h-12 rounded-lg flex items-center justify-center shrink-0 shadow-sm">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
-                    </path>
-                </svg>
-            </div>
-            <div>
-                <h4 class="text-[#202B5D] font-bold mb-1">Lưu ý bảo mật dữ liệu</h4>
-                <p class="text-sm text-gray-600 leading-relaxed">Dữ liệu khách hàng là thông tin nhạy cảm. Việc xuất dữ
-                    liệu CSV sẽ được ghi lại trong lịch sử hệ thống phục vụ mục đích kiểm soát. Vui lòng tuân thủ nghiêm
-                    ngặt quy định bảo mật của công ty Architectural Curator.</p>
-            </div>
-        </div>
-
-        <div v-if="showAdd" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div class="absolute inset-0 bg-[#202B5D]/40 backdrop-blur-md" @click="showAdd = false"></div>
-
-            <div
-                class="relative bg-white w-full max-w-[450px] rounded-2xl shadow-[0_20px_50px_rgba(32,43,93,0.3)] overflow-hidden transform transition-all">
-
-                <div class="px-8 py-6 border-b border-gray-100 flex items-center gap-4 bg-gray-50/50">
-                    <div
-                        class="w-12 h-12 bg-[#202B5D] rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 shrink-0">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold text-[#202B5D]">Thêm khách hàng</h3>
-                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Tạo mới tài khoản người
-                            dùng</p>
-                    </div>
-                </div>
-
-                <div class="px-8 py-6 space-y-5">
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Họ
-                            và tên</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </span>
-                            <input v-model="khach_hang.ten" type="text" placeholder="Ví dụ: Nguyễn Văn A"
-                                class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-[#202B5D] focus:ring-4 focus:ring-[#202B5D]/5 outline-none transition-all">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label
-                                class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Email</label>
-                            <input v-model="khach_hang.email" type="email" placeholder="abc@gmail.com"
-                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-[#202B5D] focus:ring-4 focus:ring-[#202B5D]/5 outline-none transition-all">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Số
-                                điện thoại</label>
-                            <input v-model="khach_hang.so_dien_thoai" type="text" placeholder="090..."
-                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-[#202B5D] focus:ring-4 focus:ring-[#202B5D]/5 outline-none transition-all">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Mật
-                            khẩu khởi tạo</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-11V7a4 4 0 00-8 0v4h8z"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </span>
-                            <input v-model="khach_hang.password" type="password" placeholder="••••••••"
-                                class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:border-[#202B5D] focus:ring-4 focus:ring-[#202B5D]/5 outline-none transition-all">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="px-8 py-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-                    <button @click="showAdd = false"
-                        class="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all">
-                        Hủy bỏ
-                    </button>
-                    <button @click="themKhachHang"
-                        class="px-8 py-2.5 bg-[#202B5D] hover:bg-[#1a234a] text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-100 active:scale-95 transition-all flex items-center gap-2">
-                        <span>Tạo tài khoản</span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div v-if="showEdit" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-            <div class="bg-white p-6 rounded-xl w-[400px] shadow-2xl">
-                <h3 class="text-xl font-bold text-[#202B5D] mb-4">Cập nhật thông tin</h3>
-                <div class="space-y-3">
-                    <input v-model="edit_khach_hang.ten"
-                        class="border border-gray-300 rounded-lg p-2.5 w-full text-sm focus:outline-none focus:ring-1 focus:ring-[#202B5D]">
-                    <input v-model="edit_khach_hang.email"
-                        class="border border-gray-300 rounded-lg p-2.5 w-full text-sm focus:outline-none focus:ring-1 focus:ring-[#202B5D]">
-                    <input v-model="edit_khach_hang.so_dien_thoai"
-                        class="border border-gray-300 rounded-lg p-2.5 w-full text-sm focus:outline-none focus:ring-1 focus:ring-[#202B5D]">
-                </div>
-                <div class="flex justify-end gap-3 mt-6">
-                    <button @click="showEdit = false"
-                        class="text-gray-500 font-medium hover:bg-gray-100 px-4 py-2 rounded-lg text-sm">Hủy bỏ</button>
-                    <button @click="capNhatKhachHang"
-                        class="bg-[#202B5D] text-white font-medium hover:bg-blue-900 px-5 py-2 rounded-lg text-sm shadow-md">Lưu
-                        thay đổi</button>
-                </div>
-            </div>
-        </div>
-
+      </div>
     </div>
+
+    <div class="row mb-4 g-3">
+      <!-- Tổng khách hàng-->
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+          <div
+            class="card-body d-flex justify-content-between align-items-center"
+          >
+            <div>
+              <small class="text-muted fw-bold">TỔNG KHÁCH HÀNG</small>
+              <h3 class="fw-bold text-primary mb-0">
+                {{ khachHangList.length.toLocaleString() }}
+              </h3>
+            </div>
+            <i class="bi bi-people fs-1 text-primary opacity-25"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <!-- Đang hoạt động -->
+        <div class="card border-0 shadow-sm bg-primary text-white">
+          <div
+            class="card-body d-flex justify-content-between align-items-center"
+          >
+            <div>
+              <small class="opacity-75 fw-bold">ĐANG HOẠT ĐỘNG</small>
+              <h3 class="fw-bold mb-0">
+                {{ soDangHoatDong.toLocaleString() }}
+              </h3>
+            </div>
+            <i class="bi bi-person-check fs-1 opacity-25"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Khách hàng mới-->
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-warning bg-opacity-10">
+          <div
+            class="card-body d-flex justify-content-between align-items-center"
+          >
+            <div>
+              <small class="text-warning fw-bold">KHÁCH HÀNG MỚI</small>
+              <h3 class="fw-bold text-warning mb-0">
+                {{ khachHangMoi.toLocaleString() }}
+              </h3>
+              <!-- <small class="text-muted">Trong 7 ngày qua</small> -->
+            </div>
+            <i class="bi bi-person-plus fs-1 text-warning opacity-50"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Khách hàng bị khóa-->
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-danger bg-opacity-10">
+          <div
+            class="card-body d-flex justify-content-between align-items-center"
+          >
+            <div>
+              <small class="text-danger fw-bold">BỊ KHÓA</small>
+              <h3 class="fw-bold text-danger mb-0">
+                {{ soBiKhoa.toLocaleString() }}
+              </h3>
+            </div>
+            <i class="bi bi-person-x fs-1 text-danger opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive custom-scrollbar">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th>Khách hàng</th>
+                <th class="">Liên hệ</th>
+                <th class="">Ngày tham gia</th>
+                <th class="">BĐS Đã lưu</th>
+                <th class="ps-5">Trạng thái</th>
+                <th class="text-end pe-5">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="isLoading">
+                <td colspan="7" class="text-center py-5">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <p class="mt-2 text-muted">Đang xử lý dữ liệu...</p>
+                </td>
+              </tr>
+
+              <!-- ✅ Fix: Dùng paginatedList thay vì khachHangFilter -->
+              <tr v-for="v in paginatedList" :key="v.id" class="transition-all">
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div
+                      class="avatar-sm me-3 border border-2 border-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                    >
+                      {{ getInitials(v.ten) }}
+                    </div>
+                    <div>
+                      <div class="fw-bold text-dark">{{ v.ten }}</div>
+                      <span
+                        class="badge bg-light text-dark border px-2 py-1 mt-1 small"
+                      >
+                        ID: KH-{{ String(v.id).padStart(2, "0") }}
+                      </span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="fw-bold text-dark small">{{ v.email }}</div>
+                  <small class="text-muted d-block mt-1">
+                    <i class="bi bi-telephone me-1"></i>{{ v.so_dien_thoai }}
+                  </small>
+                </td>
+                <td class="text-muted fw-medium small">
+                  {{ formatDate(v.created_at) || "-" }}
+                </td>
+                <td>
+                  <span
+                    class="badge bg-light text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill"
+                  >
+                    {{ v.bds_da_luu || 0 }}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    style="width: 150px"
+                    @click="changeStatus(v, !v.is_active)"
+                    :class="v.is_active ? 'badge-active' : 'badge-inactive'"
+                    class="badge px-3 py-2 rounded-pill small fw-bold border-0"
+                  >
+                    {{ v.is_active ? "Đang hoạt động" : "Bị khóa" }}
+                  </button>
+                </td>
+                <td class="text-end pe-5 text-nowrap">
+                  <button
+                    @click="openEdit(v)"
+                    class="btn btn-icon btn-light-primary me-2"
+                    title="Cập nhật"
+                  >
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button
+                    @click="openDelete(v)"
+                    class="btn btn-icon btn-light-danger"
+                    title="Xóa khách hàng"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <tr v-if="!isLoading && paginatedList.length === 0">
+                <td colspan="7" class="text-center py-5 text-muted">
+                  <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                  Không tìm thấy kết quả phù hợp
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ✅ Pagination Footer -->
+      <div class="card-footer bg-white border-0 py-3 px-4">
+        <div
+          class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3"
+        >
+          <!-- Info -->
+          <small class="text-muted fw-medium">
+            {{ paginationInfo }}
+          </small>
+
+          <!-- Pagination Buttons -->
+          <div class="d-flex align-items-center gap-1" v-if="totalPages > 1">
+            <!-- Previous -->
+            <button
+              @click="prevPage"
+              :disabled="currentPage === 1"
+              class="btn btn-sm btn-light border"
+              :class="{ disabled: currentPage === 1 }"
+            >
+              &laquo;
+            </button>
+
+            <!-- Page Numbers -->
+            <button
+              v-for="page in visiblePages"
+              :key="page"
+              @click="goToPage(page)"
+              class="btn btn-sm btn-primary"
+              :class="
+                page === currentPage
+                  ? 'btn-primary'
+                  : 'btn-light border text-muted'
+              "
+            >
+              {{ page }}
+            </button>
+
+            <!-- Next -->
+            <button
+              @click="nextPage"
+              :disabled="currentPage === totalPages"
+              class="btn btn-sm btn-light border"
+              :class="{ disabled: currentPage === totalPages }"
+            >
+              &raquo;
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showEdit || showDelete"
+      class="modal-backdrop fade show"
+      style="z-index: 1040"
+    ></div>
+
+    <div
+      v-if="showEdit"
+      class="modal fade show d-block"
+      tabindex="-1"
+      style="z-index: 1050"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+          <div class="modal-header border-0 pt-4 px-4 pb-0">
+            <h5 class="fw-bold text-primary mb-0">
+              <i class="bi bi-person-lines-fill me-2"></i>Cập nhật thông tin
+            </h5>
+            <button
+              @click="closeModals"
+              type="button"
+              class="btn-close shadow-none"
+            ></button>
+          </div>
+          <div class="modal-body px-4 py-4">
+            <div class="mb-3">
+              <label
+                class="form-label small fw-bold text-muted text-uppercase tracking-widest"
+                >Họ và tên</label
+              >
+              <input
+                v-model="edit_khach_hang.ten"
+                type="text"
+                class="form-control custom-input fw-bold"
+              />
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label
+                  class="form-label small fw-bold text-muted text-uppercase tracking-widest"
+                  >Email</label
+                >
+                <input
+                  v-model="edit_khach_hang.email"
+                  type="email"
+                  class="form-control custom-input fw-bold"
+                />
+              </div>
+              <div class="col-md-6">
+                <label
+                  class="form-label small fw-bold text-muted text-uppercase tracking-widest"
+                  >Số điện thoại</label
+                >
+                <input
+                  v-model="edit_khach_hang.so_dien_thoai"
+                  type="text"
+                  class="form-control custom-input fw-bold"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-0 pb-4 px-4 pt-0">
+            <button
+              @click="closeModals"
+              class="btn btn-light rounded-pill px-4"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              @click="capNhatKhachHang"
+              class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"
+            >
+              Lưu thay đổi
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showDelete"
+      class="modal fade show d-block"
+      tabindex="-1"
+      style="z-index: 1050"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4 text-center p-4">
+          <div class="mb-3">
+            <div
+              class="avatar-sm bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center mx-auto"
+              style="width: 60px; height: 60px"
+            >
+              <i class="bi bi-exclamation-triangle fs-1"></i>
+            </div>
+          </div>
+          <h5 class="fw-bold mb-3">Xác nhận xóa!</h5>
+          <p class="text-muted mb-4 small">
+            Bạn có chắc chắn muốn xóa khách hàng <br />
+            <span class="text-danger fw-bold fs-6">{{
+              delete_khach_hang?.ten
+            }}</span>
+            không?<br />
+            Hành động này không thể hoàn tác.
+          </p>
+          <div class="d-flex justify-content-center gap-2">
+            <button
+              @click="closeModals"
+              class="btn btn-light rounded-pill px-4"
+            >
+              Hủy
+            </button>
+            <button
+              @click="xoaKhachHang"
+              class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm"
+            >
+              Xóa ngay
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
 import axios from "axios";
+import { createToaster } from "@meforma/vue-toaster";
+const toaster = createToaster({ position: "top-right" });
 
 export default {
-    data() {
-        return {
-            danhSachKhachHang: [],
-            isLoading: false,
-            keyword: "",
+  data() {
+    return {
+      khachHangList: [],
+      isLoading: false,
 
-            khach_hang: {
-                ten: "",
-                email: "",
-                so_dien_thoai: "",
-                password: ""
-            },
+      showEdit: false,
+      showDelete: false,
+      showExportMenu: false,
 
-            edit_khach_hang: {},
+      search: "",
+      statusFilter: "",
+      searchTimeout: null,
 
-            showAdd: false,
-            showEdit: false,
-        };
+      // 🔹 Phân trang
+      currentPage: 1,
+      itemsPerPage: 5,
+
+      edit_khach_hang: {},
+      delete_khach_hang: {},
+
+      API_BASE: "http://127.0.0.1:8000/api/admin/khach-hang",
+    };
+  },
+
+  mounted() {
+    this.loadKhachHang();
+  },
+
+  beforeDestroy() {
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+  },
+
+  computed: {
+    // ✅ Danh sách đã phân trang
+    paginatedList() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.khachHangFilter.slice(start, end);
     },
 
-    mounted() {
-        this.loadKhachHang();
+    // ✅ Tổng số trang
+    totalPages() {
+      return Math.ceil(this.khachHangFilter.length / this.itemsPerPage) || 1;
     },
 
-    methods: {
-        // ================= LOAD =================
-        loadKhachHang() {
-            const token = localStorage.getItem("token");
-            this.isLoading = true;
+    // ✅ Các số trang hiển thị
+    visiblePages() {
+      const pages = [];
+      const maxVisible = 5;
+      let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
+      let end = Math.min(this.totalPages, start + maxVisible - 1);
 
-            axios.get("http://127.0.0.1:8000/api/admin/khach-hang/data", {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-                .then(res => {
-                    if (res.data.status) {
-                        this.danhSachKhachHang = res.data.data;
-                    } else {
-                        this.$toast.error(res.data.message);
-                    }
-                })
-                .catch(() => this.$toast.error("Lỗi load dữ liệu"))
-                .finally(() => this.isLoading = false);
-        },
+      if (end - start < maxVisible - 1) {
+        start = Math.max(1, end - maxVisible + 1);
+      }
 
-        // ================= SEARCH (Nếu cần dùng với Component cha) =================
-        searchKhachHang() {
-            const token = localStorage.getItem("token");
+      for (let i = start; i <= end; i++) pages.push(i);
+      return pages;
+    },
 
-            axios.post("http://127.0.0.1:8000/api/admin/khach-hang/search", {
-                keyword: this.keyword
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-                .then(res => {
-                    if (res.data.status) {
-                        this.danhSachKhachHang = res.data.data;
-                    } else {
-                        this.$toast.error(res.data.message);
-                    }
-                })
-                .catch(() => this.$toast.error("Lỗi tìm kiếm"));
-        },
+    // ✅ Info phân trang
+    paginationInfo() {
+      const total = this.khachHangFilter.length;
+      if (total === 0) return "Hiển thị 0 khách hàng";
+      const start = (this.currentPage - 1) * this.itemsPerPage + 1;
+      const end = Math.min(this.currentPage * this.itemsPerPage, total);
+      return `Hiển thị ${start} - ${end} của ${total} khách hàng`;
+    },
 
-        // ================= ADD =================
-        themKhachHang() {
-            axios.post("http://127.0.0.1:8000/api/khach-hang/register", this.khach_hang)
-                .then(res => {
-                    if (res.data.status) {
-                        this.$toast.success("Thêm thành công");
-                        this.showAdd = false;
-                        this.loadKhachHang();
+    // ✅ Filter logic (giữ nguyên)
+    khachHangFilter() {
+      let data = [...this.khachHangList];
+      if (this.search) {
+        const keyword = this.search.toLowerCase();
+        data = data.filter((v) => {
+          return (
+            (v.ten && v.ten.toLowerCase().includes(keyword)) ||
+            (v.email && v.email.toLowerCase().includes(keyword)) ||
+            (v.so_dien_thoai && v.so_dien_thoai.includes(keyword))
+          );
+        });
+      }
+      if (this.statusFilter === "active") {
+        data = data.filter((v) => v.is_active !== false && v.is_active !== 0);
+      }
+      if (this.statusFilter === "inactive") {
+        data = data.filter((v) => v.is_active === false || v.is_active === 0);
+      }
+      return data;
+    },
 
-                        this.khach_hang = {
-                            ten: "",
-                            email: "",
-                            so_dien_thoai: "",
-                            password: ""
-                        };
-                    } else {
-                        this.$toast.error(res.data.message);
-                    }
-                })
-                .catch(() => this.$toast.error("Lỗi thêm"));
-        },
+    soDangHoatDong() {
+      return this.khachHangList.filter(
+        (v) => v.is_active !== false && v.is_active !== 0
+      ).length;
+    },
+    soBiKhoa() {
+      return this.khachHangList.filter(
+        (v) => v.is_active === false || v.is_active === 0
+      ).length;
+    },
+    khachHangMoi() {
+      const now = new Date();
+      return this.khachHangList.filter((v) => {
+        if (!v.created_at) return false;
+        const created = new Date(v.created_at);
+        const diff = (now - created) / (1000 * 60 * 60 * 24);
+        return diff <= 7;
+      }).length;
+    },
+  },
 
-        // ================= UPDATE =================
-        openEdit(v) {
-            this.edit_khach_hang = { ...v };
-            this.showEdit = true;
-        },
+  watch: {
+    // ✅ Reset page khi filter/search thay đổi
+    search() {
+      this.resetPagination();
+    },
+    statusFilter() {
+      this.resetPagination();
+    },
+    // Auto về trang 1 nếu currentPage > totalPages sau khi filter
+    khachHangFilter() {
+      if (this.currentPage > this.totalPages) {
+        this.currentPage = 1;
+      }
+    },
+  },
 
-        capNhatKhachHang() {
-            const token = localStorage.getItem("token");
+  methods: {
+    // Helper Functions
+    formatDate(date) {
+      if (!date) return "-";
+      return new Date(date).toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    },
+    getInitials(name) {
+      if (!name) return "?";
+      return name
+        .split(" ")
+        .map((part) => part[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase();
+    },
+    getToken() {
+      return (
+        localStorage.getItem("token") || localStorage.getItem("auth_token")
+      );
+    },
+    closeModals() {
+      this.showEdit = false;
+      this.showDelete = false;
+      this.showExportMenu = false;
+      this.edit_khach_hang = {};
+      this.delete_khach_hang = {};
+      document.body.classList.remove("modal-open");
+    },
+    showToast(message, type = "info") {
+      if (this.$toast) {
+        this.$toast[type]?.(message);
+      } else {
+        alert(message);
+      }
+    },
+    handleError(err, fallbackMsg) {
+      const msg = err.response?.data?.message || err.message || fallbackMsg;
+      this.showToast(msg, "error");
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      }
+    },
 
-            axios.post("http://127.0.0.1:8000/api/admin/khach-hang/update", this.edit_khach_hang, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-                .then(res => {
-                    if (res.data.status) {
-                        this.$toast.success("Cập nhật thành công");
-                        this.showEdit = false;
-                        this.loadKhachHang();
-                    } else {
-                        this.$toast.error(res.data.message);
-                    }
-                })
-                .catch(() => this.$toast.error("Lỗi cập nhật"));
-        },
+    // 🔹 Phân trang methods
+    goToPage(page) {
+      if (page < 1 || page > this.totalPages || page === this.currentPage)
+        return;
+      this.currentPage = page;
+      this.$nextTick(() => {
+        document
+          .querySelector(".table-responsive")
+          ?.scrollIntoView({ behavior: "smooth" });
+      });
+    },
+    prevPage() {
+      this.goToPage(this.currentPage - 1);
+    },
+    nextPage() {
+      this.goToPage(this.currentPage + 1);
+    },
+    resetPagination() {
+      this.currentPage = 1;
+    },
 
-        // ================= DELETE =================
-        xoaKhachHang(v) {
-            if (!confirm("Bạn có chắc muốn xóa?")) return;
-
-            const token = localStorage.getItem("token");
-
-            axios.post("http://127.0.0.1:8000/api/admin/khach-hang/delete", {
-                id: v.id
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-                .then(res => {
-                    if (res.data.status) {
-                        this.$toast.success("Xóa thành công");
-                        this.loadKhachHang();
-                    } else {
-                        this.$toast.error(res.data.message);
-                    }
-                })
-                .catch(() => this.$toast.error("Lỗi xóa"));
+    // API Functions
+    async loadKhachHang() {
+      this.isLoading = true;
+      try {
+        const token = this.getToken();
+        if (!token) return;
+        const res = await axios.get(`${this.API_BASE}/data`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data?.status) {
+          this.khachHangList = res.data.data?.data || res.data.data || [];
+        } else {
+          this.khachHangList = [];
         }
+      } catch (err) {
+        this.handleError(err, "Không thể tải danh sách khách hàng");
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    onSearchInput() {
+      if (this.searchTimeout) clearTimeout(this.searchTimeout);
+      this.searchTimeout = setTimeout(() => {
+        this.timKiemKhachHang();
+      }, 300);
+    },
+
+    async timKiemKhachHang() {
+      try {
+        const token = this.getToken();
+        if (!token || !this.search.trim()) return;
+        const res = await axios.post(
+          `${this.API_BASE}/search`,
+          { keyword: this.search },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data?.status) {
+          this.khachHangList = res.data.data || [];
+        }
+      } catch (err) {
+        this.handleError(err, "Tìm kiếm thất bại");
+      }
+    },
+
+    applyFilter() {
+      this.loadKhachHang();
+    },
+
+    exportData(format) {
+      const token = this.getToken();
+      if (!token) {
+        alert("Vui lòng đăng nhập lại");
+        return;
+      }
+
+      const params = new URLSearchParams({
+        format,
+        search: this.search || "",
+        status: this.statusFilter || "",
+      });
+
+      // URL phải khớp với route backend: /api/admin/khach-hang/export
+      const exportUrl = `${this.API_BASE}/export?${params}`;
+      console.log("📤 Export URL:", exportUrl); // Debug
+
+      window.open(exportUrl, "_blank");
+      this.showExportMenu = false;
+      this.showToast(`Đang tải file ${format.toUpperCase()}...`, "success");
+    },
+
+    async changeStatus(customer, newStatus) {
+      try {
+        const token = this.getToken();
+        if (!token) return;
+        const res = await axios.post(
+          `${this.API_BASE}/change-status`,
+          { id: customer.id, is_active: newStatus ? 1 : 0 },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data?.status) {
+          customer.is_active = newStatus;
+          this.showToast(newStatus ? "Đã kích hoạt" : "Đã khóa", "success");
+        }
+      } catch (err) {
+        this.handleError(err, "Cập nhật trạng thái thất bại");
+      }
+    },
+
+    openEdit(data) {
+      this.edit_khach_hang = { ...data };
+      this.showEdit = true;
+      document.body.classList.add("modal-open");
+    },
+
+    openDelete(data) {
+      this.delete_khach_hang = { ...data };
+      this.showDelete = true;
+      document.body.classList.add("modal-open");
+    },
+
+    async capNhatKhachHang() {
+      try {
+        const token = this.getToken();
+        if (!token || !this.edit_khach_hang?.id) return;
+        const res = await axios.put(
+          `${this.API_BASE}/${this.edit_khach_hang.id}`,
+          {
+            ten: this.edit_khach_hang.ten,
+            email: this.edit_khach_hang.email,
+            so_dien_thoai: this.edit_khach_hang.so_dien_thoai,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data?.status) {
+          const idx = this.khachHangList.findIndex(
+            (c) => c.id === this.edit_khach_hang.id
+          );
+          if (idx !== -1) {
+            this.khachHangList[idx] = {
+              ...this.khachHangList[idx],
+              ...this.edit_khach_hang,
+            };
+          }
+          this.closeModals();
+          this.showToast("Cập nhật thành công!", "success");
+        }
+      } catch (err) {
+        this.handleError(err, "Cập nhật thất bại");
+      }
+    },
+
+    async xoaKhachHang() {
+  if (!this.delete_khach_hang?.id) return;
+  try {
+    const token = this.getToken();
+    if (!token) return;
+    
+    // ✅ Gửi id qua query string: /delete?id=123
+    const res = await axios.delete(
+      `${this.API_BASE}/delete?id=${this.delete_khach_hang.id}`, 
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    
+    if (res.data?.status) {
+      this.khachHangList = this.khachHangList.filter(
+        (v) => v.id !== this.delete_khach_hang.id
+      );
+      this.closeModals();
+      this.showToast("Xóa thành công!", "success");
     }
+  } catch (err) {
+    this.handleError(err, "Xóa thất bại");
+  }
+}
+  },
 };
 </script>
+
+<style scoped>
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css");
+
+.customer-management {
+  font-family: "Inter", sans-serif;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Card & Header */
+.card {
+  border-radius: 16px;
+}
+.custom-header-card {
+  background: white;
+}
+
+/* Table Design */
+.table th:nth-child(1),
+.table td:nth-child(1) {
+  width: 22%;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  width: 22%;
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  width: 14%;
+}
+
+.table th:nth-child(4),
+.table td:nth-child(4) {
+  width: 12%;
+}
+
+.table th:nth-child(5),
+.table td:nth-child(5) {
+  width: 15%;
+}
+
+.table th:nth-child(6),
+.table td:nth-child(6) {
+  width: 15%;
+}
+
+.table thead th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  color: #6c757d;
+  background-color: #fcfcfc;
+  padding: 15px;
+  border: none;
+}
+.table tbody td {
+  padding: 18px 15px;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+/* Avatar */
+.avatar-sm {
+  width: 40px;
+  height: 40px;
+  font-size: 0.9rem;
+}
+
+/* Status Badges */
+.badge-active {
+  background-color: #e6fcf5;
+  color: #087f5b;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge-inactive {
+  background-color: #fff5f5;
+  color: #c92a2a;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Buttons */
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+.btn-light-primary {
+  background: #e7f1ff;
+  color: #0d6efd;
+  border: none;
+}
+.btn-light-danger {
+  background: #fff5f5;
+  color: #dc3545;
+  border: none;
+}
+.btn-light-primary:hover {
+  background: #0d6efd;
+  color: white;
+  transform: translateY(-1px);
+}
+.btn-light-danger:hover {
+  background: #dc3545;
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Inputs */
+.custom-input {
+  border-radius: 12px;
+  padding: 10px 15px;
+  border: 1px solid #dee2e6;
+  background-color: #fcfcfc;
+  transition: all 0.2s;
+}
+.custom-input:focus {
+  border-color: #0d6efd;
+  background-color: white;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #dee2e6;
+  border-radius: 10px;
+}
+
+/* ✅ Pagination Styles */
+.pagination .page-item .page-link {
+  border: 1px solid #e9ecef;
+  background: white;
+  color: #6c757d;
+  font-weight: 500;
+  transition: all 0.2s;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination .page-item .page-link:hover:not(.active):not(:disabled) {
+  background: #f8f9fa;
+  border-color: #dee2e6;
+  color: #0d6efd;
+}
+
+.pagination .page-item.active .page-link {
+  background: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination .page-link i {
+  font-size: 0.875rem;
+}
+
+.pagination-sm {
+  gap: 4px;
+}
+
+.btn-sm.rounded-circle {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+}
+</style>

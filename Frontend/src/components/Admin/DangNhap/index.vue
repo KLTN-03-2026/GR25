@@ -99,20 +99,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, getCurrentInstance } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
-import { createToaster } from "@meforma/vue-toaster";
 
+// ================= STATE =================
 const email = ref("");
 const password = ref("");
 const isLoading = ref(false);
-const showPassword = ref(false); // Trạng thái hiện/ẩn mật khẩu
-const rememberMe = ref(false);   // Trạng thái ghi nhớ đăng nhập
-const router = useRouter();
-const toaster = createToaster({ position: "top-right" });
+const showPassword = ref(false);
+const rememberMe = ref(false);
 
-// Kiểm tra xem trước đó có lưu email không khi trang vừa tải
+const router = useRouter();
+
+// ================= TOASTER =================
+const internalInstance = getCurrentInstance();
+const toaster = internalInstance.appContext.config.globalProperties.$toast;
+
+// ================= AXIOS =================
+const api = axios.create({
+  baseURL: "http://localhost:8000/api",
+  timeout: 10000,
+});
+
+// 🔥 AUTO GẮN TOKEN
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("auth_token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+// ================= LOAD EMAIL =================
 onMounted(() => {
   const savedEmail = localStorage.getItem("saved_admin_email");
   if (savedEmail) {
@@ -121,38 +142,75 @@ onMounted(() => {
   }
 });
 
+// ================= LOGIN =================
 const xuLyDangNhap = async () => {
+  if (!email.value || !password.value) {
+    toaster.error("Vui lòng nhập đầy đủ thông tin");
+    return;
+  }
+
   isLoading.value = true;
+
   try {
-    const res = await axios.post("http://localhost:8000/api/admin/dang-nhap", {
+    const res = await api.post("/admin/dang-nhap", {
       email: email.value,
       password: password.value,
     });
 
-    if (res.status === 200 && res.data.token) {
-      localStorage.setItem("admin_token", res.data.token);
+    console.log("LOGIN RESPONSE:", res.data);
 
-      // Xử lý ghi nhớ đăng nhập
+    // ===== SUCCESS =====
+    if (res.data?.token) {
+
+      // 🔥 LƯU TOKEN
+      localStorage.setItem("auth_token", res.data.token);
+
+      // 🔥 ROLE
+      localStorage.setItem("user_type", "admin");
+
+      // ===== REMEMBER EMAIL =====
       if (rememberMe.value) {
         localStorage.setItem("saved_admin_email", email.value);
       } else {
         localStorage.removeItem("saved_admin_email");
       }
 
-      toaster.success("Đăng nhập thành công!");
-      router.push("/admin/trang-chu");
-    }
-  } catch (error) {
-    if (error.response && error.response.status === 401) {
-      toaster.error("Tài khoản hoặc mật khẩu không chính xác!");
+      toaster.success("Đăng nhập thành công 👋");
+
+      setTimeout(() => {
+        router.push("/admin/dashboard");
+      }, 500);
+
     } else {
-      toaster.error("Lỗi kết nối Server. Vui lòng thử lại!");
+      toaster.error("Phản hồi server không hợp lệ");
     }
+
+  } catch (error) {
+    console.error("LOGIN ERROR:", error);
+
+    if (error.response) {
+      const status = error.response.status;
+
+      if (status === 401) {
+        toaster.error("Sai tài khoản hoặc mật khẩu");
+      } else if (status === 500) {
+        toaster.error("Lỗi server backend");
+      } else {
+        toaster.error("Lỗi: " + status);
+      }
+
+    } else if (error.request) {
+      toaster.error("Không kết nối được server");
+    } else {
+      toaster.error("Lỗi không xác định");
+    }
+
   } finally {
     isLoading.value = false;
   }
 };
 </script>
+
 
 <style scoped>
 /* Reset nền tổng thể */
