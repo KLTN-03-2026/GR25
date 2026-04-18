@@ -53,7 +53,7 @@ Route::prefix('moi-gioi')->group(function () {
     Route::post('/dang-ky', [MoiGioiController::class, 'register']); // đã test postman
     Route::get('/check-token', [MoiGioiController::class, 'checkToken']); // đã test postman
     Route::post('/forgot-password/send-otp', [MoiGioiController::class, 'sendOtp']);
-    Route::post('/forgot-password/reset', [MoiGioiController::class, 'resetPassword']);
+    Route::post('/forgot-password/reset', [MoiGioiController::class, 'resetPassword']); // 
 });
 
 Route::get('/moi-gioi/sse/stream', [SSEController::class, 'stream']);
@@ -67,7 +67,7 @@ Route::get('client/bat-dong-san/{id}', [ClientHomeController::class, 'xemChiTiet
 // Tìm Kiếm 
 Route::post('client/tim-kiem', [ClientHomeController::class, 'search']);
 // Loại BĐS
-Route::get('client/loai-bat-dong-san', [ClientHomeController::class, 'getLoaiBDS']);
+Route::get('client/loai-bat-dong-san', [ClientHomeController::class, 'getLoaiBDS']); //đã test postman
 
 // Route::get('/tinh-thanh', [TinhThanhController::class, 'getTinhThanh']); //đã test postman 
 // Route::get('/quan-huyen', [QuanHuyenController::class, 'getQuanHuyen']); //đã test postman ?tinh_id=1
