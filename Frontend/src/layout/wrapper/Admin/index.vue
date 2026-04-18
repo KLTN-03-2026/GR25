@@ -13,8 +13,8 @@
 </template>
 
 <script>
-import MenuBDS from "../../components/MenuBDS.vue";
-import TopBDS from "../../components/TopBDS.vue";
+import MenuBDS from "../../components/Admin/MenuBDS.vue";
+import TopBDS from "../../components/Admin/TopBDS.vue";
 
 export default {
   components: { MenuBDS, TopBDS },
