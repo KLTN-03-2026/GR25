@@ -165,7 +165,7 @@ export default {
         })
         .catch((err) => {
           console.error(err);
-          toaster.error('Lỗi server');
+          toaster.error('Sai tài khoản hoặc mật khẩu');
         })
         .finally(() => {
           this.isLoading = false;

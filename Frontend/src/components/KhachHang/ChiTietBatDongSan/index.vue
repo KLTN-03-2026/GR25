@@ -63,13 +63,31 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Left Column: Main Image + Stats -->
           <div class="lg:col-span-2 space-y-6">
-            <!-- Main Image -->
+            <!-- Main Image with Save Button -->
             <div class="relative group cursor-pointer rounded-2xl overflow-hidden h-[700px]" @click="openGallery(0)">
               <img
                 :src="mainImage"
                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 :alt="property.tieu_de"
               />
+              
+              <!-- ✅ Nút Lưu tin (góc trên trái) -->
+              <button
+                @click.stop="toggleSave"
+                :class="['absolute top-4 left-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md transition-all duration-300 shadow-lg', 
+                         isSaved ? 'bg-red-500/90 text-white hover:bg-red-600' : 'bg-white/90 text-gray-700 hover:bg-white']"
+                :aria-label="isSaved ? 'Bỏ lưu tin này' : 'Lưu tin này'"
+                aria-pressed="isSaved"
+              >
+                <span 
+                  class="material-symbols-outlined text-[18px] transition-transform duration-200"
+                  :class="{ 'saved-pulse': justSaved }"
+                >
+                  {{ isSaved ? 'favorite' : 'favorite_border' }}
+                </span>
+                <span class="text-xs font-semibold hidden sm:inline">{{ isSaved ? 'Đã lưu' : 'Lưu tin' }}</span>
+              </button>
+
               <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
               <div class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-lg text-sm">
                 {{ images.length }} ảnh
@@ -382,6 +400,10 @@ export default {
       showGallery: false,
       currentImageIndex: 0,
       showAllFeatures: false,
+      // ✅ Trạng thái lưu tin
+      isSaved: false,
+      justSaved: false,
+      savedTimer: null
     };
   },
   computed: {
@@ -392,12 +414,10 @@ export default {
       return this.images.length > 0 ? this.getImageUrl(this.images[0].url) : 'https://via.placeholder.com/1200x800?text=No+Image';
     },
     displayImages() {
-      // Only show 2 images (index 1 and 2)
       return this.images.slice(1, 3);
     },
     remainingImages() {
-      // Calculate how many images are left after showing 2
-      const remaining = this.images.length - 3; // -1 for main, -2 for display
+      const remaining = this.images.length - 3;
       return remaining > 0 ? remaining : 0;
     },
     featuresList() {
@@ -409,12 +429,54 @@ export default {
     const id = this.$route.params.id;
     if (id) {
       await this.loadPropertyDetail(id);
+      this.checkSavedStatus(id); // ✅ Check saved status after load
     } else {
       this.error = 'Không tìm thấy ID bất động sản';
       this.loading = false;
     }
   },
   methods: {
+    // ✅ Kiểm tra trạng thái đã lưu từ localStorage
+    checkSavedStatus(propertyId) {
+      if (!propertyId) return;
+      const saved = localStorage.getItem('saved_properties');
+      const savedList = saved ? JSON.parse(saved) : [];
+      this.isSaved = savedList.includes(propertyId);
+    },
+
+    // ✅ Toggle lưu/bỏ lưu tin
+    toggleSave() {
+      const propertyId = this.property?.id;
+      if (!propertyId) return;
+
+      const saved = localStorage.getItem('saved_properties');
+      let savedList = saved ? JSON.parse(saved) : [];
+
+      if (this.isSaved) {
+        // Bỏ lưu
+        savedList = savedList.filter(id => id !== propertyId);
+        this.$toast?.info('Đã bỏ lưu tin này', { duration: 2000 });
+      } else {
+        // Lưu tin
+        if (!savedList.includes(propertyId)) {
+          savedList.push(propertyId);
+        }
+        // Hiệu ứng pulse
+        this.justSaved = true;
+        if (this.savedTimer) clearTimeout(this.savedTimer);
+        this.savedTimer = setTimeout(() => {
+          this.justSaved = false;
+        }, 600);
+        this.$toast?.success('Đã lưu tin thành công!', { duration: 2000 });
+      }
+
+      localStorage.setItem('saved_properties', JSON.stringify(savedList));
+      this.isSaved = !this.isSaved;
+      
+      // ✅ Emit event để header cập nhật badge nếu cần
+      this.$emit('saved-changed', { propertyId, isSaved: this.isSaved, total: savedList.length });
+    },
+
     async loadPropertyDetail(id) {
       this.loading = true;
       this.error = null;
@@ -497,6 +559,7 @@ export default {
   },
   beforeUnmount() {
     document.body.style.overflow = '';
+    if (this.savedTimer) clearTimeout(this.savedTimer);
   }
 };
 </script>
@@ -507,5 +570,15 @@ export default {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* ✅ Animation pulse khi vừa lưu */
+@keyframes savedPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+.saved-pulse {
+  animation: savedPulse 0.4s ease-in-out;
 }
 </style>

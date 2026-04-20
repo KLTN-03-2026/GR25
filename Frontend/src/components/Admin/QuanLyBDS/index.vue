@@ -335,28 +335,51 @@ export default {
   
   methods: {
     async loadProperties() {
-      try {
-        const response = await axios.get('http://127.0.0.1:8000/api/admin/bds/data', {
-          params: {
-            page: this.pagination.current_page,
-            ...this.filters
-          }
-        });
-        
-        if (response.data.status) {
-          this.properties = response.data.data.data || response.data.data;
-          this.pagination = {
-            current_page: response.data.data.current_page || 1,
-            last_page: response.data.data.last_page || 1,
-            from: response.data.data.from || 1,
-            to: response.data.data.to || this.properties.length,
-            total: response.data.data.total || this.properties.length
-          };
+  try {
+    const token = localStorage.getItem("auth_token");
+
+    if (!token) {
+      console.error("❌ Không có token → chưa đăng nhập");
+      return;
+    }
+
+    const response = await axios.get(
+      'http://127.0.0.1:8000/api/admin/bds/data',
+      {
+        headers: {
+          Authorization: 'Bearer ' + token
+        },
+        params: {
+          page: this.pagination.current_page,
+          ...this.filters
         }
-      } catch (error) {
-        console.error('Lỗi tải danh sách BĐS:', error);
       }
-    },
+    );
+
+    if (response.data.status) {
+      this.properties = response.data.data.data || response.data.data;
+
+      this.pagination = {
+        current_page: response.data.data.current_page || 1,
+        last_page: response.data.data.last_page || 1,
+        from: response.data.data.from || 1,
+        to: response.data.data.to || this.properties.length,
+        total: response.data.data.total || this.properties.length
+      };
+    } else {
+      console.error("❌ API trả status false:", response.data.message);
+    }
+
+  } catch (error) {
+    console.error("🔥 Lỗi tải danh sách BĐS:", error.response || error);
+
+    if (error.response?.status === 401) {
+      console.error("❌ Token sai hoặc hết hạn");
+      localStorage.clear();
+      this.$router.push("/login");
+    }
+  }
+},
     
     async searchProperties() {
       try {

@@ -242,7 +242,7 @@ const handleRegister = async () => {
 
   try {
     const response = await axios.post(
-      "http://localhost:8000/api/khach-hang/register",
+      "http://localhost:8000/api/khach-hang/dang-ky",
       {
         ten: ten.value,
         email: email.value,
