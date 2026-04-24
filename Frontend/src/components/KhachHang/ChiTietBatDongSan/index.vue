@@ -45,7 +45,7 @@
               </h1>
               <p class="flex items-center gap-2 text-gray-500">
                 <span class="material-symbols-outlined text-[18px] text-blue-600">location_on</span>
-                <span>{{ property.fullLocation || property.location || 'Đang cập nhật' }}</span>
+                <span>{{ property?.dia_chi?.dia_chi_chi_tiet}}, {{ property?.dia_chi?.quan?.ten}}, {{ property?.dia_chi?.tinh?.ten }}</span>
               </p>
             </div>
             <div class="text-left lg:text-right">
@@ -63,7 +63,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Left Column: Main Image + Stats -->
           <div class="lg:col-span-2 space-y-6">
-            <!-- Main Image -->
+            <!-- Main Image with ❤️ Favorite Button -->
             <div class="relative group cursor-pointer rounded-2xl overflow-hidden h-[700px]" @click="openGallery(0)">
               <img
                 :src="mainImage"
@@ -71,7 +71,25 @@
                 :alt="property.tieu_de"
               />
               <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
-              <div class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-lg text-sm">
+              
+              <!-- ❤️ Nút Yêu Thích - Góc trên bên TRÁI ảnh chính -->
+              <button
+                @click.stop="toggleFavorite(property.id, $event)"
+                class="absolute top-4 left-4 w-11 h-11 rounded-full bg-white/95 backdrop-blur-md shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group/btn z-10"
+                :class="isPropertyFavorite ? 'bg-gradient-to-br from-pink-500 to-rose-500' : ''"
+                :aria-label="isPropertyFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'"
+                title="Yêu thích"
+              >
+                <span 
+                  class="material-symbols-outlined text-xl transition-all duration-300"
+                  :class="isPropertyFavorite ? 'text-white fill-current' : 'text-gray-400 group-hover/btn:text-pink-500'"
+                >
+                  favorite
+                </span>
+              </button>
+              
+              <!-- Image Count Badge - Góc dưới bên trái -->
+              <div class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-lg text-sm z-10">
                 {{ images.length }} ảnh
               </div>
             </div>
@@ -132,10 +150,10 @@
               <!-- Agent Info -->
               <div class="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
                 <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                  {{ getInitials(property.moiGioi?.ten || 'AC') }}
+                  {{ property?.moi_gioi?.ten?.charAt(0) || 'A' }}
                 </div>
                 <div class="flex-1 min-w-0">
-                  <h3 class="font-['Be_Vietnam_Pro'] font-bold text-[#0a0e27] text-sm truncate">{{ property.moiGioi?.ten || 'Đang cập nhật' }}</h3>
+                  <h3 class="font-['Be_Vietnam_Pro'] font-bold text-[#0a0e27] text-sm truncate">{{ property?.moi_gioi?.ten }}</h3>
                   <p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Chuyên viên tư vấn</p>
                   <div class="flex items-center gap-0.5 mt-0.5">
                     <span v-for="s in 5" :key="s" class="material-symbols-outlined text-[12px]" :class="s <= 5 ? 'text-yellow-400' : 'text-gray-300'">star</span>
@@ -144,7 +162,7 @@
               </div>
 
               <!-- Contact Form -->
-              <form @submit.prevent="submitForm" class="space-y-3">
+              <!-- <form @submit.prevent="submitForm" class="space-y-3">
                 <div>
                   <input
                     v-model="form.ho_ten"
@@ -176,26 +194,34 @@
                   <span class="material-symbols-outlined text-[16px]">calendar_month</span>
                   Đăng ký tư vấn
                 </button>
-              </form>
+              </form> -->
 
-              <!-- Quick Contact -->
+              <!-- Quick Contact Buttons -->
               <div class="grid grid-cols-2 gap-2 mt-3">
-                <a :href="'tel:' + (property.moiGioi?.so_dien_thoai || '')" class="flex items-center justify-center gap-1.5 py-2 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-gray-600 hover:text-blue-600 text-xs font-semibold">
+                <!-- Gọi ngay -->
+                <a :href="'tel:' + (broker?.so_dien_thoai || '')" class="flex items-center justify-center gap-1.5 py-2 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-gray-600 hover:text-blue-600 text-xs font-semibold">
                   <span class="material-symbols-outlined text-[16px]">call</span>
                   Gọi ngay
                 </a>
-                <a :href="'mailto:' + (property.moiGioi?.email || '')" class="flex items-center justify-center gap-1.5 py-2 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-gray-600 hover:text-blue-600 text-xs font-semibold">
-                  <span class="material-symbols-outlined text-[16px]">mail</span>
-                  Email
-                </a>
+                
+                <!-- 🔥 Chat với môi giới -->
+                <button
+                  @click="startChat"
+                  class="flex items-center justify-center gap-1.5 py-2 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-gray-600 hover:text-blue-600 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  :disabled="!brokerId"
+                  :title="brokerId ? 'Chat với môi giới' : 'Chưa có môi giới'"
+                >
+                  <span class="material-symbols-outlined text-[16px]">chat</span>
+                  Chat
+                </button>
               </div>
 
               <!-- Zalo Button -->
               <a
-                v-if="property.moiGioi?.zalo_link"
-                :href="property.moiGioi.zalo_link"
+                v-if="broker?.zalo_link"
+                :href="broker.zalo_link"
                 target="_blank"
-                class="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-bold transition-all text-sm"
+                class="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-[#0068FF] hover:bg-[#0055D6] text-white font-bold transition-all text-sm"
               >
                 <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg" class="w-4 h-4" alt="Zalo" />
                 Chat Zalo
@@ -338,6 +364,37 @@
       </section>
     </template>
 
+    <!-- 🍞 Enhanced Toast Notification -->
+    <transition name="toast-slide">
+      <div 
+        v-if="toast.visible" 
+        class="fixed top-20 right-5 z-[9999] pointer-events-auto"
+        style="will-change: transform, opacity;"
+      >
+        <div 
+          class="flex items-center gap-3 px-5 py-3.5 text-white rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 min-w-[280px] max-w-sm"
+          :class="getToastClass(toast.type)"
+        >
+          <span 
+            class="material-symbols-outlined text-xl flex-shrink-0"
+            :class="{ 'animate-heart-pulse': toast.type === 'favorite-add' }"
+          >
+            {{ toast.icon || getToastIcon(toast.type) }}
+          </span>
+          <span class="font-medium text-sm flex-1 leading-tight">
+            {{ toast.message }}
+          </span>
+          <button 
+            @click="hideToast" 
+            class="ml-2 hover:opacity-80 transition-opacity p-1 rounded-full hover:bg-white/20"
+            aria-label="Đóng thông báo"
+          >
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+      </div>
+    </transition>
+
     <!-- Image Gallery Modal -->
     <div v-if="showGallery" class="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center" @click.self="closeGallery">
       <button @click="closeGallery" class="absolute top-6 right-6 text-white hover:text-gray-300 z-10">
@@ -374,47 +431,122 @@ export default {
       similarProperties: [],
       backendUrl: 'http://127.0.0.1:8000',
       apiUrl: 'http://127.0.0.1:8000/api/client',
-      form: {
-        ho_ten: '',
-        so_dien_thoai: '',
-        tin_nhan: ''
-      },
+      form: { ho_ten: '', so_dien_thoai: '', tin_nhan: '' },
       showGallery: false,
       currentImageIndex: 0,
       showAllFeatures: false,
+      favoriteIds: [],
+      toast: { visible: false, message: '', type: 'warning', icon: null, timer: null }
     };
   },
   computed: {
-    images() {
-      return this.property?.hinhAnh || this.property?.hinh_anh || [];
-    },
-    mainImage() {
-      return this.images.length > 0 ? this.getImageUrl(this.images[0].url) : 'https://via.placeholder.com/1200x800?text=No+Image';
-    },
-    displayImages() {
-      // Only show 2 images (index 1 and 2)
-      return this.images.slice(1, 3);
-    },
-    remainingImages() {
-      // Calculate how many images are left after showing 2
-      const remaining = this.images.length - 3; // -1 for main, -2 for display
-      return remaining > 0 ? remaining : 0;
-    },
+    images() { return this.property?.hinhAnh || this.property?.hinh_anh || []; },
+    mainImage() { return this.images.length > 0 ? this.getImageUrl(this.images[0].url) : 'https://via.placeholder.com/1200x800?text=No+Image'; },
+    displayImages() { return this.images.slice(1, 3); },
+    remainingImages() { const r = this.images.length - 3; return r > 0 ? r : 0; },
     featuresList() {
-      const features = this.property?.tien_ich || this.property?.tien_nghi || '';
-      return features ? features.split(',').map(f => f.trim()).filter(f => f) : [];
+      const f = this.property?.tien_ich || this.property?.tien_nghi || '';
+      return f ? f.split(',').map(x => x.trim()).filter(x => x) : [];
+    },
+    isPropertyFavorite() { return this.favoriteIds.includes(this.property?.id); },
+    
+    // 🔥 BROKER COMPUTED - CHUẨN FINAL: Đọc trực tiếp từ property.moiGioi
+    broker() {
+      return this.property?.moi_gioi || null;
+    },
+    brokerId() {
+      return this.property?.moi_gioi?.id || null;
+    },
+    brokerName() {
+      return this.property?.moi_gioi?.ten || 'Đang cập nhật';
     }
   },
   async mounted() {
     const id = this.$route.params.id;
     if (id) {
       await this.loadPropertyDetail(id);
+      if (this.isAuthenticated()) await this.syncFavoriteList();
     } else {
       this.error = 'Không tìm thấy ID bất động sản';
       this.loading = false;
     }
+    window.addEventListener('favorite-updated', this.handleFavoriteUpdated);
+    
+    // 🧪 DEBUG: Log data để kiểm tra moiGioi có trong response không
+    console.log('🔥 DATA:', this.property);
+  },
+  beforeUnmount() {
+    document.body.style.overflow = '';
+    if (this.toast.timer) clearTimeout(this.toast.timer);
+    window.removeEventListener('favorite-updated', this.handleFavoriteUpdated);
   },
   methods: {
+    getToastClass(type) {
+      const c = {
+        success: 'bg-gradient-to-r from-emerald-500 to-teal-500',
+        error: 'bg-gradient-to-r from-red-500 to-rose-500',
+        warning: 'bg-gradient-to-r from-amber-500 to-orange-500',
+        'favorite-add': 'bg-gradient-to-r from-pink-500 via-rose-500 to-red-500',
+        'favorite-remove': 'bg-gradient-to-r from-gray-500 via-slate-500 to-gray-600'
+      };
+      return c[type] || c.warning;
+    },
+
+    getToastIcon(type) {
+      const i = { success: 'check_circle', error: 'error', warning: 'warning', 'favorite-add': 'favorite', 'favorite-remove': 'heart_broken' };
+      return i[type] || i.warning;
+    },
+    showToast(msg, type = 'warning', duration = 2500) {
+      if (this.toast.timer) clearTimeout(this.toast.timer);
+      this.toast = { visible: true, message: msg, type, icon: null, timer: setTimeout(() => this.hideToast(), duration) };
+    },
+    showFavoriteToast(action, propertyName) {
+      const shortName = propertyName.length > 30 ? propertyName.substring(0, 27) + '...' : propertyName;
+      if (action === 'add') {
+        this.toast = { visible: true, message: `❤️ Đã lưu "${shortName}" vào yêu thích`, type: 'favorite-add', icon: 'favorite', timer: setTimeout(() => this.hideToast(), 3000) };
+      } else {
+        this.toast = { visible: true, message: `💔 Đã xóa "${shortName}" khỏi yêu thích`, type: 'favorite-remove', icon: 'heart_broken', timer: setTimeout(() => this.hideToast(), 2500) };
+      }
+    },
+    hideToast() { this.toast.visible = false; if (this.toast.timer) { clearTimeout(this.toast.timer); this.toast.timer = null; } },
+    isAuthenticated() { return !!(localStorage.getItem('auth_token') && localStorage.getItem('user_type') === 'khach-hang'); },
+    requireAuth(redirectUrl = null) {
+      if (!this.isAuthenticated()) {
+        this.showToast('Vui lòng đăng nhập để tiếp tục', 'warning');
+        setTimeout(() => this.$router.push({ path: '/khach-hang/dang-nhap', query: { redirect: redirectUrl || this.$route.fullPath } }), 800);
+        return false;
+      }
+      return true;
+    },
+    async toggleFavorite(bdsId, ev) {
+      ev?.stopPropagation();
+      if (!this.requireAuth()) return;
+      const token = localStorage.getItem('auth_token');
+      const wasFavorite = this.isPropertyFavorite;
+      const action = wasFavorite ? 'remove' : 'add';
+      const propertyName = this.property?.tieu_de || 'Bất động sản';
+      try {
+        await axios.post('http://127.0.0.1:8000/api/khach-hang/bds/yeu-thich', { bds_id: bdsId }, { headers: { Authorization: `Bearer ${token}` } });
+        await this.syncFavoriteList();
+        this.showFavoriteToast(action, propertyName);
+        window.dispatchEvent(new Event('favorite-updated'));
+      } catch (err) {
+        console.error('Favorite API error:', err.response?.data || err);
+        this.showToast('Có lỗi xảy ra, vui lòng thử lại', 'error');
+      }
+    },
+    async syncFavoriteList() {
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) { this.favoriteIds = []; return; }
+        const res = await axios.get('http://127.0.0.1:8000/api/khach-hang/bds/yeu-thich/data', { headers: { Authorization: `Bearer ${token}` } });
+        const favorites = res.data?.data || [];
+        this.favoriteIds = favorites.map(item => item.bat_dong_san_id || item.bds_id || item.batDongSan?.id || item.id).filter(id => id);
+      } catch (err) { console.error('Sync favorite error:', err); this.favoriteIds = []; }
+    },
+    async handleFavoriteUpdated() { if (this.isAuthenticated()) await this.syncFavoriteList(); },
+    
+    // 🔥 LOAD PROPERTY - KHÔNG FETCH BROKER THỪA (BE ĐÃ TRẢ SẴN)
     async loadPropertyDetail(id) {
       this.loading = true;
       this.error = null;
@@ -422,6 +554,7 @@ export default {
         const res = await axios.get(`${this.apiUrl}/bat-dong-san/${id}`);
         if (res.data.status && res.data.data) {
           this.property = res.data.data;
+          // ✅ BE đã with('moiGioi') → KHÔNG CẦN fetch thêm
           this.loadSimilarProperties(id);
         } else {
           this.error = res.data.message || 'Không tìm thấy bất động sản';
@@ -433,79 +566,81 @@ export default {
         this.loading = false;
       }
     },
+    
     async loadSimilarProperties(currentId) {
       try {
         const res = await axios.get(`${this.apiUrl}/bat-dong-san`);
         if (res.data.status) {
-          this.similarProperties = res.data.data.data
-            .filter(item => item.id !== currentId)
-            .slice(0, 3);
+          this.similarProperties = res.data.data.data.filter(item => item.id !== currentId).slice(0, 3);
         }
-      } catch (err) {
-        console.error('Lỗi load BĐS tương tự:', err);
-      }
+      } catch (err) { console.error('Lỗi load BĐS tương tự:', err); }
     },
+    
     getImageUrl(url) {
       if (!url) return 'https://via.placeholder.com/800x600?text=No+Image';
       if (url.startsWith('http')) return url;
       return `${this.backendUrl}/storage/${url}`;
     },
-    formatPriceFull(gia) {
-      if (!gia && gia !== 0) return 'Liên hệ';
-      return new Intl.NumberFormat('vi-VN').format(gia) + ' VNĐ';
-    },
-    getInitials(name) {
-      if (!name) return 'AC';
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-    },
-    viewProperty(id) {
-      this.$router.push(`/chi-tiet-bds/${id}`);
-      window.scrollTo(0, 0);
-    },
-    openGallery(index) {
-      this.currentImageIndex = index;
-      this.showGallery = true;
-      document.body.style.overflow = 'hidden';
-    },
-    closeGallery() {
-      this.showGallery = false;
-      document.body.style.overflow = '';
-    },
-    nextImage() {
-      this.currentImageIndex = (this.currentImageIndex + 1) % this.images.length;
-    },
-    prevImage() {
-      this.currentImageIndex = (this.currentImageIndex - 1 + this.images.length) % this.images.length;
-    },
+    formatPriceFull(gia) { if (!gia && gia !== 0) return 'Liên hệ'; return new Intl.NumberFormat('vi-VN').format(gia) + ' VNĐ'; },
+    getInitials(name) { if (!name || name === 'Đang cập nhật') return 'AC'; return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2); },
+    viewProperty(id) { this.$router.push(`/chi-tiet-bds/${id}`); window.scrollTo(0, 0); },
+    openGallery(index) { this.currentImageIndex = index; this.showGallery = true; document.body.style.overflow = 'hidden'; },
+    closeGallery() { this.showGallery = false; document.body.style.overflow = ''; },
+    nextImage() { this.currentImageIndex = (this.currentImageIndex + 1) % this.images.length; },
+    prevImage() { this.currentImageIndex = (this.currentImageIndex - 1 + this.images.length) % this.images.length; },
+    
     async submitForm() {
-      if (!this.form.ho_ten || !this.form.so_dien_thoai) {
-        alert('Vui lòng nhập họ tên và số điện thoại');
-        return;
-      }
+      if (!this.form.ho_ten || !this.form.so_dien_thoai) { this.showToast('Vui lòng nhập họ tên và số điện thoại', 'warning'); return; }
       try {
-        console.log('Form submitted:', {
-          ...this.form,
-          bds_id: this.property?.id
-        });
-        alert('Đăng ký tư vấn thành công! Chúng tôi sẽ liên hệ bạn sớm.');
+        console.log('Form submitted:', { ...this.form, bds_id: this.property?.id });
+        this.showToast('Đăng ký tư vấn thành công! Chúng tôi sẽ liên hệ bạn sớm.', 'success');
         this.form = { ho_ten: '', so_dien_thoai: '', tin_nhan: '' };
+      } catch (err) { console.error('Lỗi submit:', err); this.showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'error'); }
+    },
+
+    // 🔥 CHAT VỚI MÔI GIỚI - CHUẨN FINAL
+    async startChat() {
+      if (!this.requireAuth()) return;
+      if (!this.brokerId) { this.showToast("Chưa có môi giới", "warning"); return; }
+      const token = localStorage.getItem("auth_token");
+      try {
+        const res = await axios.post(
+          "http://127.0.0.1:8000/api/khach-hang/chat/start",
+          { moi_gioi_id: this.brokerId, bat_dong_san_id: this.property.id },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const conversation = res.data.data;
+        window.dispatchEvent(new CustomEvent("open-chat", {
+          detail: {
+            conversationId: conversation.id,
+            brokerId: this.brokerId,
+            brokerName: this.brokerName,
+            propertyName: this.property.tieu_de,
+            propertyId: this.property.id
+          }
+        }));
+        this.showToast(`Đang kết nối với ${this.brokerName}...`, 'success', 2000);
       } catch (err) {
-        console.error('Lỗi submit:', err);
-        alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        console.error('Chat start error:', err.response?.data || err);
+        if (err.response?.status === 401) this.showToast('Phiên đăng nhập hết hạn', 'error');
+        else if (err.response?.status === 404) this.showToast('Không tìm thấy môi giới', 'error');
+        else this.showToast('Không thể mở chat, vui lòng thử lại', 'error');
       }
     }
-  },
-  beforeUnmount() {
-    document.body.style.overflow = '';
   }
 };
 </script>
 
 <style scoped>
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.toast-slide-enter-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.toast-slide-leave-active { transition: all 0.2s ease-in; }
+.toast-slide-enter-from { opacity: 0; transform: translateX(120%) scale(0.9); }
+.toast-slide-leave-to { opacity: 0; transform: translateX(120%) scale(0.95); }
+@keyframes heartPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+.animate-heart-pulse { animation: heartPulse 0.6s ease-in-out; }
+.bg-gradient-to-r.from-pink-500 { box-shadow: 0 8px 32px rgba(236, 72, 153, 0.4); }
+@media(prefers-reduced-motion:reduce){ *,*::before,*::after{ animation-duration:0.01ms!important; transition-duration:0.01ms!important; } .animate-heart-pulse { animation: none !important; } }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button:disabled:hover { background: transparent; border-color: #e5e7eb; color: #9ca3af; }
 </style>

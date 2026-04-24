@@ -169,11 +169,6 @@ const routes = [
     meta: { layout: "moi-gioi" }
   },
 
-
-
-
-
-
   // ===== 404 =====
   {
     path: "/:pathMatch(.*)*",

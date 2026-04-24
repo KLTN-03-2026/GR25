@@ -1,15 +1,8 @@
 <template>
-  <div class="bg-[#f8fafc] min-h-screen font-['Inter']">
-    <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center min-h-screen">
-      <div class="text-center">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
-        <p class="mt-4 text-gray-500 font-medium">Đang tải danh sách bất động sản...</p>
-      </div>
-    </div>
-
+  <div class="bg-[#f8fafc] min-h-screen font-['Inter']" style="contain: layout style;">
+    
     <!-- Content -->
-    <template v-else>
+    <div>
       <!-- Breadcrumb -->
       <div class="bg-white border-b border-gray-100">
         <div class="container mx-auto max-w-7xl px-6 py-4">
@@ -41,7 +34,7 @@
               <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">location_on</span>
               <select v-model="filters.tinh" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none cursor-pointer">
                 <option value="">Tất cả tỉnh/thành</option>
-                <option v-for="tinh in danhSachTinh" :key="tinh.id" :value="tinh.id">{{ tinh.ten_tinh }}</option>
+                <option v-for="tinh in danhSachTinh" :key="tinh.id" :value="tinh.id">{{ tinh.ten }}</option>
               </select>
             </div>
 
@@ -50,7 +43,7 @@
               <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">map</span>
               <select v-model="filters.quan" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none cursor-pointer">
                 <option value="">Tất cả quận/huyện</option>
-                <option v-for="quan in danhSachQuan" :key="quan.id" :value="quan.id">{{ quan.ten_quan }}</option>
+                <option v-for="quan in danhSachQuan" :key="quan.id" :value="quan.id">{{ quan.ten }}</option>
               </select>
             </div>
 
@@ -78,7 +71,7 @@
           </div>
 
           <!-- Advanced Filters -->
-          <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             <!-- Area -->
             <div class="relative">
               <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">square_foot</span>
@@ -126,12 +119,6 @@
                 <option value="area_desc">Diện tích giảm dần</option>
               </select>
             </div>
-
-            <!-- Search Button -->
-            <button @click="searchProperties" class="bg-[#0a0e27] hover:bg-[#0d1542] text-white font-bold py-2 px-4 rounded-lg transition-all hover:shadow-lg flex items-center justify-center gap-2">
-              <span class="material-symbols-outlined text-[18px]">search</span>
-              Tìm kiếm
-            </button>
           </div>
 
           <!-- Active Filters -->
@@ -166,71 +153,140 @@
           </div>
         </div>
 
-        <!-- Properties Grid -->
-        <div v-if="properties.length > 0" :class="viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8' : 'space-y-4'">
-          <div
-            v-for="bds in properties"
-            :key="bds.id"
-            @click="viewProperty(bds.id)"
-            class="group bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(10,14,39,0.1)] transition-all duration-500 cursor-pointer border border-gray-100 hover:-translate-y-2"
+        <!-- ✅ Properties Grid with Loading Overlay -->
+        <div class="relative min-h-[400px]" style="contain: content;">
+          
+          <!-- 🔥 Loading Overlay -->
+          <transition name="fade-fast">
+            <div 
+              v-show="loading && properties.length > 0" 
+              class="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-10 pointer-events-none"
+              aria-hidden="true"
+              style="will-change: opacity;"
+            >
+              <div class="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" style="will-change: transform;"></div>
+            </div>
+          </transition>
+
+          <!-- Grid/List Content -->
+          <transition-group 
+            name="list-fade" 
+            tag="div" 
+            :class="viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8' : 'space-y-4'"
           >
-            <!-- Image -->
-            <div class="relative h-[240px] overflow-hidden">
-              <img
-                :src="getImageUrl(bds.hinh_anh?.[0]?.url)"
-                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                :alt="bds.tieu_de"
-              />
-              <div class="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-md text-[#0a0e27] text-[10px] font-bold uppercase tracking-wider rounded-full">
-                {{ bds.loai?.ten_loai || 'BĐS' }}
+            <div
+              v-for="bds in properties"
+              :key="bds.id"
+              @click="viewProperty(bds.id)"
+              class="group bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(10,14,39,0.1)] transition-all duration-500 cursor-pointer border border-gray-100 hover:-translate-y-2"
+            >
+              <!-- Image -->
+              <div class="relative h-[240px] overflow-hidden">
+                <img
+                  :src="bds.image"
+                  class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  :alt="bds.tieu_de"
+                  @error="handleImageError"
+                  loading="lazy"
+                />
+                
+                <!-- Badge Loại BĐS -->
+                <div class="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-md text-[#0a0e27] text-[10px] font-bold uppercase tracking-wider rounded-full">
+                  {{ bds.loai?.ten_loai || 'BĐS' }}
+                </div>
+                
+                <!-- Badge Nổi bật -->
+                <div v-if="bds.is_featured" class="absolute top-4 right-16 px-3 py-1 bg-yellow-400 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
+                  Nổi bật
+                </div>
+
+                <!-- ❤️ Icon Trái Tim - SYNC WITH API -->
+                <button
+                  @click.stop="toggleFavorite(bds.id, $event)"
+                  class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 backdrop-blur-md shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group/btn"
+                  :class="bds.isFavorite ? 'bg-gradient-to-br from-pink-500 to-rose-500' : ''"
+                  :aria-label="bds.isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'"
+                  title="Yêu thích"
+                >
+                  <span 
+                    class="material-symbols-outlined text-lg transition-all duration-300"
+                    :class="bds.isFavorite ? 'text-white fill-current' : 'text-gray-400 group-hover/btn:text-pink-500'"
+                  >
+                    favorite
+                  </span>
+                </button>
               </div>
-              <div v-if="bds.is_featured" class="absolute top-4 right-4 px-3 py-1 bg-yellow-400 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
-                Nổi bật
+
+              <!-- Content -->
+              <div class="p-6">
+                <h3 class="font-['Be_Vietnam_Pro'] font-bold text-[18px] text-[#0a0e27] mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  {{ bds.tieu_de }}
+                </h3>
+                <p class="text-gray-500 text-sm flex items-center gap-1 mb-4">
+                  <span class="material-symbols-outlined text-[16px]">location_on</span>
+                  {{ bds.dia_chi?.ten_quan || bds.location || '—' }}
+                </p>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-3 mb-4 pb-4 border-b border-gray-100">
+                  <div class="text-center">
+                    <span class="material-symbols-outlined text-blue-600 text-[18px] block mb-1">square_foot</span>
+                    <p class="text-xs text-gray-500">{{ bds.dien_tich || '—' }} m²</p>
+                  </div>
+                  <div class="text-center">
+                    <span class="material-symbols-outlined text-blue-600 text-[18px] block mb-1">bed</span>
+                    <p class="text-xs text-gray-500">{{ bds.so_phong_ngu || '—' }} PN</p>
+                  </div>
+                  <div class="text-center">
+                    <span class="material-symbols-outlined text-blue-600 text-[18px] block mb-1">bathtub</span>
+                    <p class="text-xs text-gray-500">{{ bds.so_phong_tam || '—' }} PT</p>
+                  </div>
+                </div>
+
+                <!-- Price & Action -->
+                <div class="flex items-center justify-between">
+                  <p class="font-['Be_Vietnam_Pro'] text-xl font-black text-[#0a0e27]">
+                    {{ formatPriceFull(bds.gia) }}
+                  </p>
+                  <span 
+                    @click.stop="viewProperty(bds.id)"
+                    class="text-blue-600 font-semibold text-sm flex items-center gap-1 group/btn cursor-pointer relative"
+                  >
+                    Chi tiết
+                    <span class="material-symbols-outlined text-[16px] group-hover/btn:translate-x-1 transition-transform">
+                      {{ isAuthenticated() ? 'arrow_forward' : 'lock' }}
+                    </span>
+                    <!-- Tooltip khi chưa login -->
+                    <span v-if="!isAuthenticated()" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 shadow-lg">
+                      Đăng nhập để xem chi tiết
+                      <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></span>
+                    </span>
+                  </span>
+                </div>
               </div>
             </div>
+          </transition-group>
 
-            <!-- Content -->
-            <div class="p-6">
-              <h3 class="font-['Be_Vietnam_Pro'] font-bold text-[18px] text-[#0a0e27] mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                {{ bds.tieu_de }}
-              </h3>
-              <p class="text-gray-500 text-sm flex items-center gap-1 mb-4">
-                <span class="material-symbols-outlined text-[16px]">location_on</span>
-                {{ bds.dia_chi?.ten_quan || bds.location || '—' }}
-              </p>
-
-              <!-- Stats -->
-              <div class="grid grid-cols-3 gap-3 mb-4 pb-4 border-b border-gray-100">
-                <div class="text-center">
-                  <span class="material-symbols-outlined text-blue-600 text-[18px] block mb-1">square_foot</span>
-                  <p class="text-xs text-gray-500">{{ bds.dien_tich || '—' }} m²</p>
+          <!-- ✅ Skeleton Loading -->
+          <div v-if="loading && properties.length === 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div v-for="i in 6" :key="i" class="bg-white rounded-2xl overflow-hidden border border-gray-100 animate-pulse">
+              <div class="h-[240px] bg-gray-200"></div>
+              <div class="p-6 space-y-4">
+                <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div class="grid grid-cols-3 gap-3">
+                  <div class="h-10 bg-gray-200 rounded"></div>
+                  <div class="h-10 bg-gray-200 rounded"></div>
+                  <div class="h-10 bg-gray-200 rounded"></div>
                 </div>
-                <div class="text-center">
-                  <span class="material-symbols-outlined text-blue-600 text-[18px] block mb-1">bed</span>
-                  <p class="text-xs text-gray-500">{{ bds.so_phong_ngu || '—' }} PN</p>
-                </div>
-                <div class="text-center">
-                  <span class="material-symbols-outlined text-blue-600 text-[18px] block mb-1">bathtub</span>
-                  <p class="text-xs text-gray-500">{{ bds.so_phong_tam || '—' }} PT</p>
-                </div>
-              </div>
-
-              <!-- Price & Action -->
-              <div class="flex items-center justify-between">
-                <p class="font-['Be_Vietnam_Pro'] text-xl font-black text-[#0a0e27]">
-                  {{ formatPriceFull(bds.gia) }}
-                </p>
-                <span class="text-blue-600 font-semibold text-sm flex items-center gap-1 group/btn">
-                  Chi tiết
-                  <span class="material-symbols-outlined text-[16px] group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
-                </span>
+                <div class="h-6 bg-gray-200 rounded w-1/3"></div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Empty State -->
-        <div v-else class="text-center py-16">
+        <div v-if="properties.length === 0 && !loading && searched" class="text-center py-16">
           <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">search_off</span>
           <h3 class="text-xl font-bold text-gray-700 mb-2">Không tìm thấy bất động sản</h3>
           <p class="text-gray-500 mb-6">Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác</p>
@@ -240,7 +296,7 @@
         </div>
 
         <!-- Pagination -->
-        <div v-if="properties.length > 0" class="mt-12 flex items-center justify-center">
+        <div v-if="totalPages > 1 && !loading" class="mt-12 flex items-center justify-center">
           <nav class="flex items-center gap-2">
             <button
               @click="changePage(currentPage - 1)"
@@ -251,7 +307,7 @@
             </button>
 
             <button
-              v-for="page in totalPages"
+              v-for="page in visiblePages"
               :key="page"
               @click="changePage(page)"
               :class="page === currentPage ? 'bg-[#0a0e27] text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'"
@@ -270,7 +326,43 @@
           </nav>
         </div>
       </div>
-    </template>
+    </div>
+
+    <!-- 🍞 Enhanced Toast Notification - FIX: Position below sticky header -->
+    <transition name="toast-slide">
+      <div 
+        v-if="toast.visible" 
+        class="fixed top-20 right-5 z-[9999] pointer-events-auto"
+        style="will-change: transform, opacity;"
+      >
+        <div 
+          class="flex items-center gap-3 px-5 py-3.5 text-white rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 min-w-[280px] max-w-sm"
+          :class="getToastClass(toast.type)"
+        >
+          <!-- Icon với animation pulse khi add favorite -->
+          <span 
+            class="material-symbols-outlined text-xl flex-shrink-0"
+            :class="{ 'animate-heart-pulse': toast.type === 'favorite-add' }"
+          >
+            {{ toast.icon || getToastIcon(toast.type) }}
+          </span>
+          
+          <!-- Message -->
+          <span class="font-medium text-sm flex-1 leading-tight">
+            {{ toast.message }}
+          </span>
+          
+          <!-- Close button -->
+          <button 
+            @click="hideToast" 
+            class="ml-2 hover:opacity-80 transition-opacity p-1 rounded-full hover:bg-white/20"
+            aria-label="Đóng thông báo"
+          >
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -286,197 +378,335 @@ export default {
       totalProperties: 0,
       currentPage: 1,
       perPage: 9,
-      viewMode: 'grid', // 'grid' or 'list'
-      backendUrl: 'http://127.0.0.1:8000',
+      viewMode: 'grid',
       apiUrl: 'http://127.0.0.1:8000/api/client',
+      searched: false,
       filters: {
-        tinh: '',
-        quan: '',
-        loai: '',
-        gia: '',
-        dien_tich: '',
-        phong_ngu: '',
-        phong_tam: '',
-        sort: 'newest',
-        search: ''
+        tinh: '', quan: '', loai: '', gia: '', dien_tich: '', phong_ngu: '', phong_tam: '', sort: 'newest', search: ''
       },
-      danhSachTinh: [],
-      danhSachQuan: [],
-      danhSachLoai: []
+      danhSachTinh: [], danhSachQuan: [], danhSachLoai: [],
+      toast: { visible: false, message: '', type: 'warning', icon: null, timer: null },
+      defaultImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800',
+      searchTimer: null,
+      lastFetchParams: null, lastFetchTime: 0, FETCH_COOLDOWN: 400,
+      favoriteIds: []
     };
   },
   computed: {
-    totalPages() {
-      return Math.ceil(this.totalProperties / this.perPage);
+    totalPages() { return Math.ceil(this.totalProperties / this.perPage); },
+    visiblePages() {
+      const pages = [], max = 5;
+      let start = Math.max(1, this.currentPage - 2), end = Math.min(this.totalPages, start + max - 1);
+      start = Math.max(1, end - max + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      return pages;
     },
-    hasActiveFilters() {
-      return Object.values(this.filters).some(value => value !== '' && value !== 'newest');
-    },
+    hasActiveFilters() { return Object.values(this.filters).some(v => v !== '' && v !== 'newest'); },
     activeFilters() {
-      const active = {};
-      const filterLabels = {
-        tinh: 'Tỉnh',
-        quan: 'Quận',
-        loai: 'Loại',
-        gia: 'Giá',
-        dien_tich: 'Diện tích',
-        phong_ngu: 'Phòng ngủ',
-        phong_tam: 'Phòng tắm'
-      };
-
-      for (const [key, value] of Object.entries(this.filters)) {
-        if (value && value !== 'newest') {
-          active[key] = {
-            label: filterLabels[key],
-            value: this.getFilterValueLabel(key, value)
-          };
-        }
+      const active = {}, labels = { tinh:'Tỉnh', quan:'Quận', loai:'Loại', gia:'Giá', dien_tich:'Diện tích', phong_ngu:'Phòng ngủ', phong_tam:'Phòng tắm' };
+      for (const [k,v] of Object.entries(this.filters)) {
+        if (v && v !== 'newest') active[k] = { label: labels[k], value: this.getFilterValueLabel(k,v) };
       }
       return active;
     }
   },
   async mounted() {
-    await Promise.all([
-      this.loadProperties(),
-      this.loadFilterData()
-    ]);
+    await this.loadFilterData();
+    if (this.filters.tinh) await this.loadQuan(this.filters.tinh);
+    await this.loadProperties();
+    if (this.isAuthenticated()) {
+      await this.syncFavoriteList();
+    }
+    window.addEventListener('favorite-updated', this.handleFavoriteUpdated);
+  },
+  beforeUnmount() {
+    if (this.toast.timer) clearTimeout(this.toast.timer);
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    window.removeEventListener('favorite-updated', this.handleFavoriteUpdated);
   },
   methods: {
-    async loadProperties() {
-      this.loading = true;
-      try {
-        const params = {
-          ...this.filters,
-          page: this.currentPage,
-          per_page: this.perPage
-        };
-
-        // Remove empty filters
-        Object.keys(params).forEach(key => {
-          if (!params[key]) delete params[key];
-        });
-
-        const res = await axios.get(`${this.apiUrl}/bat-dong-san`, { params });
-        
-        if (res.data.status) {
-          this.properties = res.data.data.data || res.data.data;
-          this.totalProperties = res.data.data.total || this.properties.length;
-        }
-      } catch (err) {
-        console.error('Lỗi load properties:', err);
-      } finally {
-        this.loading = false;
-      }
-    },
-    async loadFilterData() {
-      try {
-        const [tinhRes, quanRes, loaiRes] = await Promise.all([
-          axios.get(`${this.apiUrl}/tinh`),
-          axios.get(`${this.apiUrl}/quan`),
-          axios.get(`${this.apiUrl}/loai`)
-        ]);
-
-        if (tinhRes.data.status) this.danhSachTinh = tinhRes.data.data;
-        if (quanRes.data.status) this.danhSachQuan = quanRes.data.data;
-        if (loaiRes.data.status) this.danhSachLoai = loaiRes.data.data;
-      } catch (err) {
-        console.error('Lỗi load filter data:', err);
-      }
-    },
-    searchProperties() {
-      this.currentPage = 1;
-      this.loadProperties();
-    },
-    changePage(page) {
-      if (page < 1 || page > this.totalPages) return;
-      this.currentPage = page;
-      this.loadProperties();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    },
-    toggleView(mode) {
-      this.viewMode = mode;
-    },
-    viewProperty(id) {
-      this.$router.push(`/chi-tiet-bds/${id}`);
-    },
-    clearAllFilters() {
-      this.filters = {
-        tinh: '',
-        quan: '',
-        loai: '',
-        gia: '',
-        dien_tich: '',
-        phong_ngu: '',
-        phong_tam: '',
-        sort: 'newest',
-        search: ''
+    // 🍞 Toast helpers
+    getToastClass(type) {
+      const classes = {
+        success: 'bg-gradient-to-r from-emerald-500 to-teal-500',
+        error: 'bg-gradient-to-r from-red-500 to-rose-500',
+        warning: 'bg-gradient-to-r from-amber-500 to-orange-500',
+        'favorite-add': 'bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 shadow-pink-500/30',
+        'favorite-remove': 'bg-gradient-to-r from-gray-500 via-slate-500 to-gray-600 shadow-gray-500/30'
       };
-      this.currentPage = 1;
-      this.loadProperties();
+      return classes[type] || classes.warning;
     },
-    removeFilter(key) {
-      this.filters[key] = '';
-      if (key === 'tinh') this.filters.quan = '';
-      this.currentPage = 1;
-      this.loadProperties();
+    getToastIcon(type) {
+      const icons = {
+        success: 'check_circle',
+        error: 'error',
+        warning: 'warning',
+        'favorite-add': 'favorite',
+        'favorite-remove': 'heart_broken'
+      };
+      return icons[type] || icons.warning;
     },
-    getFilterValueLabel(key, value) {
-      if (key === 'tinh') {
-        const tinh = this.danhSachTinh.find(t => t.id == value);
-        return tinh?.ten_tinh || value;
-      }
-      if (key === 'quan') {
-        const quan = this.danhSachQuan.find(q => q.id == value);
-        return quan?.ten_quan || value;
-      }
-      if (key === 'loai') {
-        const loai = this.danhSachLoai.find(l => l.id == value);
-        return loai?.ten_loai || value;
-      }
-      if (key === 'gia') {
-        const labels = {
-          '0-1': 'Dưới 1 tỷ',
-          '1-3': '1 - 3 tỷ',
-          '3-5': '3 - 5 tỷ',
-          '5-10': '5 - 10 tỷ',
-          '10-999999': 'Trên 10 tỷ'
+    showToast(msg, type='warning') {
+      if (this.toast.timer) clearTimeout(this.toast.timer);
+      this.toast = { 
+        visible: true, 
+        message: msg, 
+        type, 
+        icon: null,
+        timer: setTimeout(() => this.hideToast(), 2500) 
+      };
+    },
+    
+    // ❤️ Toast chuyên biệt cho favorite
+    showFavoriteToast(action, propertyName) {
+      const shortName = propertyName.length > 30 
+        ? propertyName.substring(0, 27) + '...' 
+        : propertyName;
+
+      if (action === 'add') {
+        this.toast = {
+          visible: true,
+          message: `❤️ Đã lưu "${shortName}" vào yêu thích`,
+          type: 'favorite-add',
+          icon: 'favorite',
+          timer: setTimeout(() => this.hideToast(), 3000)
         };
-        return labels[value] || value;
-      }
-      if (key === 'dien_tich') {
-        const labels = {
-          '0-50': 'Dưới 50m²',
-          '50-100': '50 - 100m²',
-          '100-200': '100 - 200m²',
-          '200-999999': 'Trên 200m²'
+      } else {
+        this.toast = {
+          visible: true,
+          message: `💔 Đã xóa "${shortName}" khỏi yêu thích`,
+          type: 'favorite-remove',
+          icon: 'heart_broken',
+          timer: setTimeout(() => this.hideToast(), 2500)
         };
-        return labels[value] || value;
       }
-      return value;
     },
-    getImageUrl(url) {
-      if (!url) return 'https://via.placeholder.com/800x600?text=No+Image';
-      if (url.startsWith('http')) return url;
-      return `${this.backendUrl}/storage/${url}`;
+    
+    hideToast() { 
+      this.toast.visible = false; 
+      if (this.toast.timer) {
+        clearTimeout(this.toast.timer);
+        this.toast.timer = null;
+      }
     },
-    formatPriceFull(gia) {
-      if (!gia && gia !== 0) return 'Liên hệ';
-      return new Intl.NumberFormat('vi-VN').format(gia) + ' VNĐ';
-    }
+    
+    // 🔐 Auth
+    isAuthenticated() { return !!(localStorage.getItem('auth_token') && localStorage.getItem('user_type')==='khach-hang'); },
+    requireAuth(redirectUrl=null) {
+      if (!this.isAuthenticated()) {
+        this.showToast('Vui lòng đăng nhập để tiếp tục','warning');
+        setTimeout(()=>this.$router.push({path:'/khach-hang/dang-nhap',query:{redirect:redirectUrl||this.$route.fullPath}}),800);
+        return false;
+      } return true;
+    },
+    
+    // 🎯 Navigation
+    viewProperty(id) { if(!this.requireAuth(`/khach-hang/chi-tiet-bat-dong-san/${id}`))return; this.$router.push(`/khach-hang/chi-tiet-bat-dong-san/${id}`); },
+    
+    // ❤️ Toggle Favorite
+    async toggleFavorite(bdsId, ev) {
+      ev.stopPropagation();
+      if (!this.requireAuth()) return;
+
+      const token = localStorage.getItem('auth_token');
+      const property = this.properties.find(p => p.id === bdsId);
+      const wasFavorite = property?.isFavorite || false;
+      const action = wasFavorite ? 'remove' : 'add';
+      const propertyName = property?.tieu_de || 'Bất động sản';
+
+      if (property) property.isFavorite = !wasFavorite;
+
+      try {
+        await axios.post(
+          'http://127.0.0.1:8000/api/khach-hang/bds/yeu-thich',
+          { bds_id: bdsId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        await this.syncFavoriteList();
+        this.showFavoriteToast(action, propertyName);
+        window.dispatchEvent(new Event('favorite-updated'));
+
+      } catch (err) {
+        console.error('Favorite API error:', err.response?.data || err);
+        if (property) property.isFavorite = wasFavorite;
+        this.showToast('Có lỗi xảy ra, vui lòng thử lại', 'error');
+      }
+    },
+
+    // ✅ Sync favorite list
+    async syncFavoriteList() {
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) { this.favoriteIds = []; return; }
+
+        const res = await axios.get(
+          'http://127.0.0.1:8000/api/khach-hang/bds/yeu-thich/data',
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const favorites = res.data?.data || [];
+        this.favoriteIds = favorites.map(item => 
+          item.bat_dong_san_id || item.bds_id || item.batDongSan?.id || item.id
+        ).filter(id => id);
+
+        this.properties = this.properties.map(p => ({
+          ...p,
+          isFavorite: this.favoriteIds.includes(p.id)
+        }));
+
+      } catch (err) {
+        console.error('Sync favorite error:', err);
+        this.favoriteIds = [];
+      }
+    },
+
+    async handleFavoriteUpdated() {
+      if (this.isAuthenticated()) {
+        await this.syncFavoriteList();
+      }
+    },
+
+    handleImageError(e){ if(e.target.src!==this.defaultImage)e.target.src=this.defaultImage; },
+    
+    triggerAutoSearch() {
+      if(this.searchTimer)clearTimeout(this.searchTimer);
+      this.searchTimer=setTimeout(()=>{this.currentPage=1;this.loadProperties();},500);
+    },
+
+    async loadProperties() {
+      const now=Date.now(), key=JSON.stringify({...this.filters,page:this.currentPage});
+      if(key===this.lastFetchParams && now-this.lastFetchTime<this.FETCH_COOLDOWN) return;
+      this.lastFetchParams=key; this.lastFetchTime=now; this.searched=true;
+      
+      if (this.properties.length > 0) this.loading = true;
+
+      try {
+        const params={page:this.currentPage,per_page:this.perPage};
+        if(this.filters.tinh)params.tinh_id=this.filters.tinh;
+        if(this.filters.quan)params.quan_id=this.filters.quan;
+        if(this.filters.loai)params.loai_id=this.filters.loai;
+        if(this.filters.gia){const[mn,mx]=this.filters.gia.split('-');params.gia_min=Number(mn)*1e9;params.gia_max=Number(mx)*1e9;}
+        if(this.filters.dien_tich){const[mn,mx]=this.filters.dien_tich.split('-');params.dt_min=Number(mn);params.dt_max=Number(mx);}
+        if(this.filters.phong_ngu)params.phong_ngu=this.filters.phong_ngu;
+        if(this.filters.phong_tam)params.phong_tam=this.filters.phong_tam;
+        if(this.filters.sort)params.sort=this.filters.sort;
+
+        const res=await axios.get(`${this.apiUrl}/bat-dong-san`,{params});
+        if(res.data?.status){
+          const raw=res.data.data?.data||res.data.data||[];
+          this.properties=raw.map(it=>{
+            let img=this.defaultImage;
+            if(it.anh_dai_dien?.url)img=this.getImageUrl(it.anh_dai_dien.url);
+            else if(it.hinh_anh?.[0]?.url)img=this.getImageUrl(it.hinh_anh[0].url);
+            else if(it.anh_dai_dien_url)img=this.getImageUrl(it.anh_dai_dien_url);
+            return {
+              ...it,
+              image: img,
+              isFavorite: this.favoriteIds.includes(it.id)
+            };
+          });
+          this.totalProperties=res.data.data?.total||this.properties.length;
+        }
+      } catch(err){
+        console.error('Load error:',err);
+        if(err.response?.status===401){ this.showToast('Phiên đăng nhập đã hết hạn','error'); setTimeout(()=>this.$router.push('/khach-hang/dang-nhap'),800); }
+      } finally {
+        this.$nextTick(()=>{ this.loading=false; });
+      }
+    },
+
+    async loadFilterData(){
+      try{
+        const [t,l]=await Promise.all([axios.get('http://127.0.0.1:8000/api/tinh-thanh'),axios.get(`${this.apiUrl}/loai-bat-dong-san`)]);
+        if(t.data?.status)this.danhSachTinh=t.data.data||[];
+        if(l.data?.status)this.danhSachLoai=l.data.data||[];
+      }catch(e){console.error('Filter load error:',e);}
+    },
+    async loadQuan(tinh_id){
+      if(!tinh_id){this.danhSachQuan=[];return;}
+      try{
+        const r=await axios.get('http://127.0.0.1:8000/api/quan-huyen',{params:{tinh_id}});
+        if(r.data?.status)this.danhSachQuan=r.data.data||[];
+      }catch(e){console.error('Load quận error:',e);}
+    },
+    getImageUrl(url){ if(!url)return this.defaultImage; if(url.startsWith('http'))return url; return `${this.apiUrl.replace('/api/client','')}/storage/${url}`; },
+    
+    changePage(p){ if(p<1||p>this.totalPages)return; this.currentPage=p; this.loadProperties(); window.scrollTo({top:0,behavior:'smooth'}); },
+    toggleView(m){this.viewMode=m;},
+    
+    clearAllFilters(){ this.filters={tinh:'',quan:'',loai:'',gia:'',dien_tich:'',phong_ngu:'',phong_tam:'',sort:'newest',search:''}; this.currentPage=1; this.loadProperties(); },
+    removeFilter(k){ this.filters[k]=''; if(k==='tinh')this.filters.quan=''; this.currentPage=1; this.loadProperties(); },
+    getFilterValueLabel(k,v){
+      if(k==='tinh'){const t=this.danhSachTinh.find(x=>x.id==v);return t?.ten||v;}
+      if(k==='quan'){const q=this.danhSachQuan.find(x=>x.id==v);return q?.ten||v;}
+      if(k==='loai'){const l=this.danhSachLoai.find(x=>x.id==v);return l?.ten_loai||v;}
+      if(k==='gia'){const lb={'0-1':'Dưới 1 tỷ','1-3':'1 - 3 tỷ','3-5':'3 - 5 tỷ','5-10':'5 - 10 tỷ','10-999999':'Trên 10 tỷ'};return lb[v]||v;}
+      if(k==='dien_tich'){const lb={'0-50':'Dưới 50m²','50-100':'50 - 100m²','100-200':'100 - 200m²','200-999999':'Trên 200m²'};return lb[v]||v;}
+      return v;
+    },
+    formatPriceFull(g){ if(g==null)return'Liên hệ'; return new Intl.NumberFormat('vi-VN').format(g)+' VNĐ'; }
   },
-  watch: {
-    'filters.tinh'() {
-      this.filters.quan = '';
-    }
+  watch:{
+    'filters.tinh':async function(v){this.filters.quan='';await this.loadQuan(v);this.triggerAutoSearch();},
+    'filters.quan'(){this.triggerAutoSearch();},'filters.loai'(){this.triggerAutoSearch();},'filters.gia'(){this.triggerAutoSearch();},
+    'filters.dien_tich'(){this.triggerAutoSearch();},'filters.phong_ngu'(){this.triggerAutoSearch();},'filters.phong_tam'(){this.triggerAutoSearch();},'filters.sort'(){this.triggerAutoSearch();}
   }
 };
 </script>
 
 <style scoped>
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+
+/* ✅ Fast fade for loading overlay */
+.fade-fast-enter-active,.fade-fast-leave-active{transition:opacity 0.15s ease-out;}
+.fade-fast-enter-from,.fade-fast-leave-to{opacity:0;}
+
+/* ✅ Smooth list transition */
+.list-fade-move,.list-fade-enter-active,.list-fade-leave-active{transition:all 0.3s ease;}
+.list-fade-enter-from,.list-fade-leave-to{opacity:0;transform:translateY(10px);}
+.list-fade-leave-active{position:absolute;}
+
+/* 🍞 Enhanced Toast Animation - FIX: Position below sticky header */
+.toast-slide-enter-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.toast-slide-leave-active {
+  transition: all 0.2s ease-in;
+}
+.toast-slide-enter-from {
+  opacity: 0;
+  transform: translateX(120%) scale(0.9);
+}
+.toast-slide-leave-to {
+  opacity: 0;
+  transform: translateX(120%) scale(0.95);
+}
+
+/* 💖 Heart pulse animation */
+@keyframes heartPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+.animate-heart-pulse {
+  animation: heartPulse 0.6s ease-in-out;
+}
+
+/* 🌟 Glow effect */
+.bg-gradient-to-r.from-pink-500 {
+  box-shadow: 0 8px 32px rgba(236, 72, 153, 0.4);
+}
+
+/* Skeleton pulse */
+@keyframes skeletonPulse{0%{opacity:1}50%{opacity:0.6}100%{opacity:1}}
+.animate-pulse{animation:skeletonPulse 1.5s ease-in-out infinite;}
+
+/* Reduce motion */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:0.01ms!important;
+    transition-duration:0.01ms!important;
+  }
+  .animate-heart-pulse { animation: none !important; }
 }
 </style>
