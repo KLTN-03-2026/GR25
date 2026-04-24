@@ -18,10 +18,12 @@ class Admin extends Authenticatable
         'ten',
         'email',
         'password',
-        'is_super',
         'mo_ta',
         'so_dien_thoai',
+        'is_super',
     ];
+        
+        
 
     protected $hidden = [
         'password',

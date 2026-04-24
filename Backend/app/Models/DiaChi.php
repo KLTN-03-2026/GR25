@@ -14,13 +14,13 @@ class DiaChi extends Model
         'tinh_id',
         'quan_id',
         'dia_chi_chi_tiet',
-        'latitude',    // ✅ Đổi từ 'lat' → 'latitude'
-        'longitude',   // ✅ Đổi từ 'lng' → 'longitude'
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [
-        'latitude' => 'float',   // ✅ Đổi từ 'lat'
-        'longitude' => 'float',  // ✅ Đổi từ 'lng'
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
 
     public function tinh(): BelongsTo

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\GoiTin;
 use App\Models\GiaoDich;
 use App\Models\MoiGioi;
-use App\Services\VnPayService;
+use App\Services\SePayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,183 +14,307 @@ use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Events\ThanhToanThanhCong;
 
 class GiaoDichController extends Controller
 {
-    protected $vnPay;
+    protected $sePay;
 
-    public function __construct(VnPayService $vnPay)
+    public function __construct(SePayService $sePay)
     {
-        $this->vnPay = $vnPay;
+        $this->sePay = $sePay;
     }
 
-    private function resolveVnPayReturnUrl(Request $request): string
+    private function resolveSePayReturnUrl(Request $request): string
     {
-        $configuredReturnUrl = env('VNP_RETURN_URL');
+        $configuredReturnUrl = env('SEPAY_RETURN_URL');
 
-        if ($configuredReturnUrl && !str_contains($configuredReturnUrl, 'localhost:3000')) {
+        if ($configuredReturnUrl) {
             return $configuredReturnUrl;
         }
 
-        return rtrim($request->getSchemeAndHttpHost(), '/') . '/api/payment/vnpay-return';
+        return rtrim($request->getSchemeAndHttpHost(), '/') . '/payment/sepay-return';
     }
 
-    //1. Tạo đơn hàng & Redirect sang VNPay (POST /api/moi-gioi/payment/create)
+    private function generateOrderCode(): string
+    {
+        do {
+            $code = 'SE' . now()->format('YmdHis') . random_int(1000, 9999);
+        } while (GiaoDich::where('ma_giao_dich', $code)->exists());
+
+        return $code;
+    }
+
+    //1. Tạo đơn hàng & Redirect sang SePay (POST /api/moi-gioi/payment/create)
     public function createPayment(Request $request)
     {
-        $request->validate([
-            'goi_tin_id' => 'required|exists:goi_tins,id'
-        ]);
-
         $user = Auth::guard('sanctum')->user();
-        if (!$user) return response()->json(['status' => false, 'message' => 'Chưa đăng nhập'], 401);
+        $goi = GoiTin::find($request->goi_tin_id);
 
-        $goiTin = GoiTin::findOrFail($request->goi_tin_id);
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
 
-        // Log cấu hình VNPAY trước khi tạo URL
-        Log::info('=== VNPAY DEBUG START ===', [
-            'time' => now(),
-        ]);
+        if (!$goi) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Package not found'
+            ], 404);
+        }
 
-        // Tạo mã giao dịch duy nhất
-        $orderCode = 'GOPKG' . time() . rand(100, 999);
+        try {
+            $paymentData = DB::transaction(function () use ($goi, $request, $user) {
+                $orderCode = $this->generateOrderCode();
 
-        // Lưu đơn hàng pending
-        $transaction = GiaoDich::create([
-            'ma_giao_dich' => $orderCode,
-            'moi_gioi_id' => $user->id,
-            'goi_tin_id'   => $goiTin->id,
-            'so_tien'      => $goiTin->gia,
-            'phuong_thuc'  => 'vnpay',
-            'trang_thai'   => 'pending'
-        ]);
+                $transaction = GiaoDich::create([
+                    'moi_gioi_id' => $user->id,
+                    'goi_tin_id' => $goi->id,
+                    'so_tien' => $goi->gia,
+                    'phuong_thuc' => 'sepay',
+                    'trang_thai' => GiaoDich::STATUS_PENDING,
+                    'ma_giao_dich' => $orderCode,
+                ]);
 
-        // Log thông tin giao dịch
-        Log::info('Transaction Data', [
-            'order_code' => $orderCode,
-            'amount' => $goiTin->gia,
-            'goi_tin' => $goiTin->ten_goi,
-        ]);
+                $paymentForm = $this->sePay->createPaymentUrl(
+                    $orderCode,
+                    $goi->gia,
+                    "Thanh toán  {$goi->ten_goi}",
+                    $this->resolveSePayReturnUrl($request)
+                );
 
-        // Tạo URL thanh toán
-        $returnUrl = $this->resolveVnPayReturnUrl($request);
-        $paymentUrl = $this->vnPay->createPaymentUrl(
-            $orderCode,
-            $goiTin->gia,
-            $this->vnPay->getIpAddress(),
-            "Thanh toan goi tin: " . preg_replace('/[^\x20-\x7E]/', '', $goiTin->ten_goi),
-            $returnUrl
-        );
+                return [
+                    'transaction_id' => $transaction->id,
+                    'order_code' => $orderCode,
+                    'payment_form' => $paymentForm,
+                ];
+            });
+        } catch (\Throwable $exception) {
+            Log::error('SePay create payment failed', [
+                'user_id' => $user->id,
+                'goi_tin_id' => $request->goi_tin_id,
+                'message' => $exception->getMessage(),
+            ]);
 
-        // Log payment URL (cắt ngắn để dễ đọc)
-        Log::info('Payment URL Generated', [
-            'url_length' => strlen($paymentUrl),
-            'starts_with' => substr($paymentUrl, 0, 50),
-            'has_tmn_code' => strpos($paymentUrl, 'vnp_TmnCode=LHDWEON5') !== false ? 'YES' : 'NO',
-            'has_hash' => strpos($paymentUrl, 'vnp_SecureHash=') !== false ? 'YES' : 'NO',
-        ]);
-
-        Log::info('=== VNPAY DEBUG END ===');
+            return response()->json([
+                'status' => false,
+                'message' => 'Khong the tao thanh toan SePay'
+            ], 500);
+        }
 
         return response()->json([
             'status' => true,
-            'data' => [
-                'payment_url' => $paymentUrl,
-                'order_code'  => $orderCode
-            ]
+            'transaction_id' => $paymentData['transaction_id'],
+            'order_code' => $paymentData['order_code'],
+            'payment_form' => $paymentData['payment_form'],
+            'data' => $paymentData,
         ]);
     }
 
-    //2. Xử lý Callback/IPN từ VNPay (GET /api/payment/vnpay-ipn)
-    public function handleVnPayCallback(Request $request)
+    // 2. Xử lý webhook từ SePay (POST /api/payment/sepay-webhook)
+    public function handleSePayWebhook(Request $request)
     {
-        // Log toàn bộ data nhận được từ VNPay
-        Log::info('=== VNPay IPN RECEIVED ===', [
-            'time' => now(),
-            'all_data' => $request->all(),
-        ]);
+        Log::info('========== WEBHOOK START ==========');
 
-        // 1. Verify chữ ký
-        if (!$this->vnPay->verifySignature($request->all())) {
-            Log::error('VNPay IPN: Invalid signature', [
-                'received_data' => $request->all(),
-                'hash_secret_used' => substr(env('VNP_HASH_SECRET'), 0, 10) . '...',
-            ]);
-            return response()->json(['RspCode' => '97', 'Message' => 'Invalid signature'], 400);
+        // ===== AUTH CHECK (Có thể bỏ qua khi test) =====
+        $authHeader = $request->header('Authorization') ?? $request->header('authorization');
+        $expectedToken = config('services.sepay.secret_key');
+
+        if ($authHeader && str_starts_with($authHeader, 'Bearer ')) {
+            $receivedToken = substr($authHeader, 7);
+            if (!hash_equals($expectedToken, $receivedToken)) {
+                Log::error('❌ Auth failed', ['received' => $receivedToken, 'expected' => $expectedToken]);
+                return response()->json(['success' => false, 'message' => 'Invalid token'], 401);
+            }
+            Log::info('✅ Auth passed');
+        } else {
+            Log::warning('⚠️ Skipping auth check (test mode)');
+        }
+        // ===== END AUTH =====
+
+        $data = $request->json()->all();
+        Log::info('Payload:', $data);
+
+        if (!isset($data['notification_type'], $data['order']['order_invoice_number'], $data['order']['order_amount'], $data['transaction']['transaction_status'])) {
+            Log::error('❌ Invalid payload');
+            return response()->json(['success' => false, 'message' => 'Invalid payload'], 422);
         }
 
-        $orderCode = $request->input('vnp_TxnRef');
-        $amount    = $request->input('vnp_Amount') / 100; // Chia lại 100
-        $responseCode = $request->input('vnp_ResponseCode');
-        $vnpTxnRef = $request->input('vnp_TransactionNo');
+        if ($data['notification_type'] !== 'ORDER_PAID') {
+            Log::info('⏭️ Skipping non-ORDER_PAID event');
+            return response()->json(['success' => true], 200);
+        }
 
-        Log::info('VNPay Signature Valid', [
-            'order_code' => $orderCode,
-            'amount' => $amount,
-            'response_code' => $responseCode,
-        ]);
+        $orderCode = $data['order']['order_invoice_number'];
+        $amount = (float) $data['order']['order_amount'];
+        $status = $data['transaction']['transaction_status'];
 
-        // 2. Tìm đơn hàng
-        $transaction = GiaoDich::where('ma_giao_dich', $orderCode)->first();
+        Log::info('🔍 Looking for order: ' . $orderCode);
+
+        $transaction = GiaoDich::where('ma_giao_dich', $orderCode)->lockForUpdate()->first();
+
         if (!$transaction) {
-            Log::error('VNPay IPN: Order not found', ['code' => $orderCode]);
-            return response()->json(['RspCode' => '01', 'Message' => 'Order not found'], 404);
+            Log::error('❌ Order NOT found', ['code' => $orderCode]);
+            return response()->json(['success' => false, 'message' => 'Order not found'], 404);
         }
 
-        // 3. Chống xử lý trùng (Idempotency)
+        Log::info('✅ Order found', ['id' => $transaction->id, 'status' => $transaction->trang_thai]);
+
         if ($transaction->trang_thai === 'success') {
-            Log::warning('VNPay IPN: Already processed', ['code' => $orderCode]);
-            return response()->json(['RspCode' => '02', 'Message' => 'Already processed'], 200);
+            Log::warning('⚠️ Already processed');
+            return response()->json(['success' => true], 200);
         }
 
-        // 4. Kiểm tra số tiền khớp
         if ($amount != $transaction->so_tien) {
-            Log::error('VNPay IPN: Amount mismatch', [
-                'expected' => $transaction->so_tien,
-                'received' => $amount,
-            ]);
+            Log::error('❌ Amount mismatch', ['sepay' => $amount, 'db' => $transaction->so_tien]);
             $transaction->update(['trang_thai' => 'failed']);
-            return response()->json(['RspCode' => '04', 'Message' => 'Amount mismatch'], 400);
+            return response()->json(['success' => false, 'message' => 'Amount mismatch'], 400);
         }
 
-        // 5. Xử lý thanh toán thành công
-        if ($responseCode == '00') {
-            Log::info('VNPay IPN: Processing success', ['code' => $orderCode]);
-
-            DB::transaction(function () use ($transaction, $vnpTxnRef) {
-                $transaction->update([
-                    'trang_thai'     => 'success',
-                    'ma_vnp_txn_ref' => $vnpTxnRef
-                ]);
-
-                $goiTin = GoiTin::find($transaction->goi_tin_id);
-                $user = MoiGioi::find($transaction->moi_gioi_id);
-
-                if ($user && $goiTin) {
-                    $user->so_tin_con_lai   = ($user->so_tin_con_lai ?? 0) + $goiTin->so_luong_tin;
-                    $user->ngay_het_han_goi = Carbon::now()->addDays($goiTin->so_ngay);
-                    $user->save();
-
-                    Log::info('Package activated', [
-                        'user_id' => $user->id,
-                        'so_tin' => $goiTin->so_luong_tin,
-                        'ngay_het_han' => $user->ngay_het_han_goi,
-                    ]);
-                }
-            });
-
-            Log::info('VNPay IPN: Success completed', ['code' => $orderCode]);
-            return response()->json(['RspCode' => '00', 'Message' => 'Success'], 200);
+        $validStatuses = ['APPROVED', 'SUCCESS', 'CAPTURED', 'COMPLETED'];
+        if (!in_array(strtoupper($status), $validStatuses)) {
+            Log::error('❌ Payment not approved', ['status' => $status]);
+            $transaction->update(['trang_thai' => 'failed']);
+            return response()->json(['success' => false, 'message' => 'Payment not approved'], 400);
         }
 
-        // 6. Thanh toán thất bại/hủy
-        Log::warning('VNPay IPN: Payment failed', [
-            'code' => $orderCode,
-            'response_code' => $responseCode,
+        // Update transaction
+        $transaction->update([
+            'trang_thai' => 'success',
+            'paid_at' => now(),
+            'ma_sepay_txn_ref' => $data['transaction']['transaction_id'] ?? null,
         ]);
-        $transaction->update(['trang_thai' => 'failed']);
-        return response()->json(['RspCode' => '00', 'Message' => 'Payment failed'], 200);
+        Log::info('✅ Transaction updated');
+
+        // 🔥 QUAN TRỌNG: Update user credits
+        Log::info('👤 Updating user credits...');
+
+        $goiTin = GoiTin::find($transaction->goi_tin_id);
+        $user = MoiGioi::find($transaction->moi_gioi_id);
+
+        if (!$goiTin || !$user) {
+            Log::error('❌ Related model not found');
+            return response()->json(['success' => false, 'message' => 'Model not found'], 404);
+        }
+
+        $baseDate = $user->ngay_het_han_goi && $user->ngay_het_han_goi->isFuture()
+            ? $user->ngay_het_han_goi->copy()
+            : now();
+
+        $user->goi_tin_id = $goiTin->id;
+        $user->so_tin_con_lai += $goiTin->so_luong_tin;
+        $user->ngay_het_han_goi = $baseDate->addDays($goiTin->so_ngay);
+        $user->save();
+
+        Log::info('✅ User credits updated', [
+            'new_credits' => $user->so_tin_con_lai,
+            'new_expiry' => $user->ngay_het_han_goi,
+        ]);
+
+        event(new ThanhToanThanhCong($user->id));
+
+        Log::info('========== WEBHOOK END ==========');
+        return response()->json(['success' => true], 200);
     }
+
+    // 2️⃣ Xử lý return URL từ SePay (khi user được redirect về)
+    public function handleSePayReturn(Request $request)
+    {
+        $status = $request->query('status', 'cancel');
+        $orderCode = $request->query('order_code');
+
+        Log::info('SePay Return Hit', [
+            'status' => $status,
+            'order_code' => $orderCode,
+            'all_query' => $request->query(),
+        ]);
+
+        // ✅ QUAN TRỌNG: Redirect về frontend URL
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173'); // Hoặc port FE của bạn
+        $redirectUrl = "{$frontendUrl}/moi-gioi/goi-tin";
+
+        // Thêm query params
+        $params = [];
+        if ($status) $params['status'] = $status;
+        if ($orderCode) $params['order_code'] = $orderCode;
+
+        if (!empty($params)) {
+            $redirectUrl .= '?' . http_build_query($params);
+        }
+
+        Log::info('Redirecting to: ' . $redirectUrl);
+
+        return redirect()->away($redirectUrl);
+    }
+
+    // 3️⃣ Xử lý redirect khi thanh toán THÀNH CÔNG
+    public function handlePaymentSuccess(Request $request)
+    {
+        $orderCode = $request->query('order_code');
+        $txnRef = $request->query('transaction_id');
+
+        Log::info('Payment Success Redirect', [
+            'order_code' => $orderCode,
+            'txn_ref' => $txnRef,
+            'query' => $request->query(),
+        ]);
+
+        // 🔥 QUAN TRỌNG: KHÔNG update DB ở đây! 
+        // Chỉ redirect về frontend, frontend sẽ polling check status
+
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+        $redirectUrl = "{$frontendUrl}/payment/success?order_code={$orderCode}";
+
+        return redirect()->away($redirectUrl);
+    }
+
+    // 4️⃣ Xử lý redirect khi thanh toán THẤT BẠI
+    public function handlePaymentError(Request $request)
+    {
+        $orderCode = $request->query('order_code');
+        $errorMessage = $request->query('message', 'Thanh toán thất bại');
+
+        Log::warning('Payment Error Redirect', [
+            'order_code' => $orderCode,
+            'message' => $errorMessage,
+        ]);
+
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+        $redirectUrl = "{$frontendUrl}/payment/error?order_code={$orderCode}&message=" . urlencode($errorMessage);
+
+        return redirect()->away($redirectUrl);
+    }
+
+    // 5️⃣ Xử lý redirect khi user HỦY thanh toán
+    public function handlePaymentCancel(Request $request)
+    {
+        $orderCode = $request->query('order_code');
+
+        Log::info('Payment Cancelled', ['order_code' => $orderCode]);
+
+        // Optional: Update order status thành 'cancelled' nếu muốn
+        // Nhưng thường nên để pending và chờ webhook timeout
+
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+        $redirectUrl = "{$frontendUrl}/payment/cancel?order_code={$orderCode}";
+
+        return redirect()->away($redirectUrl);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public function exportGiaoDich(Request $request)
     {

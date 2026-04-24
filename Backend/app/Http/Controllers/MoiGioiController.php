@@ -10,6 +10,9 @@ use App\Http\Requests\SearchMoiGioiRequest;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\UpdateMoiGioiRequest;
 use App\Http\Requests\updatePasswordMoiGioiRequest;
+use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Requests\SendOtpRequest;
+use App\Http\Requests\VerifyOtpRequest;
 use App\Models\MoiGioi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -25,48 +28,52 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class MoiGioiController extends Controller
 {
-    public function login(MoiGioiLoginRequest $request): JsonResponse
+    public function login(MoiGioiLoginRequest $request)
     {
-        $moigioi = MoiGioi::where('email', $request->email)->first();
+        $user = MoiGioi::where('email', $request->email)->first();
 
-        if (!$moigioi || !Hash::check($request->password, $moigioi->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => 0,  // ✅ Integer 0
                 'message' => 'Email hoặc mật khẩu không đúng'
             ], 401);
         }
 
-        $token = $moigioi->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'status' => 1,  // ✅ Integer 1
             'message' => 'Đăng nhập thành công',
             'token' => $token,
             'token_type' => 'Bearer',
-            'data' => $moigioi  // Không cần thêm 'role' vì FE tự xác định qua user_type
+            'user_type' => 'moi_gioi',
+            'data' => $user  
         ], 200);
     }
 
     public function updatePassword(updatePasswordMoiGioiRequest $request)
     {
+        // ✅ 1. Lấy user đang đăng nhập (qua Sanctum)
         $user = Auth::guard('sanctum')->user();
-        $data = KhachHang::where('id', $user->id)
-            ->where('password', $request->old_password)
-            ->first();
-        if ($data) {
-            $data->update([
-                'password' => $request->password,
-            ]);
+
+        // ✅ 2. Kiểm tra mật khẩu cũ
+        if (!Hash::check($request->old_password, $user->password)) {
             return response()->json([
-                'status'    => 1,
-                'message'   => 'Cập nhật mật khẩu thành công!',
-            ]);
-        } else {
-            return response()->json([
-                'status'    => 0,
-                'message'   => 'Mật khẩu cũ không đúng!',
-            ]);
+                'status'  => false,
+                'message' => 'Mật khẩu cũ không đúng!',
+            ], 400);
         }
+        $currentTokenId = $user->currentAccessToken()->id;
+
+        $user->tokens()->where('id', '!=', $currentTokenId)->delete();
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Đổi mật khẩu thành công! Các thiết bị khác đã được đăng xuất.',
+        ]);
     }
 
     public function updateProfile(UpdateMoiGioiRequest $request)
@@ -119,33 +126,46 @@ class MoiGioiController extends Controller
         ]);
     }
 
+    // public function profile()
+    // {
+    //     /** @var MoiGioi|null $user */
+    //     $user = Auth::guard('sanctum')->user();
+
+    //     if ($user) {
+    //         return response()->json([
+    //             'status' => true,
+    //             'data' => $user,
+    //         ]);
+    //     } else {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => "Có lỗi xảy ra"
+    //         ]);
+    //     }
+
+    //     return response()->json([
+    //         'status' => false,
+    //         'message' => 'Có lỗi xảy ra',
+    //     ]);
+    // }
+
     public function profile()
     {
-        /** @var MoiGioi|null $user */
         $user = Auth::guard('sanctum')->user();
+        
 
-        if ($user) {
-            return response()->json([
-                'status' => true,
-                'data' => $user,
-            ]);
-        } else {
-            return response()->json([
-                'status' => false,
-                'message' => "Có lỗi xảy ra"
-            ]);
-        }
+        $user->load('goiTin');
 
         return response()->json([
-            'status' => false,
-            'message' => 'Có lỗi xảy ra',
+            'status' => true,
+            'data' => $user
         ]);
     }
 
     public function checkToken(Request $request)
     {
-        $user = Auth::guard('sanctum')->user();
-        if ($user) {
+       $user = Auth::guard('sanctum')->user();
+        if ($user && $user instanceof MoiGioi) {
             return response()->json([
                 'status' => 'success',
                 'data' => $user,
@@ -176,12 +196,26 @@ class MoiGioiController extends Controller
         }
     }
 
-    //Gửi OTP
-    public function sendOtp(Request $request)
+    public function logoutAll()
     {
-        $request->validate([
-            'email' => 'required|email'
-        ]);
+        $user = Auth::guard('sanctum')->user();
+        if ($user) {
+            $user->tokens()->delete();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Đã đăng xuất tất cả thiết bị'
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Không tìm thấy người dùng hoặc token không hợp lệ'
+            ], 401);
+        }
+    }
+
+    //Gửi OTP
+    public function sendOtp(SendOtpRequest $request)
+    {
 
         $user = MoiGioi::where('email', $request->email)->first();
 
@@ -209,14 +243,29 @@ class MoiGioiController extends Controller
         ]);
     }
 
-    //Reset password
-    public function resetPassword(Request $request)
+    public function verifyOtp(VerifyOtpRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'otp' => 'required',
-            'password' => 'required|min:6'
+        $record = DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->where('token', $request->otp)
+            ->first();
+
+        if (!$record) {
+            return response()->json([
+                'status' => false,
+                'message' => 'OTP không đúng'
+            ]);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'OTP hợp lệ'
         ]);
+    }
+
+    //Reset password
+    public function resetPassword(ResetPasswordRequest $request)
+    {
 
         $record = DB::table('password_reset_tokens')
             ->where('email', $request->email)

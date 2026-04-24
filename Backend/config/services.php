@@ -34,5 +34,11 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'sepay' => [
+        'merchant_id' => env('SEPAY_MERCHANT_ID'),
+        'secret_key' => env('SEPAY_SECRET_KEY'),
+        'env' => env('SEPAY_ENV', 'sandbox'),
+        'webhook_token' => env('SEPAY_WEBHOOK_TOKEN'),
+    ],
 
 ];

@@ -8,6 +8,9 @@ use App\Models\MoiGioi;
 use App\Models\KhachHang;
 use App\Http\Requests\AdminLoginRequest;
 use App\Http\Requests\AdminUpdateProfileRequest;
+use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Requests\SendOtpRequest;
+use App\Http\Requests\VerifyOtpRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,23 +21,24 @@ class AdminController extends Controller
 {
     public function login(AdminLoginRequest $request)
     {
-        $admin = Admin::where('email', $request->email)->first();
+        $user = Admin::where('email', $request->email)->first();
 
-        if (!$admin || !Hash::check($request->password, $admin->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => 0,  // ✅ Integer 0
                 'message' => 'Email hoặc mật khẩu không đúng'
             ], 401);
         }
 
-        $token = $admin->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'status' => 1,  // ✅ Integer 1
             'message' => 'Đăng nhập thành công',
             'token' => $token,
             'token_type' => 'Bearer',
-            'data' => $admin  // Không cần thêm 'role' vì FE tự xác định qua user_type
+            'user_type' => 'admin',
+            'data' => $user  
         ], 200);
     }
 
@@ -198,11 +202,8 @@ class AdminController extends Controller
     }
 
     //Gửi OTP
-    public function sendOtp(Request $request)
+    public function sendOtp(SendOtpRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email'
-        ]);
 
         $user = KhachHang::where('email', $request->email)->first();
 
@@ -230,14 +231,29 @@ class AdminController extends Controller
         ]);
     }
 
-    //Reset password
-    public function resetPassword(Request $request)
+    public function verifyOtp(VerifyOtpRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'otp' => 'required',
-            'password' => 'required|min:6'
+        $record = DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->where('token', $request->otp)
+            ->first();
+
+        if (!$record) {
+            return response()->json([
+                'status' => false,
+                'message' => 'OTP không đúng'
+            ]);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'OTP hợp lệ'
         ]);
+    }
+
+    //Reset password
+    public function resetPassword(ResetPasswordRequest $request)
+    {
 
         $record = DB::table('password_reset_tokens')
             ->where('email', $request->email)
