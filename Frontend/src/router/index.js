@@ -111,6 +111,12 @@ const routes = [
     name: "KhachHangChiTietBatDongSan",
     meta: { layout: "khach-hang" }
   },
+  {
+    path: "/khach-hang/profile",
+    component: () => import("../components/KhachHang/Profile/index.vue"),
+    name: "KhachHangProfile",
+    meta: { layout: "khach-hang" }
+  },
 
 
   // Môi Giới
@@ -162,11 +168,6 @@ const routes = [
     name: "MoiGioiProfile",
     meta: { layout: "moi-gioi" }
   },
-
-
-
-
-
 
   // ===== 404 =====
   {
