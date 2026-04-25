@@ -507,7 +507,7 @@ const fetchStats = async () => {
   try {
     const token = localStorage.getItem("auth_token");
     const res = await axios.get(
-      "http://localhost:8000/api/admin/dashboard/stats",
+      "http://127.0.0.1:8000/api/admin/dashboard/stats",
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -525,7 +525,7 @@ const fetchChartData = async () => {
   try {
     const token = localStorage.getItem("auth_token");
     const res = await axios.post(
-      "http://localhost:8000/api/admin/dashboard/revenue-chart",
+      "http://127.0.0.1:8000/api/admin/dashboard/revenue-chart",
       { period: timePeriod.value },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -584,7 +584,7 @@ const fetchFavorites = async () => {
   try {
     const token = localStorage.getItem("auth_token");
     const res = await axios.get(
-      "http://localhost:8000/api/admin/dashboard/recent-favorites?limit=5",
+      "http://127.0.0.1:8000/api/admin/dashboard/recent-favorites?limit=5",
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -605,7 +605,7 @@ const fetchTransactions = async () => {
   try {
     const token = localStorage.getItem("auth_token");
     const res = await axios.get(
-      "http://localhost:8000/api/admin/dashboard/recent-package-purchases?limit=5",
+      "http://127.0.0.1:8000/api/admin/dashboard/recent-package-purchases?limit=5",
       {
         headers: { Authorization: `Bearer ${token}` },
       }

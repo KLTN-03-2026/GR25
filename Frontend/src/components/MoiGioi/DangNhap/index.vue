@@ -205,7 +205,7 @@ export default {
 
       // Check if already logged in as broker
       if (userType === 'moi-gioi') {
-        axios.get('http://127.0.0.1:8000/api/kiem-tra-token-moi-gioi', {
+        axios.get('http://127.0.0.1:8000/api/moi-gioi/check-token', {
           headers: {
             Authorization: 'Bearer ' + token
           }

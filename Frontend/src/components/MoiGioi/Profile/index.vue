@@ -1,314 +1,430 @@
 <template>
-  <div class="max-w-6xl mx-auto p-6 bg-slate-50 min-h-screen space-y-6 font-sans">
+  <div class="container-fluid bg-light min-vh-100 py-4">
+    <div class="container" style="max-width: 1140px;">
+      
+      <!-- HEADER -->
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="bg-primary" style="height: 160px; background: linear-gradient(135deg, #1a237e 0%, #283593 100%);"></div>
+        
+        <div class="card-body px-4 pb-4">
+          <div class="d-flex justify-content-between align-items-end">
+            <div class="d-flex align-items-end gap-4" style="margin-top: -80px;">
+              
+              <!-- Avatar -->
+              <div class="position-relative">
+                <img :src="defaultAvatar"
+                  class="rounded-4 border border-4 border-white shadow-lg object-fit-cover bg-white"
+                  style="width: 160px; height: 160px;">
+                
+                <button class="position-absolute bottom-0 end-0 mb-2 me-2 btn btn-light rounded-3 shadow-sm border">
+                  <i class="bi bi-camera"></i>
+                </button>
+              </div>
 
-    <!-- HEADER -->
-    <div class="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden">
-      <div class="h-40 bg-[#1a237e] relative"></div>
-
-      <div class="px-10 pb-8 flex justify-between items-end">
-        <div class="flex items-end space-x-6 -mt-16 relative">
-
-          <div class="relative group">
-            <img :src="defaultAvatar"
-              class="w-40 h-40 rounded-3xl border-4 border-white shadow-lg object-cover bg-white">
-
-            <button
-              class="absolute bottom-3 right-3 bg-white p-2 rounded-xl shadow-md border border-slate-100 text-[#1a237e]">
-              <i class="pi pi-camera"></i>
-            </button>
-          </div>
-
-          <div class="pb-2">
-            <h3 class="text-3xl font-bold text-slate-900">
-              {{ profile.ten }}
-            </h3>
-
-            <p class="text-slate-500 mt-1">
-              <span class="text-emerald-600 font-bold text-sm">
-                {{ profile.mo_ta || 'Chuyên viên tư vấn cao cấp' }}
-              </span>
-
-              <span class="mx-2 opacity-30">•</span>
-
-              <span class="text-sm">
-                Mã số: MG-{{ profile.id }}
-              </span>
-            </p>
-          </div>
-        </div>
-
-        <button @click="saveProfile" :disabled="loading"
-          class="!bg-[#1a237e] text-white px-8 py-3 rounded-2xl flex items-center space-x-2 font-bold text-sm shadow-indigo-100 shadow-xl hover:bg-blue-900 transition-all mb-2">
-          <i class="pi pi-pencil text-xs"></i>
-          <span>
-            {{ loading ? 'Đang lưu...' : 'Chỉnh sửa hồ sơ' }}
-          </span>
-        </button>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-12 gap-6">
-
-      <!-- LEFT -->
-      <div class="col-span-12 lg:col-span-8 space-y-6">
-
-        <!-- THÔNG TIN CÁ NHÂN -->
-        <div class="bg-white p-10 rounded-[32px] shadow-sm border border-slate-100">
-
-          <div class="flex items-center space-x-3 mb-8">
-            <i class="pi pi-id-card text-[#1a237e] text-xl"></i>
-            <h4 class="font-bold text-xl text-slate-900">
-              Thông tin cá nhân
-            </h4>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-
-            <div v-for="(field, index) in infoFields" :key="index">
-              <label class="text-[11px] uppercase font-black text-slate-400 tracking-widest mb-2 block">
-                {{ field.label }}
-              </label>
-
-              <div class="flex items-center space-x-4 bg-slate-50/80 p-4 rounded-2xl border border-slate-50">
-                <i :class="field.icon" class="text-slate-400"></i>
-
-                <span class="text-[15px] text-slate-700 font-medium">
-                  {{ field.value }}
-                </span>
+              <!-- Info -->
+              <div class="pb-2">
+                <h3 class="h3 fw-bold text-dark mb-1">
+                  {{ profile.ten }}
+                </h3>
+                
+                <p class="text-muted mb-0 d-flex align-items-center flex-wrap gap-2">
+                  <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                    {{ profile.mo_ta || 'Chuyên viên tư vấn cao cấp' }}
+                  </span>
+                  
+                  <span class="text-muted opacity-50">•</span>
+                  
+                  <span class="small">
+                    Mã số: <strong class="text-dark">MG-{{ profile.id }}</strong>
+                  </span>
+                </p>
               </div>
             </div>
 
+            <!-- Button -->
+            <button @click="saveProfile" :disabled="loading"
+              class="btn btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm d-flex align-items-center gap-2"
+              style="background: linear-gradient(135deg, #1a237e 0%, #283593 100%); border: none;">
+              <i class="bi bi-pencil-square small"></i>
+              <span>{{ loading ? 'Đang lưu...' : 'Chỉnh sửa hồ sơ' }}</span>
+            </button>
           </div>
-        </div>
-
-        <!-- BẢO MẬT -->
-        <div class="bg-white p-10 rounded-[32px] shadow-sm border border-slate-100">
-
-          <div class="flex justify-between items-center mb-8">
-            <div class="flex items-center space-x-3">
-              <i class="pi pi-shield text-[#1a237e] text-xl"></i>
-              <h4 class="font-bold text-xl text-slate-900">
-                Quản lý bảo mật
-              </h4>
-            </div>
-
-            <span
-              class="bg-emerald-50 text-emerald-600 text-[11px] font-black px-4 py-1.5 rounded-full border border-emerald-100">
-              AN TOÀN
-            </span>
-          </div>
-
-          <!-- FORM ĐỔI MẬT KHẨU -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-            <div>
-              <label class="text-xs font-bold text-slate-500 mb-2 block">
-                Mật khẩu hiện tại
-              </label>
-
-              <input type="password" v-model="passwordForm.old_password"
-                class="w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none focus:border-[#1a237e]">
-            </div>
-
-            <div>
-              <label class="text-xs font-bold text-slate-500 mb-2 block">
-                Mật khẩu mới
-              </label>
-
-              <input type="password" v-model="passwordForm.password"
-                class="w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none focus:border-[#1a237e]">
-            </div>
-
-            <div class="md:col-span-2">
-              <label class="text-xs font-bold text-slate-500 mb-2 block">
-                Xác nhận mật khẩu mới
-              </label>
-
-              <input type="password" v-model="passwordForm.re_password"
-                class="w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none focus:border-[#1a237e]">
-            </div>
-
-          </div>
-
-          <button @click="changePassword"
-            class="mt-3 !bg-[#1a237e] text-white px-8 py-3 rounded-2xl font-bold hover:!bg-blue-900 transition-all">Đổi
-            mật khẩu</button>
-
         </div>
       </div>
 
-      <!-- RIGHT -->
-      <div class="col-span-12 lg:col-span-4 space-y-6">
+      <div class="row g-4">
+        
+        <!-- LEFT COLUMN -->
+        <div class="col-lg-8">
+          
+          <!-- THÔNG TIN CÁ NHÂN -->
+          <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+              
+              <div class="d-flex align-items-center gap-2 mb-4">
+                <div class="p-2 rounded-3" style="background-color: rgba(26, 35, 126, 0.1);">
+                  <i class="bi bi-person-badge text-primary fs-5"></i>
+                </div>
+                <h4 class="h5 fw-bold mb-0 text-dark">
+                  Thông tin cá nhân
+                </h4>
+              </div>
 
-        <!-- GIỮ NGUYÊN -->
-        <div class="bg-[#1a237e] text-white p-10 rounded-[32px] shadow-2xl shadow-indigo-200 relative overflow-hidden">
-          <p class="text-[11px] uppercase font-bold text-indigo-300 tracking-[0.2em] mb-3">
-            Tổng giá trị giao dịch
-          </p>
-
-          <div class="flex items-baseline space-x-2">
-            <h4 class="text-5xl font-black">1.2T</h4>
-            <span class="text-lg font-medium text-indigo-300 italic uppercase">
-              VND
-            </span>
+              <div class="row g-3">
+                <div class="col-md-6" v-for="(field, index) in infoFields" :key="index">
+                  <label class="text-uppercase fw-bold text-muted small mb-2 d-block" style="font-size: 10px; letter-spacing: 0.5px;">
+                    {{ field.label }}
+                  </label>
+                  
+                  <div class="d-flex align-items-center gap-3 p-3 rounded-4 bg-light border border-light-subtle hover-shadow transition-all">
+                    <div class="p-2 rounded-3 bg-white">
+                      <i :class="field.icon" class="text-muted"></i>
+                    </div>
+                    
+                    <span class="text-dark fw-medium">
+                      {{ field.value }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
           </div>
 
-          <div class="mt-6 flex items-center space-x-2 text-emerald-400 text-[13px] font-bold">
-            <i class="pi pi-arrow-up-right"></i>
-            <span>+15% so với năm ngoái</span>
+          <!-- BẢO MẬT -->
+          <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4">
+              
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="p-2 rounded-3" style="background-color: rgba(26, 35, 126, 0.1);">
+                    <i class="bi bi-shield-check text-primary fs-5"></i>
+                  </div>
+                  <h4 class="h5 fw-bold mb-0 text-dark">
+                    Quản lý bảo mật
+                  </h4>
+                </div>
+
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-2">
+                  <i class="bi bi-check-circle me-1"></i> AN TOÀN
+                </span>
+              </div>
+
+              <!-- FORM ĐỔI MẬT KHẨU -->
+              <div class="row g-3">
+                
+                <div class="col-md-6">
+                  <label class="form-label fw-bold text-muted small">
+                    Mật khẩu hiện tại
+                  </label>
+                  <input type="password" v-model="passwordForm.old_password"
+                    class="form-control rounded-4 border border-secondary-subtle py-3"
+                    placeholder="••••••••">
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-bold text-muted small">
+                    Mật khẩu mới
+                  </label>
+                  <input type="password" v-model="passwordForm.password"
+                    class="form-control rounded-4 border border-secondary-subtle py-3"
+                    placeholder="••••••••">
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label fw-bold text-muted small">
+                    Xác nhận mật khẩu mới
+                  </label>
+                  <input type="password" v-model="passwordForm.re_password"
+                    class="form-control rounded-4 border border-secondary-subtle py-3"
+                    placeholder="••••••••">
+                </div>
+
+              </div>
+
+              <button @click="changePassword"
+                class="btn btn-primary mt-3 px-4 py-2 rounded-4 fw-semibold shadow-sm"
+                style="background: linear-gradient(135deg, #1a237e 0%, #283593 100%); border: none;">
+                Đổi mật khẩu
+              </button>
+
+            </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm text-center">
-            <p class="text-[10px] uppercase font-bold text-slate-400 mb-2 tracking-widest">
-              Tổng giao dịch
-            </p>
+        <!-- RIGHT COLUMN -->
+        <div class="col-lg-4">
+          
+          <!-- STATS CARD -->
+          <div class="card border-0 text-white rounded-4 shadow-lg mb-4 position-relative overflow-hidden"
+            style="background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #1a237e 100%);">
+            
+            <div class="position-absolute top-0 end-0 translate-middle-y me-n4 opacity-10">
+              <i class="bi bi-currency-exchange" style="font-size: 120px;"></i>
+            </div>
+            
+            <div class="card-body p-4 position-relative">
+              <p class="text-uppercase fw-bold mb-3 opacity-75 small" style="letter-spacing: 2px; font-size: 10px;">
+                Tổng giá trị giao dịch
+              </p>
 
-            <p class="text-2xl font-black text-[#1a237e]">200+</p>
+              <div class="d-flex align-items-baseline gap-2 mb-3">
+                <h4 class="display-5 fw-black mb-0">1.2T</h4>
+                <span class="fs-6 fw-medium opacity-75 fst-italic">VND</span>
+              </div>
+
+              <div class="d-flex align-items-center gap-1 text-success fw-bold small">
+                <i class="bi bi-arrow-up-right"></i>
+                <span>+15% so với năm ngoái</span>
+              </div>
+              
+              <hr class="border-white border-opacity-25 my-3">
+              
+              <div class="d-flex justify-content-between small mb-2">
+                <span class="opacity-75">Mục tiêu năm nay</span>
+                <span class="fw-semibold">2.5T VND</span>
+              </div>
+              <div class="progress rounded-pill" style="height: 6px; background-color: rgba(255,255,255,0.2);">
+                <div class="progress-bar bg-success rounded-pill" style="width: 48%"></div>
+              </div>
+            </div>
           </div>
 
-          <div class="bg-emerald-50/50 p-6 rounded-[24px] border border-emerald-100 shadow-sm text-center">
-            <p class="text-[10px] uppercase font-bold text-emerald-600 mb-2 tracking-widest">
-              Tỷ lệ quay lại
-            </p>
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <div class="card border-0 shadow-sm rounded-4 text-center h-100">
+                <div class="card-body p-4">
+                  <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-2" 
+                    style="width: 32px; height: 32px; background-color: rgba(26, 35, 126, 0.1);">
+                    <i class="bi bi-cart-check text-primary small"></i>
+                  </div>
+                  <p class="text-uppercase fw-bold text-muted mb-1 small" style="font-size: 9px; letter-spacing: 0.5px;">
+                    Tổng giao dịch
+                  </p>
+                  <p class="h4 fw-black text-primary mb-0">200+</p>
+                </div>
+              </div>
+            </div>
 
-            <p class="text-2xl font-black text-emerald-700">98%</p>
+            <div class="col-6">
+              <div class="card border-0 shadow-sm rounded-4 text-center h-100" style="background-color: rgba(40, 167, 69, 0.05);">
+                <div class="card-body p-4">
+                  <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-2" 
+                    style="width: 32px; height: 32px; background-color: rgba(40, 167, 69, 0.2);">
+                    <i class="bi bi-arrow-repeat text-success small"></i>
+                  </div>
+                  <p class="text-uppercase fw-bold text-success mb-1 small" style="font-size: 9px; letter-spacing: 0.5px;">
+                    Tỷ lệ quay lại
+                  </p>
+                  <p class="h4 fw-black text-success mb-0">98%</p>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <!-- QUICK ACTIONS -->
+          <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4">
+              <p class="text-uppercase fw-bold text-muted mb-3 small" style="letter-spacing: 0.5px;">
+                Thao tác nhanh
+              </p>
+              <div class="list-group list-group-flush">
+                <button class="list-group-item list-group-item-action border-0 rounded-3 px-3 py-3 d-flex justify-content-between align-items-center">
+                  <span class="fw-medium">Xem báo cáo</span>
+                  <i class="bi bi-chevron-right text-muted small"></i>
+                </button>
+                <button class="list-group-item list-group-item-action border-0 rounded-3 px-3 py-3 d-flex justify-content-between align-items-center">
+                  <span class="fw-medium">Cài đặt thông báo</span>
+                  <i class="bi bi-chevron-right text-muted small"></i>
+                </button>
+                <button class="list-group-item list-group-item-action border-0 rounded-3 px-3 py-3 d-flex justify-content-between align-items-center">
+                  <span class="fw-medium">Trợ giúp</span>
+                  <i class="bi bi-chevron-right text-muted small"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
-
       </div>
 
     </div>
   </div>
 </template>
 
-<script setup>
-import { reactive, ref, computed, onMounted } from "vue"
+<script>
 import axios from "axios"
 import Swal from "sweetalert2"
 
-const loading = ref(false)
-
-const profile = reactive({
-  id: "",
-  ten: "",
-  email: "",
-  so_dien_thoai: "",
-  dia_chi: "",
-  khu_vuc_hoat_dong: "",
-  mo_ta: ""
-})
-
-const passwordForm = reactive({
-  old_password: "",
-  password: "",
-  re_password: ""
-})
-
-const defaultAvatar =
-  "https://ui-avatars.com/api/?name=Moi+Gioi&background=1a237e&color=fff"
-
-const token = localStorage.getItem("auth_token")
-
-const infoFields = computed(() => [
-  {
-    label: "Email",
-    value: profile.email,
-    icon: "pi pi-envelope"
+export default {
+  data() {
+    return {
+      loading: false,
+      profile: {
+        id: "",
+        ten: "",
+        email: "",
+        so_dien_thoai: "",
+        dia_chi: "",
+        khu_vuc_hoat_dong: "",
+        mo_ta: ""
+      },
+      passwordForm: {
+        old_password: "",
+        password: "",
+        re_password: ""
+      },
+      defaultAvatar: "https://ui-avatars.com/api/?name=Moi+Gioi&background=1a237e&color=fff",
+      token: localStorage.getItem("auth_token")
+    };
   },
-  {
-    label: "Số điện thoại",
-    value: profile.so_dien_thoai,
-    icon: "pi pi-phone"
-  },
-  {
-    label: "Địa chỉ",
-    value: profile.dia_chi || "Chưa cập nhật",
-    icon: "pi pi-map-marker"
-  },
-  {
-    label: "Khu vực hoạt động",
-    value: profile.khu_vuc_hoat_dong || "Chưa cập nhật",
-    icon: "pi pi-map"
-  }
-])
 
-const fetchProfile = async () => {
-  try {
-    const res = await axios.get(
-      "http://127.0.0.1:8000/api/moi-gioi/profile",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
+  computed: {
+    infoFields() {
+      return [
+        {
+          label: "Email",
+          value: this.profile.email,
+          icon: "bi bi-envelope"
+        },
+        {
+          label: "Số điện thoại",
+          value: this.profile.so_dien_thoai,
+          icon: "bi bi-telephone"
+        },
+        {
+          label: "Địa chỉ",
+          value: this.profile.dia_chi || "Chưa cập nhật",
+          icon: "bi bi-geo-alt"
+        },
+        {
+          label: "Khu vực hoạt động",
+          value: this.profile.khu_vuc_hoat_dong || "Chưa cập nhật",
+          icon: "bi bi-map"
         }
-      }
-    )
-
-    if (res.data.status) {
-      Object.assign(profile, res.data.data)
+      ]
     }
+  },
 
-  } catch (error) {
-    Swal.fire("Lỗi", "Không tải được hồ sơ", "error")
-  }
-}
+  methods: {
+    async fetchProfile() {
+      try {
+        const res = await axios.get(
+          "http://127.0.0.1:8000/api/moi-gioi/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${this.token}`
+            }
+          }
+        )
 
-const saveProfile = async () => {
-  loading.value = true
-
-  try {
-    await axios.post(
-      "http://127.0.0.1:8000/api/moi-gioi/update-profile",
-      profile,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
+        if (res.data.status) {
+          Object.assign(this.profile, res.data.data)
         }
+
+      } catch (error) {
+        Swal.fire("Lỗi", "Không tải được hồ sơ", "error")
       }
-    )
+    },
 
-    Swal.fire("Thành công", "Cập nhật hồ sơ thành công", "success")
+    async saveProfile() {
+      this.loading = true
 
-  } catch (error) {
-    Swal.fire("Lỗi", "Cập nhật thất bại", "error")
-  }
+      try {
+        await axios.post(
+          "http://127.0.0.1:8000/api/moi-gioi/update-profile",
+          this.profile,
+          {
+            headers: {
+              Authorization: `Bearer ${this.token}`
+            }
+          }
+        )
 
-  loading.value = false
-}
+        Swal.fire("Thành công", "Cập nhật hồ sơ thành công", "success")
 
-const changePassword = async () => {
-  if (
-    passwordForm.password !==
-    passwordForm.re_password
-  ) {
-    Swal.fire("Lỗi", "Xác nhận mật khẩu không khớp", "error")
-    return
-  }
-
-  try {
-    await axios.post(
-      "http://127.0.0.1:8000/api/moi-gioi/update-password",
-      passwordForm,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      } catch (error) {
+        Swal.fire("Lỗi", "Cập nhật thất bại", "error")
       }
-    )
 
-    Swal.fire("Thành công", "Đổi mật khẩu thành công", "success")
+      this.loading = false
+    },
 
-    passwordForm.old_password = ""
-    passwordForm.password = ""
-    passwordForm.re_password = ""
+    async changePassword() {
+      if (
+        this.passwordForm.password !==
+        this.passwordForm.re_password
+      ) {
+        Swal.fire("Lỗi", "Xác nhận mật khẩu không khớp", "error")
+        return
+      }
 
-  } catch (error) {
-    Swal.fire("Lỗi", "Đổi mật khẩu thất bại", "error")
+      try {
+        await axios.post(
+          "http://127.0.0.1:8000/api/moi-gioi/update-password",
+          this.passwordForm,
+          {
+            headers: {
+              Authorization: `Bearer ${this.token}`
+            }
+          }
+        )
+
+        Swal.fire("Thành công", "Đổi mật khẩu thành công", "success")
+
+        this.passwordForm.old_password = ""
+        this.passwordForm.password = ""
+        this.passwordForm.re_password = ""
+
+      } catch (error) {
+        Swal.fire("Lỗi", "Đổi mật khẩu thất bại", "error")
+      }
+    }
+  },
+
+  mounted() {
+    this.fetchProfile()
   }
 }
-
-onMounted(() => {
-  fetchProfile()
-})
 </script>
+
+<style scoped>
+/* Custom styles for smooth transitions */
+.hover-shadow:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+  border-color: rgba(26, 35, 126, 0.3) !important;
+}
+
+.transition-all {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Override Bootstrap primary color */
+.btn-primary {
+  background-color: #1a237e !important;
+  border-color: #1a237e !important;
+}
+
+.btn-primary:hover {
+  background-color: #151c6a !important;
+  border-color: #151c6a !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+</style>

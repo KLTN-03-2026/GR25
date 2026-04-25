@@ -548,6 +548,7 @@ import Swal from "sweetalert2";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+
 // ===== STATE =====
 const currentStep = ref(1);
 const lastSaveTime = ref("Vừa xong");
@@ -1035,7 +1036,7 @@ select.form-select {
   overflow: visible !important;
 }
 /* ===== LEAFLET MAP ===== */
-@import "leaflet/dist/leaflet.css";
+
 
 .map-wrapper {
   position: relative;

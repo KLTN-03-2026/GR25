@@ -229,7 +229,7 @@ const toaster = createToaster({ position: "top-right" });
 
 // ===== API =====
 const api = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: "http://127.0.0.1:8000/api",
   timeout: 10000,
 });
 
@@ -242,7 +242,7 @@ const handleRegister = async () => {
 
   try {
     const response = await axios.post(
-      "http://localhost:8000/api/khach-hang/dang-ky",
+      "http://127.0.0.1:8000/api/khach-hang/dang-ky",
       {
         ten: ten.value,
         email: email.value,

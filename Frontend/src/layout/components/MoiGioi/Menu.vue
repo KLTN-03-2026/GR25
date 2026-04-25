@@ -56,11 +56,8 @@
           <span v-if="item.badge" class="broker-sidebar__badge">{{
             item.badge
           }}</span>
-
         </RouterLink>
       </div>
-
-      
 
       <!-- <div class="broker-sidebar__upgrade-card">
         <div class="upgrade-card__icon">
@@ -105,12 +102,6 @@ const primaryItems = ref([
     icon: "people",
     route: "/moi-gioi/quan-ly-khach-hang",
   },
-  {
-    id: "favorites",
-    label: "Yêu thích",
-    icon: "favorite",
-    //route: "/moi-gioi/yeu-thich",
-  },
 ]);
 
 const propertyItems = ref([
@@ -119,25 +110,6 @@ const propertyItems = ref([
     label: "Tất cả BĐS",
     icon: "domain",
     route: "/moi-gioi/quan-ly-bat-dong-san",
-  },
-  {
-    id: "pending",
-    label: "Chờ duyệt",
-    icon: "pending_actions",
-    //route: "/moi-gioi/bat-dong-san?status=pending",
-    badge: null,
-  },
-  {
-    id: "approved",
-    label: "Đã duyệt",
-    icon: "check_circle",
-    //route: "/moi-gioi/bat-dong-san?status=approved",
-  },
-  {
-    id: "expired",
-    label: "Hết hạn",
-    icon: "schedule",
-    //route: "/moi-gioi/bat-dong-san?status=expired",
   },
 ]);
 
@@ -148,20 +120,6 @@ const secondaryItems = ref([
     icon: "inventory_2",
     route: "/moi-gioi/goi-tin",
   },
-  {
-    id: "transactions",
-    label: "Giao dịch",
-    icon: "receipt_long",
-    //route: "/moi-gioi/giao-dich",
-  },
-  {
-    id: "notifications",
-    label: "Thông báo",
-    icon: "notifications",
-    //route: "/moi-gioi/thong-bao",
-    badge: null,
-  },
-
   {
     id: "notifications",
     label: "Profile",
@@ -337,8 +295,7 @@ onMounted(() => {
   line-height: 1.2;
 }
 
-Upgrade Card
-.broker-sidebar__upgrade-card {
+Upgrade Card .broker-sidebar__upgrade-card {
   margin-top: auto;
   padding: 16px;
   background: linear-gradient(135deg, #059669, #10b981);

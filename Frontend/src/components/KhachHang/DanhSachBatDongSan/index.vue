@@ -153,10 +153,10 @@
           </div>
         </div>
 
-        <!-- ✅ Properties Grid with Loading Overlay (giống PropertyDetail) -->
+        <!-- ✅ Properties Grid with Loading Overlay -->
         <div class="relative min-h-[400px]" style="contain: content;">
           
-          <!-- 🔥 Loading Overlay (chỉ trong khu vực list, không chặn filter) -->
+          <!-- 🔥 Loading Overlay -->
           <transition name="fade-fast">
             <div 
               v-show="loading && properties.length > 0" 
@@ -200,11 +200,12 @@
                   Nổi bật
                 </div>
 
-                <!-- ❤️ Icon Trái Tim -->
+                <!-- ❤️ Icon Trái Tim - SYNC WITH API -->
                 <button
                   @click.stop="toggleFavorite(bds.id, $event)"
                   class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 backdrop-blur-md shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group/btn"
                   :class="bds.isFavorite ? 'bg-gradient-to-br from-pink-500 to-rose-500' : ''"
+                  :aria-label="bds.isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'"
                   title="Yêu thích"
                 >
                   <span 
@@ -266,7 +267,7 @@
             </div>
           </transition-group>
 
-          <!-- ✅ Skeleton Loading khi chưa có data lần đầu -->
+          <!-- ✅ Skeleton Loading -->
           <div v-if="loading && properties.length === 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div v-for="i in 6" :key="i" class="bg-white rounded-2xl overflow-hidden border border-gray-100 animate-pulse">
               <div class="h-[240px] bg-gray-200"></div>
@@ -327,19 +328,36 @@
       </div>
     </div>
 
-    <!-- 🍞 Toast Notification -->
+    <!-- 🍞 Enhanced Toast Notification - FIX: Position below sticky header -->
     <transition name="toast-slide">
       <div 
         v-if="toast.visible" 
-        class="fixed top-5 right-5 z-[9999]"
-        :class="toast.type === 'error' ? 'bg-gradient-to-r from-red-500 to-rose-500' : 'bg-gradient-to-r from-amber-500 to-orange-500'"
+        class="fixed top-20 right-5 z-[9999] pointer-events-auto"
+        style="will-change: transform, opacity;"
       >
-        <div class="flex items-center gap-3 px-5 py-3.5 text-white rounded-2xl shadow-2xl backdrop-blur-md">
-          <span class="material-symbols-outlined text-xl">
-            {{ toast.type === 'error' ? 'error' : 'warning' }}
+        <div 
+          class="flex items-center gap-3 px-5 py-3.5 text-white rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 min-w-[280px] max-w-sm"
+          :class="getToastClass(toast.type)"
+        >
+          <!-- Icon với animation pulse khi add favorite -->
+          <span 
+            class="material-symbols-outlined text-xl flex-shrink-0"
+            :class="{ 'animate-heart-pulse': toast.type === 'favorite-add' }"
+          >
+            {{ toast.icon || getToastIcon(toast.type) }}
           </span>
-          <span class="font-medium text-sm">{{ toast.message }}</span>
-          <button @click="hideToast" class="ml-2 hover:opacity-80 transition-opacity">
+          
+          <!-- Message -->
+          <span class="font-medium text-sm flex-1 leading-tight">
+            {{ toast.message }}
+          </span>
+          
+          <!-- Close button -->
+          <button 
+            @click="hideToast" 
+            class="ml-2 hover:opacity-80 transition-opacity p-1 rounded-full hover:bg-white/20"
+            aria-label="Đóng thông báo"
+          >
             <span class="material-symbols-outlined text-lg">close</span>
           </button>
         </div>
@@ -355,7 +373,7 @@ export default {
   name: 'PropertyList',
   data() {
     return {
-      loading: false, // ✅ Thêm lại loading state
+      loading: false,
       properties: [],
       totalProperties: 0,
       currentPage: 1,
@@ -367,10 +385,11 @@ export default {
         tinh: '', quan: '', loai: '', gia: '', dien_tich: '', phong_ngu: '', phong_tam: '', sort: 'newest', search: ''
       },
       danhSachTinh: [], danhSachQuan: [], danhSachLoai: [],
-      toast: { visible: false, message: '', type: 'warning', timer: null },
+      toast: { visible: false, message: '', type: 'warning', icon: null, timer: null },
       defaultImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800',
       searchTimer: null,
-      lastFetchParams: null, lastFetchTime: 0, FETCH_COOLDOWN: 400
+      lastFetchParams: null, lastFetchTime: 0, FETCH_COOLDOWN: 400,
+      favoriteIds: []
     };
   },
   computed: {
@@ -395,17 +414,83 @@ export default {
     await this.loadFilterData();
     if (this.filters.tinh) await this.loadQuan(this.filters.tinh);
     await this.loadProperties();
+    if (this.isAuthenticated()) {
+      await this.syncFavoriteList();
+    }
+    window.addEventListener('favorite-updated', this.handleFavoriteUpdated);
   },
   beforeUnmount() {
     if (this.toast.timer) clearTimeout(this.toast.timer);
     if (this.searchTimer) clearTimeout(this.searchTimer);
+    window.removeEventListener('favorite-updated', this.handleFavoriteUpdated);
   },
   methods: {
+    // 🍞 Toast helpers
+    getToastClass(type) {
+      const classes = {
+        success: 'bg-gradient-to-r from-emerald-500 to-teal-500',
+        error: 'bg-gradient-to-r from-red-500 to-rose-500',
+        warning: 'bg-gradient-to-r from-amber-500 to-orange-500',
+        'favorite-add': 'bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 shadow-pink-500/30',
+        'favorite-remove': 'bg-gradient-to-r from-gray-500 via-slate-500 to-gray-600 shadow-gray-500/30'
+      };
+      return classes[type] || classes.warning;
+    },
+    getToastIcon(type) {
+      const icons = {
+        success: 'check_circle',
+        error: 'error',
+        warning: 'warning',
+        'favorite-add': 'favorite',
+        'favorite-remove': 'heart_broken'
+      };
+      return icons[type] || icons.warning;
+    },
     showToast(msg, type='warning') {
       if (this.toast.timer) clearTimeout(this.toast.timer);
-      this.toast = { visible:true, message:msg, type, timer: setTimeout(()=>this.hideToast(),3000) };
+      this.toast = { 
+        visible: true, 
+        message: msg, 
+        type, 
+        icon: null,
+        timer: setTimeout(() => this.hideToast(), 2500) 
+      };
     },
-    hideToast() { this.toast.visible=false; if(this.toast.timer){clearTimeout(this.toast.timer);this.toast.timer=null;} },
+    
+    // ❤️ Toast chuyên biệt cho favorite
+    showFavoriteToast(action, propertyName) {
+      const shortName = propertyName.length > 30 
+        ? propertyName.substring(0, 27) + '...' 
+        : propertyName;
+
+      if (action === 'add') {
+        this.toast = {
+          visible: true,
+          message: `❤️ Đã lưu "${shortName}" vào yêu thích`,
+          type: 'favorite-add',
+          icon: 'favorite',
+          timer: setTimeout(() => this.hideToast(), 3000)
+        };
+      } else {
+        this.toast = {
+          visible: true,
+          message: `💔 Đã xóa "${shortName}" khỏi yêu thích`,
+          type: 'favorite-remove',
+          icon: 'heart_broken',
+          timer: setTimeout(() => this.hideToast(), 2500)
+        };
+      }
+    },
+    
+    hideToast() { 
+      this.toast.visible = false; 
+      if (this.toast.timer) {
+        clearTimeout(this.toast.timer);
+        this.toast.timer = null;
+      }
+    },
+    
+    // 🔐 Auth
     isAuthenticated() { return !!(localStorage.getItem('auth_token') && localStorage.getItem('user_type')==='khach-hang'); },
     requireAuth(redirectUrl=null) {
       if (!this.isAuthenticated()) {
@@ -414,24 +499,86 @@ export default {
         return false;
       } return true;
     },
+    
+    // 🎯 Navigation
     viewProperty(id) { if(!this.requireAuth(`/khach-hang/chi-tiet-bat-dong-san/${id}`))return; this.$router.push(`/khach-hang/chi-tiet-bat-dong-san/${id}`); },
-    toggleFavorite(pid,ev) {
-      ev.stopPropagation(); if(!this.requireAuth())return;
-      const p=this.properties.find(x=>x.id===pid); if(p){ p.isFavorite=!p.isFavorite; this.showToast(p.isFavorite?'Đã thêm vào yêu thích':'Đã xóa khỏi yêu thích','success'); }
+    
+    // ❤️ Toggle Favorite
+    async toggleFavorite(bdsId, ev) {
+      ev.stopPropagation();
+      if (!this.requireAuth()) return;
+
+      const token = localStorage.getItem('auth_token');
+      const property = this.properties.find(p => p.id === bdsId);
+      const wasFavorite = property?.isFavorite || false;
+      const action = wasFavorite ? 'remove' : 'add';
+      const propertyName = property?.tieu_de || 'Bất động sản';
+
+      if (property) property.isFavorite = !wasFavorite;
+
+      try {
+        await axios.post(
+          'http://127.0.0.1:8000/api/khach-hang/bds/yeu-thich',
+          { bds_id: bdsId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        await this.syncFavoriteList();
+        this.showFavoriteToast(action, propertyName);
+        window.dispatchEvent(new Event('favorite-updated'));
+
+      } catch (err) {
+        console.error('Favorite API error:', err.response?.data || err);
+        if (property) property.isFavorite = wasFavorite;
+        this.showToast('Có lỗi xảy ra, vui lòng thử lại', 'error');
+      }
     },
+
+    // ✅ Sync favorite list
+    async syncFavoriteList() {
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) { this.favoriteIds = []; return; }
+
+        const res = await axios.get(
+          'http://127.0.0.1:8000/api/khach-hang/bds/yeu-thich/data',
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const favorites = res.data?.data || [];
+        this.favoriteIds = favorites.map(item => 
+          item.bat_dong_san_id || item.bds_id || item.batDongSan?.id || item.id
+        ).filter(id => id);
+
+        this.properties = this.properties.map(p => ({
+          ...p,
+          isFavorite: this.favoriteIds.includes(p.id)
+        }));
+
+      } catch (err) {
+        console.error('Sync favorite error:', err);
+        this.favoriteIds = [];
+      }
+    },
+
+    async handleFavoriteUpdated() {
+      if (this.isAuthenticated()) {
+        await this.syncFavoriteList();
+      }
+    },
+
     handleImageError(e){ if(e.target.src!==this.defaultImage)e.target.src=this.defaultImage; },
+    
     triggerAutoSearch() {
       if(this.searchTimer)clearTimeout(this.searchTimer);
       this.searchTimer=setTimeout(()=>{this.currentPage=1;this.loadProperties();},500);
     },
+
     async loadProperties() {
-      // Guard + cache
       const now=Date.now(), key=JSON.stringify({...this.filters,page:this.currentPage});
       if(key===this.lastFetchParams && now-this.lastFetchTime<this.FETCH_COOLDOWN) return;
       this.lastFetchParams=key; this.lastFetchTime=now; this.searched=true;
       
-      // ✅ Chỉ set loading=true nếu đã có data (hiển thị overlay nhẹ)
-      // Nếu chưa có data lần đầu: giữ loading để hiện skeleton
       if (this.properties.length > 0) this.loading = true;
 
       try {
@@ -453,7 +600,11 @@ export default {
             if(it.anh_dai_dien?.url)img=this.getImageUrl(it.anh_dai_dien.url);
             else if(it.hinh_anh?.[0]?.url)img=this.getImageUrl(it.hinh_anh[0].url);
             else if(it.anh_dai_dien_url)img=this.getImageUrl(it.anh_dai_dien_url);
-            return {...it,image:img,isFavorite:false};
+            return {
+              ...it,
+              image: img,
+              isFavorite: this.favoriteIds.includes(it.id)
+            };
           });
           this.totalProperties=res.data.data?.total||this.properties.length;
         }
@@ -461,10 +612,10 @@ export default {
         console.error('Load error:',err);
         if(err.response?.status===401){ this.showToast('Phiên đăng nhập đã hết hạn','error'); setTimeout(()=>this.$router.push('/khach-hang/dang-nhap'),800); }
       } finally {
-        // ✅ Dùng nextTick để đảm bảo DOM update xong mới tắt loading
         this.$nextTick(()=>{ this.loading=false; });
       }
     },
+
     async loadFilterData(){
       try{
         const [t,l]=await Promise.all([axios.get('http://127.0.0.1:8000/api/tinh-thanh'),axios.get(`${this.apiUrl}/loai-bat-dong-san`)]);
@@ -480,8 +631,10 @@ export default {
       }catch(e){console.error('Load quận error:',e);}
     },
     getImageUrl(url){ if(!url)return this.defaultImage; if(url.startsWith('http'))return url; return `${this.apiUrl.replace('/api/client','')}/storage/${url}`; },
+    
     changePage(p){ if(p<1||p>this.totalPages)return; this.currentPage=p; this.loadProperties(); window.scrollTo({top:0,behavior:'smooth'}); },
     toggleView(m){this.viewMode=m;},
+    
     clearAllFilters(){ this.filters={tinh:'',quan:'',loai:'',gia:'',dien_tich:'',phong_ngu:'',phong_tam:'',sort:'newest',search:''}; this.currentPage=1; this.loadProperties(); },
     removeFilter(k){ this.filters[k]=''; if(k==='tinh')this.filters.quan=''; this.currentPage=1; this.loadProperties(); },
     getFilterValueLabel(k,v){
@@ -505,7 +658,7 @@ export default {
 <style scoped>
 .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 
-/* ✅ Fast fade for loading overlay (giống PropertyDetail) */
+/* ✅ Fast fade for loading overlay */
 .fade-fast-enter-active,.fade-fast-leave-active{transition:opacity 0.15s ease-out;}
 .fade-fast-enter-from,.fade-fast-leave-to{opacity:0;}
 
@@ -514,15 +667,46 @@ export default {
 .list-fade-enter-from,.list-fade-leave-to{opacity:0;transform:translateY(10px);}
 .list-fade-leave-active{position:absolute;}
 
-/* 🍞 Toast */
-.toast-slide-enter-active,.toast-slide-leave-active{transition:all 0.25s ease;}
-.toast-slide-enter-from{transform:translateX(120%);opacity:0;}
-.toast-slide-leave-to{transform:translateX(120%);opacity:0;}
+/* 🍞 Enhanced Toast Animation - FIX: Position below sticky header */
+.toast-slide-enter-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.toast-slide-leave-active {
+  transition: all 0.2s ease-in;
+}
+.toast-slide-enter-from {
+  opacity: 0;
+  transform: translateX(120%) scale(0.9);
+}
+.toast-slide-leave-to {
+  opacity: 0;
+  transform: translateX(120%) scale(0.95);
+}
 
-/* Skeleton pulse animation */
+/* 💖 Heart pulse animation */
+@keyframes heartPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+.animate-heart-pulse {
+  animation: heartPulse 0.6s ease-in-out;
+}
+
+/* 🌟 Glow effect */
+.bg-gradient-to-r.from-pink-500 {
+  box-shadow: 0 8px 32px rgba(236, 72, 153, 0.4);
+}
+
+/* Skeleton pulse */
 @keyframes skeletonPulse{0%{opacity:1}50%{opacity:0.6}100%{opacity:1}}
 .animate-pulse{animation:skeletonPulse 1.5s ease-in-out infinite;}
 
 /* Reduce motion */
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important;}}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:0.01ms!important;
+    transition-duration:0.01ms!important;
+  }
+  .animate-heart-pulse { animation: none !important; }
+}
 </style>

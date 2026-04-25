@@ -2,17 +2,18 @@
   <div class="page-content">
     <div class="broker-chat-container">
       
+      <!-- SIDEBAR -->
       <aside class="chat-sidebar">
         <div class="chat-sidebar__header">
           <div class="d-flex align-items-center mb-3">
             <h5 class="mb-0 fw-bold text-dark">Tin nhắn</h5>
-            <span class="badge bg-emerald ms-2">{{ contacts.length }}</span>
+            <span class="badge bg-emerald ms-2">{{ conversations.length }}</span>
             <div class="ms-auto dropdown">
               <button class="btn btn-light btn-sm rounded-circle" data-bs-toggle="dropdown">
                 <i class="bx bx-dots-vertical-rounded"></i>
               </button>
               <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                <li><a class="dropdown-item" href="#">Đánh dấu tất cả đã đọc</a></li>
+                <li><a class="dropdown-item" href="#" @click.prevent="markAllAsRead">Đánh dấu tất cả đã đọc</a></li>
                 <li><a class="dropdown-item" href="#">Cài đặt tin nhắn tự động</a></li>
               </ul>
             </div>
@@ -24,18 +25,26 @@
           </div>
 
           <div class="chat-filters mt-3">
-            <button class="filter-btn active">Tất cả</button>
-            <button class="filter-btn">Chưa đọc</button>
-            <button class="filter-btn">Đang quan tâm</button>
+            <button class="filter-btn active" @click="filterType = 'all'">Tất cả</button>
+            <button class="filter-btn" @click="filterType = 'unread'" :class="{ active: filterType === 'unread' }">Chưa đọc</button>
+            <button class="filter-btn" @click="filterType = 'interested'" :class="{ active: filterType === 'interested' }">Đang quan tâm</button>
           </div>
         </div>
 
         <div class="chat-sidebar__list">
-          <div v-if="filteredContacts.length === 0" class="empty-state">
-            <i class="bx bx-search-alt"></i>
-            <p>Không tìm thấy khách hàng</p>
+          <!-- Loading -->
+          <div v-if="loadingConversations" class="empty-state">
+            <div class="spinner-border text-emerald" role="status"></div>
+            <p class="mt-2">Đang tải tin nhắn...</p>
+          </div>
+
+          <!-- Empty -->
+          <div v-else-if="filteredContacts.length === 0" class="empty-state">
+            <i class="bx bx-chat"></i>
+            <p>Chưa có cuộc trò chuyện nào</p>
           </div>
           
+          <!-- List -->
           <a href="javascript:;" 
              v-for="contact in filteredContacts" 
              :key="contact.id" 
@@ -44,66 +53,87 @@
              @click="selectChat(contact.id)">
             
             <div class="contact-avatar">
-              <img :src="contact.avatar || `https://ui-avatars.com/api/?name=${contact.name}&background=random&color=fff`" :alt="contact.name" />
-              <span class="status-dot" :class="contact.online ? 'online' : 'offline'"></span>
+              <img :src="getAvatarUrl(contact.khach_hang)" :alt="contact.khach_hang?.ten" />
+              <span class="status-dot" :class="contact.khach_hang?.online ? 'online' : 'offline'"></span>
             </div>
             
             <div class="contact-info">
               <div class="d-flex justify-content-between align-items-center mb-1">
-                <h6 class="contact-name mb-0">{{ contact.name }}</h6>
-                <span class="contact-time">{{ contact.time }}</span>
+                <h6 class="contact-name mb-0">{{ contact.khach_hang?.ten || 'Khách hàng' }}</h6>
+                <span class="contact-time">{{ formatTime(contact.updated_at || contact.created_at) }}</span>
               </div>
-              <p class="contact-last-msg mb-0" :class="{ 'fw-bold text-dark': contact.unread }">
-                {{ contact.lastMsg }}
+              <p class="contact-last-msg mb-0" :class="{ 'fw-bold text-dark': contact.unread_count > 0 }">
+                {{ contact.last_message?.content || 'Bắt đầu trò chuyện...' }}
               </p>
-              <div v-if="contact.propertyInterest" class="property-tag mt-1">
-                <i class="bx bx-building-house"></i> {{ contact.propertyInterest }}
+              <div v-if="contact.bat_dong_san?.tieu_de" class="property-tag mt-1">
+                <i class="bx bx-building-house"></i> {{ contact.bat_dong_san.tieu_de }}
               </div>
             </div>
             
-            <div v-if="contact.unread" class="unread-badge"></div>
+            <div v-if="contact.unread_count > 0" class="unread-badge">{{ contact.unread_count > 9 ? '9+' : contact.unread_count }}</div>
           </a>
         </div>
       </aside>
 
+      <!-- MAIN CHAT -->
       <main class="chat-main">
-        <template v-if="activeContact.id">
+        <template v-if="activeConversationId">
           <header class="chat-main__header">
             <div class="d-flex align-items-center">
-              <img :src="activeContact.avatar || `https://ui-avatars.com/api/?name=${activeContact.name}&background=random&color=fff`" class="header-avatar" alt="" />
+              <img :src="getAvatarUrl(activeContact?.khach_hang)" class="header-avatar" alt="" />
               <div class="ms-3">
-                <h5 class="mb-0 fw-bold">{{ activeContact.name }}</h5>
-                <span class="status-text" :class="activeContact.online ? 'text-emerald' : 'text-muted'">
+                <h5 class="mb-0 fw-bold">{{ activeContact?.khach_hang?.ten || 'Đang tải...' }}</h5>
+                <span class="status-text" :class="activeContact?.khach_hang?.online ? 'text-emerald' : 'text-muted'">
                   <i class="bx bxs-circle fs-6 me-1"></i>
-                  {{ activeContact.online ? 'Đang hoạt động' : 'Ngoại tuyến' }}
+                  {{ activeContact?.khach_hang?.online ? 'Đang hoạt động' : 'Ngoại tuyến' }}
                 </span>
               </div>
             </div>
             
             <div class="header-actions">
-              <button class="action-btn" title="Gọi điện"><i class="bx bx-phone"></i></button>
-              <button class="action-btn" title="Gửi hợp đồng/báo giá"><i class="bx bx-file"></i></button>
-              <button class="action-btn" title="Thông tin khách hàng"><i class="bx bx-info-circle"></i></button>
+              <button class="action-btn" title="Gọi điện" @click="makeCall">
+                <i class="bx bx-phone"></i>
+              </button>
+              <button class="action-btn" title="Gửi hợp đồng/báo giá" @click="sendDocument">
+                <i class="bx bx-file"></i>
+              </button>
+              <button class="action-btn" title="Thông tin khách hàng" @click="viewCustomerInfo">
+                <i class="bx bx-info-circle"></i>
+              </button>
             </div>
           </header>
 
           <div class="chat-main__content" ref="chatContent">
+            <!-- Security Notice -->
             <div class="security-notice">
               <i class="bx bx-lock-alt"></i> Cuộc trò chuyện được mã hóa đầu cuối. Không chia sẻ mật khẩu của bạn.
             </div>
 
-            <div v-for="msg in currentMessages" :key="msg.id" class="message-wrapper" :class="msg.sender === 'me' ? 'is-me' : 'is-other'">
-              <div class="message-bubble">
-                <p class="message-text">{{ msg.text }}</p>
-                <span class="message-time">{{ msg.time }}</span>
-              </div>
+            <!-- Loading Messages -->
+            <div v-if="loadingMessages" class="text-center py-4">
+              <div class="spinner-border text-emerald spinner-border-sm" role="status"></div>
+              <span class="ms-2 text-muted">Đang tải tin nhắn...</span>
             </div>
+
+            <!-- Messages List -->
+            <template v-else>
+              <div v-for="msg in messages" :key="msg.id" class="message-wrapper" :class="msg.sender === 'me' ? 'is-me' : 'is-other'">
+                <div class="message-bubble">
+                  <p class="message-text">{{ msg.text }}</p>
+                  <span class="message-time">{{ msg.time }}</span>
+                </div>
+              </div>
+            </template>
           </div>
 
           <footer class="chat-main__footer">
             <div class="chat-input-wrapper">
-              <button class="input-action-btn"><i class="bx bx-plus-circle"></i></button>
-              <button class="input-action-btn"><i class="bx bx-image"></i></button>
+              <button class="input-action-btn" title="Đính kèm" @click="attachFile">
+                <i class="bx bx-plus-circle"></i>
+              </button>
+              <button class="input-action-btn" title="Gửi ảnh" @click="sendImage">
+                <i class="bx bx-image"></i>
+              </button>
               
               <input 
                 type="text" 
@@ -111,15 +141,23 @@
                 placeholder="Nhập tin nhắn hỗ trợ khách hàng..." 
                 v-model="newMessage" 
                 @keyup.enter="sendMessage" 
+                :disabled="sending"
               />
               
-              <button class="send-btn" :class="{ 'active': newMessage.trim() }" @click="sendMessage">
-                <i class="bx bx-send"></i>
+              <button 
+                class="send-btn" 
+                :class="{ 'active': newMessage.trim() && !sending }" 
+                @click="sendMessage"
+                :disabled="!newMessage.trim() || sending"
+              >
+                <i v-if="!sending" class="bx bx-send"></i>
+                <div v-else class="spinner-border spinner-border-sm text-white" role="status"></div>
               </button>
             </div>
           </footer>
         </template>
         
+        <!-- Empty State -->
         <div v-else class="chat-empty-state">
           <div class="empty-icon">💬</div>
           <h4>Quản lý tin nhắn khách hàng</h4>
@@ -132,86 +170,79 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted } from 'vue';
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
+import axios from 'axios';
 
+// ===== CONFIG =====
+const API_BASE = 'http://127.0.0.1:8000/api/moi-gioi';
+const SSE_URL = 'http://127.0.0.1:8000/api/moi-gioi/sse/stream';
+
+// ===== STATE =====
 const searchQuery = ref('');
-const activeChatId = ref(2);
+const filterType = ref('all');
+const activeChatId = ref(null);
+const activeConversationId = ref(null);
 const newMessage = ref('');
+const sending = ref(false);
 const chatContent = ref(null);
+const eventSource = ref(null);
+let currentEchoChannel = null; // 🔥 Echo channel reference
 
-// Mock Data ngữ cảnh Bất động sản
-const contacts = ref([
-  { id: 1, name: 'Lê Minh Tuấn', avatar: '', lastMsg: 'Giá căn hộ 2PN bên Indochina là bao nhiêu em?', time: '09:51', online: true, unread: true, propertyInterest: 'Indochina Riverside' },
-  { id: 2, name: 'Chị Hoàng Yến', avatar: '', lastMsg: 'Ok em, cuối tuần chị ghé xem thực tế nhé.', time: '14:32', online: true, unread: false, propertyInterest: 'Vinhomes Central' },
-  { id: 3, name: 'Nguyễn Văn Đạt', avatar: '', lastMsg: 'Pháp lý dự án này đã có sổ hồng chưa?', time: 'T4', online: false, unread: false, propertyInterest: 'Đất nền Hòa Xuân' },
-  { id: 4, name: 'Trần Thu Hà', avatar: '', lastMsg: 'Chị cần tìm mặt bằng kinh doanh quận Hải Châu', time: 'T3', online: true, unread: false, propertyInterest: 'Mặt bằng thương mại' },
-  { id: 5, name: 'Phạm Đức Anh', avatar: '', lastMsg: 'Ngân hàng hỗ trợ vay tối đa bao nhiêu %?', time: '01/10', online: false, unread: false, propertyInterest: 'KĐT FPT City' }
-]);
+// API Data
+const conversations = ref([]);
+const messages = ref([]);
+const loadingConversations = ref(false);
+const loadingMessages = ref(false);
 
-const messages = ref({
-  1: [
-    { id: 1, sender: 'other', text: 'Chào em, chị thấy tin đăng căn Penthouse.', time: '09:45' },
-    { id: 2, sender: 'other', text: 'Giá căn hộ 2PN bên Indochina là bao nhiêu em?', time: '09:51' }
-  ],
-  2: [
-    { id: 1, sender: 'other', text: 'Chào em, chị quan tâm dự án Vinhomes em đang đăng', time: '14:15' },
-    { id: 2, sender: 'me', text: 'Dạ em chào chị Yến. Căn 3PN hiện tại giá đang cực tốt, chủ nhà đang ngộp bank ạ.', time: '14:17' },
-    { id: 3, sender: 'other', text: 'Giá chốt là bao nhiêu em? Có bớt lộc không?', time: '14:20' },
-    { id: 4, sender: 'me', text: 'Dạ giá chốt 4.2 tỷ bao gồm hết thuế phí rồi chị nhé. Để em gửi chị bảng tính dòng tiền ạ.', time: '14:22' },
-    { id: 5, sender: 'other', text: 'Ok em, cuối tuần chị ghé xem thực tế nhé.', time: '14:32' }
-  ],
-  3: [
-    { id: 1, sender: 'other', text: 'Pháp lý dự án này đã có sổ hồng chưa?', time: 'Thứ Tư' }
-  ]
-});
-
+// ===== COMPUTED =====
 const filteredContacts = computed(() => {
-  if (!searchQuery.value.trim()) return contacts.value;
-  const q = searchQuery.value.toLowerCase();
-  return contacts.value.filter(c => c.name.toLowerCase().includes(q) || c.propertyInterest?.toLowerCase().includes(q));
+  let list = [...conversations.value];
+  
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.toLowerCase();
+    list = list.filter(c => 
+      c.khach_hang?.ten?.toLowerCase().includes(q) || 
+      c.bat_dong_san?.tieu_de?.toLowerCase().includes(q)
+    );
+  }
+  
+  if (filterType.value === 'unread') {
+    list = list.filter(c => c.unread_count > 0);
+  }
+  
+  return list.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
 });
 
 const activeContact = computed(() => {
-  return contacts.value.find(c => c.id === activeChatId.value) || {};
+  return conversations.value.find(c => c.id === activeConversationId.value) || null;
 });
 
-const currentMessages = computed(() => {
-  return messages.value[activeChatId.value] || [];
-});
+// ===== HELPERS =====
+const getAuthToken = () => localStorage.getItem('auth_token');
 
-const selectChat = (id) => {
-  activeChatId.value = id;
-  // Xóa trạng thái unread khi click vào
-  const contact = contacts.value.find(c => c.id === id);
-  if (contact) contact.unread = false;
-  
-  nextTick(() => scrollToBottom());
+const getAvatarUrl = (user) => {
+  if (user?.avatar) {
+    return user.avatar.startsWith('http') ? user.avatar : `http://127.0.0.1:8000/storage/${user.avatar}`;
+  }
+  const name = user?.ten || 'K';
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=10b981&color=fff&size=128`;
 };
 
-const sendMessage = () => {
-  if (!newMessage.value.trim()) return;
-  
-  const chatId = activeChatId.value;
-  if (!messages.value[chatId]) messages.value[chatId] = [];
-  
+const formatTime = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
   const now = new Date();
-  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const diff = Math.floor((now - date) / 1000);
   
-  messages.value[chatId].push({
-    id: Date.now(),
-    sender: 'me',
-    text: newMessage.value.trim(),
-    time: timeStr
-  });
-  
-  const contact = contacts.value.find(c => c.id === chatId);
-  if (contact) {
-    contact.lastMsg = newMessage.value.trim();
-    contact.time = timeStr;
-  }
-  
-  newMessage.value = '';
-  nextTick(() => scrollToBottom());
+  if (diff < 60) return 'Vừa xong';
+  if (diff < 3600) return `${Math.floor(diff/60)}p`;
+  if (diff < 86400) return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+};
+
+const formatMessageTime = (dateStr) => {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 };
 
 const scrollToBottom = () => {
@@ -220,13 +251,293 @@ const scrollToBottom = () => {
   }
 };
 
-onMounted(() => {
-  scrollToBottom();
+// ===== API FUNCTIONS =====
+
+async function loadConversations() {
+  loadingConversations.value = true;
+  try {
+    const token = getAuthToken();
+    const res = await axios.get(`${API_BASE}/chat/conversations`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    conversations.value = res.data.data || [];
+  } catch (err) {
+    console.error('Lỗi load conversations:', err);
+    conversations.value = [];
+  } finally {
+    loadingConversations.value = false;
+  }
+}
+
+async function loadMessages() {
+  if (!activeConversationId.value) return;
+  
+  loadingMessages.value = true;
+  try {
+    const token = getAuthToken();
+    const res = await axios.get(
+      `${API_BASE}/chat/${activeConversationId.value}/messages`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    
+    messages.value = (res.data.data || []).map(msg => ({
+      id: msg.id,
+      text: msg.content,
+      sender: msg.sender_type === 'moi_gioi' ? 'me' : 'other',
+      time: formatMessageTime(msg.created_at),
+      created_at: msg.created_at
+    }));
+    
+    await nextTick();
+    scrollToBottom();
+    await markAsRead(activeConversationId.value);
+    
+  } catch (err) {
+    console.error('Lỗi load messages:', err);
+    messages.value = [];
+  } finally {
+    loadingMessages.value = false;
+  }
+}
+
+async function sendMessage() {
+  if (!newMessage.value.trim() || !activeConversationId.value || sending.value) return;
+  
+  const content = newMessage.value.trim();
+  sending.value = true;
+  
+  try {
+    const token = getAuthToken();
+    const tempId = Date.now();
+    
+    messages.value.push({
+      id: tempId,
+      text: content,
+      sender: 'me',
+      time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+    });
+    await nextTick();
+    scrollToBottom();
+    
+    await axios.post(
+      `${API_BASE}/chat/${activeConversationId.value}/message`,
+      { content },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    
+    newMessage.value = '';
+    
+    const conv = conversations.value.find(c => c.id === activeConversationId.value);
+    if (conv) {
+      conv.last_message = { content };
+      conv.updated_at = new Date().toISOString();
+    }
+    
+  } catch (err) {
+    console.error('Lỗi gửi tin:', err);
+    messages.value = messages.value.filter(m => m.id !== tempId);
+    alert('Gửi tin nhắn thất bại. Vui lòng thử lại.');
+  } finally {
+    sending.value = false;
+  }
+}
+
+async function markAsRead(conversationId) {
+  try {
+    const token = getAuthToken();
+    await axios.post(
+      `${API_BASE}/chat/${conversationId}/read`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const conv = conversations.value.find(c => c.id === conversationId);
+    if (conv) conv.unread_count = 0;
+  } catch (err) {
+    console.warn('Lỗi mark as read:', err);
+  }
+}
+
+async function markAllAsRead() {
+  try {
+    const token = getAuthToken();
+    await axios.post(
+      `${API_BASE}/chat/read-all`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    conversations.value.forEach(c => c.unread_count = 0);
+  } catch (err) {
+    console.error('Lỗi mark all as read:', err);
+  }
+}
+
+async function selectChat(id) {
+  if (activeConversationId.value === id) return;
+  
+  activeChatId.value = id;
+  activeConversationId.value = id;
+  
+  await loadMessages();
+  
+  // 🔥 BẬT ECHO REALTIME CHO ROOM NÀY
+  listenRealtime(id);
+}
+
+// ===== ACTION BUTTONS =====
+const makeCall = () => {
+  const phone = activeContact.value?.khach_hang?.so_dien_thoai;
+  if (phone) window.location.href = `tel:${phone}`;
+};
+
+const sendDocument = () => alert('Tính năng gửi tài liệu đang được phát triển');
+const viewCustomerInfo = () => console.log('View customer:', activeContact.value?.khach_hang?.id);
+const attachFile = () => alert('Tính năng đính kèm file đang được phát triển');
+const sendImage = () => alert('Tính năng gửi ảnh đang được phát triển');
+
+// 🔔 ===== SSE: CHỈ XỬ LÝ NOTIFICATION (KHÔNG XỬ LÝ CHAT) =====
+function setupSSE() {
+  const token = getAuthToken();
+  if (!token) return;
+  
+  if (eventSource.value) {
+    eventSource.value.close();
+  }
+  
+  const url = `${SSE_URL}?token=${encodeURIComponent(token)}`;
+  const es = new EventSource(url);
+  eventSource.value = es;
+  
+  // 🔥 Option 1: Dùng onmessage (nhận tất cả event)
+  es.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      
+      // 🔔 CHỈ XỬ LÝ NOTIFICATION: có field tieu_de HOẶC event type là message
+      if (data.tieu_de || e.type === 'message' || data.type === 'new-notification') {
+        console.log('🔔 Notification SSE:', data);
+        
+        // TODO: Update badge thông báo / list notification
+        // Ví dụ: increment notification badge count
+        // window.dispatchEvent(new CustomEvent('notification-received', { detail: data }));
+      }
+      
+    } catch (err) {
+      console.error('Lỗi parse SSE:', err);
+    }
+  };
+  
+  // 🔥 Option 2 (Chuẩn hơn): Dùng addEventListener cho event name cụ thể
+  // es.addEventListener('new-notification', (e) => {
+  //   try {
+  //     const data = JSON.parse(e.data);
+  //     console.log('🔔 New notification:', data);
+  //     // Update notification UI here
+  //   } catch (err) {
+  //     console.error('Lỗi parse notification:', err);
+  //   }
+  // });
+  
+  es.onerror = (err) => {
+    console.warn('SSE connection error:', err);
+    setTimeout(() => {
+      if (document.visibilityState === 'visible') {
+        setupSSE();
+      }
+    }, 5000);
+  };
+}
+
+// 🚀 ===== ECHO (REVERB): CHAT REALTIME =====
+function listenRealtime(conversationId) {
+  // Check nếu Echo đã được init (trong app.js hoặc bootstrap.js)
+  if (!window.Echo) {
+    console.warn('❌ Laravel Echo chưa được khởi tạo. Kiểm tra bootstrap.js');
+    return;
+  }
+
+  // 🔥 Rời channel cũ nếu có (tránh duplicate listeners)
+  if (currentEchoChannel) {
+    console.log('🔴 Leave channel:', currentEchoChannel);
+    window.Echo.leave(currentEchoChannel);
+    currentEchoChannel = null;
+  }
+
+  const channelName = `chat.${conversationId}`;
+  currentEchoChannel = channelName;
+
+  console.log('🟢 Join channel:', channelName);
+
+  window.Echo.channel(channelName)
+    .listen('.message.sent', (e) => {
+      console.log('🔥 Chat realtime received:', e);
+
+      // 🔥 Tránh duplicate: kiểm tra message đã tồn tại chưa
+      if (messages.value.find(m => m.id === e.id)) {
+        return;
+      }
+
+      // 🔥 Nếu đang xem đúng conversation này → push vào UI
+      if (Number(e.conversation_id) === Number(activeConversationId.value)) {
+        messages.value.push({
+          id: e.id,
+          text: e.content,
+          sender: e.sender_type === 'moi_gioi' ? 'me' : 'other',
+          time: formatMessageTime(e.created_at),
+          created_at: e.created_at
+        });
+
+        nextTick(() => scrollToBottom());
+      }
+
+      // 🔥 Update sidebar: last message + unread count
+      const conv = conversations.value.find(c => c.id === e.conversation_id);
+      if (conv) {
+        conv.last_message = { content: e.content };
+        conv.updated_at = e.created_at;
+
+        // Tăng unread nếu KHÔNG đang xem conversation này
+        if (Number(e.conversation_id) !== Number(activeConversationId.value)) {
+          conv.unread_count = (conv.unread_count || 0) + 1;
+        }
+      } else {
+        // Nếu là conversation mới chưa có trong list → reload list
+        loadConversations();
+      }
+    });
+}
+
+// ===== LIFECYCLE =====
+onMounted(async () => {
+  await loadConversations();
+  setupSSE(); // 🔔 SSE cho notification
+  // Echo sẽ được init khi selectChat() được gọi
+});
+
+onUnmounted(() => {
+  // Cleanup SSE
+  if (eventSource.value) {
+    eventSource.value.close();
+    eventSource.value = null;
+  }
+  
+  // Cleanup Echo channel
+  if (currentEchoChannel && window.Echo) {
+    console.log('🔴 Cleanup Echo channel:', currentEchoChannel);
+    window.Echo.leave(currentEchoChannel);
+    currentEchoChannel = null;
+  }
+});
+
+// Reconnect SSE khi page trở lại visible
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && !eventSource.value) {
+    setupSSE();
+  }
 });
 </script>
 
 <style scoped>
-/* Biến màu chủ đạo cho Broker */
+/* ===== GIỮ NGUYÊN 100% CSS CŨ ===== */
 .broker-chat-container {
   --emerald-50: #ecfdf5;
   --emerald-100: #d1fae5;
@@ -239,7 +550,7 @@ onMounted(() => {
   --text-muted: #64748b;
   
   display: flex;
-  height: calc(100vh - 120px); /* Điều chỉnh tùy theo layout tổng của bạn */
+  height: calc(100vh - 120px);
   min-height: 600px;
   background: #fff;
   border-radius: 16px;
@@ -252,7 +563,6 @@ onMounted(() => {
 .bg-emerald { background-color: var(--emerald-500) !important; color: white; }
 .text-emerald { color: var(--emerald-500) !important; }
 
-/* ================= SIDEBAR ================= */
 .chat-sidebar {
   width: 340px;
   background: white;
@@ -324,6 +634,7 @@ onMounted(() => {
   color: var(--text-muted);
 }
 .empty-state i { font-size: 3rem; color: #cbd5e1; margin-bottom: 10px; }
+.empty-state .spinner-border { width: 1.5rem; height: 1.5rem; }
 
 .chat-contact-item {
   display: flex;
@@ -393,13 +704,19 @@ onMounted(() => {
   top: 50%;
   right: 20px;
   transform: translateY(-50%);
-  width: 10px;
-  height: 10px;
+  min-width: 20px;
+  height: 20px;
   background: var(--emerald-500);
-  border-radius: 50%;
+  color: white;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
 }
 
-/* ================= MAIN CHAT AREA ================= */
 .chat-main {
   flex: 1;
   display: flex;
@@ -433,6 +750,7 @@ onMounted(() => {
   transition: all 0.2s;
 }
 .action-btn:hover { background: var(--emerald-50); color: var(--emerald-600); border-color: var(--emerald-200); }
+.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .chat-main__content {
   flex: 1;
@@ -481,7 +799,7 @@ onMounted(() => {
   border-bottom-right-radius: 4px;
 }
 
-.message-text { margin: 0; font-size: 0.95rem; line-height: 1.4; }
+.message-text { margin: 0; font-size: 0.95rem; line-height: 1.4; word-break: break-word; }
 .message-time {
   font-size: 0.7rem;
   display: block;
@@ -515,6 +833,7 @@ onMounted(() => {
   transition: color 0.2s;
 }
 .input-action-btn:hover { color: var(--emerald-500); }
+.input-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .chat-input {
   flex: 1;
@@ -524,6 +843,7 @@ onMounted(() => {
   outline: none;
   color: var(--text-dark);
 }
+.chat-input:disabled { opacity: 0.6; }
 
 .send-btn {
   background: var(--emerald-500);
@@ -542,8 +862,9 @@ onMounted(() => {
 }
 .send-btn.active { opacity: 1; pointer-events: auto; }
 .send-btn.active:hover { background: var(--emerald-600); transform: scale(1.05); }
+.send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.send-btn .spinner-border { width: 1rem; height: 1rem; border-width: 2px; }
 
-/* Khi chưa chọn đoạn chat */
 .chat-empty-state {
   flex: 1;
   display: flex;
@@ -560,9 +881,39 @@ onMounted(() => {
   50% { transform: translateY(-10px); }
 }
 
-/* Responsive cơ bản */
 @media (max-width: 768px) {
-  .chat-sidebar { width: 100%; display: flex; }
-  .chat-main { display: none; /* Ở bản mobile thực tế, bạn cần làm logic ẩn hiện bằng v-if khi activeChatId thay đổi */ }
+  .broker-chat-container {
+    flex-direction: column;
+    height: 100vh;
+  }
+  .chat-sidebar { 
+    width: 100%; 
+    height: auto;
+    max-height: 40%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .chat-main { 
+    height: 60%;
+  }
 }
+
+.spinner-border {
+  display: inline-block;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-border 0.75s linear infinite;
+}
+@keyframes spinner-border {
+  to { transform: rotate(360deg); }
+}
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.15em;
+}
+.text-center { text-align: center; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+.ms-2 { margin-left: 0.5rem; }
 </style>
