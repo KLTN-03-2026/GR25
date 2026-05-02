@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <transition name="chat-slide">
     <div v-if="visible" class="chat-wrapper">
       
@@ -98,7 +98,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import api from "@/axios/config";
 
 export default {
   name: "ChatPopup",
@@ -164,14 +164,9 @@ beforeUnmount() {
   // 🔥 LOAD TIN NHẮN
   async loadMessages() {
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("khach_hang_auth_token");
 
-      const res = await axios.get(
-        `http://127.0.0.1:8000/api/khach-hang/chat/${this.conversationId}/messages`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const res = await api.get(`/khach-hang/chat/${this.conversationId}/messages`);
 
       // 🔥 FIX FIELD THEO BE
       this.messages = res.data.data.map(msg => ({
@@ -194,17 +189,9 @@ beforeUnmount() {
     const content = this.text.trim();
 
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("khach_hang_auth_token");
 
-      await axios.post(
-        `http://127.0.0.1:8000/api/khach-hang/chat/${this.conversationId}/message`,
-        {
-          content: content   // 🔥 FIX QUAN TRỌNG
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      await api.post(`/khach-hang/chat/${this.conversationId}/message`, { content });
 
       // 🔥 HIỆN NGAY (optimistic UI)
       this.messages.push({

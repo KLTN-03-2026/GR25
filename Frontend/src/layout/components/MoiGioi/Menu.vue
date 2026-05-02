@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <aside class="broker-sidebar">
     <div class="broker-sidebar__brand">
       <p class="broker-sidebar__brand-name">BrokerHub</p>
@@ -43,13 +43,16 @@
 
       <div class="broker-sidebar__divider"></div>
 
-      <div class="broker-sidebar__group">
+      <div class="broker-sidebar__group broker-sidebar__group--bottom">
         <RouterLink
           v-for="item in secondaryItems"
           :key="item.id"
           :to="item.route"
           class="broker-sidebar__link"
-          :class="{ 'is-active': route.path.startsWith(item.route) }"
+          :class="{ 
+    'is-active': route.path.startsWith(item.route),
+    'broker-sidebar__link--upgrade': item.id === 'packages'
+  }"
         >
           <span class="material-symbols-outlined">{{ item.icon }}</span>
           <span class="broker-sidebar__label">{{ item.label }}</span>
@@ -78,7 +81,7 @@
 <script setup>
 import { RouterLink, useRoute } from "vue-router";
 import { ref, onMounted } from "vue";
-import { api } from "@/main";
+import api from "@/axios/config";
 
 const route = useRoute();
 
@@ -115,60 +118,48 @@ const propertyItems = ref([
 
 const secondaryItems = ref([
   {
-    id: "packages",
-    label: "Gói tin",
-    icon: "inventory_2",
-    route: "/moi-gioi/goi-tin",
+    id: "notifications",
+    label: "Thông báo",
+    icon: "notifications",
+    route: "/moi-gioi/thong-bao",
+    badge: null,
   },
   {
-    id: "notifications",
-    label: "Profile",
+    id: 'packages',
+    label: 'Gói tin',
+    icon: 'auto_awesome',
+    route: '/moi-gioi/goi-tin',
+  },
+  {
+    id: 'lich-su-mua-tin',
+    label: 'Lịch sử mua tin',
+    icon: 'receipt_long',
+    route: '/moi-gioi/lich-su-mua-tin',
+  },
+  {
+    id: "profile",
+    label: "Hồ sơ cá nhân",
     icon: "account_circle",
     route: "/moi-gioi/ho-so-ca-nhan",
     badge: null,
   },
 ]);
 
-// Load counts
-const loadCounts = async () => {
+const loadUnreadNotifications = async () => {
   try {
-    const response = await api.get("");
-
-    if (response.data) {
-      const pendingCount = response.data.bds_cho_duyet || 0;
-      const newCustomersCount = response.data.khach_hang_moi || 0;
-      const unreadNotifications = response.data.thong_bao_moi || 0;
-
-      const pendingItem = propertyItems.value.find(
-        (item) => item.id === "pending"
-      );
-      if (pendingItem && pendingCount > 0) {
-        pendingItem.badge = pendingCount;
-      }
-
-      const customerItem = primaryItems.value.find(
-        (item) => item.id === "customers"
-      );
-      if (customerItem && newCustomersCount > 0) {
-        customerItem.badge = newCustomersCount;
-      }
-
-      const notificationItem = secondaryItems.value.find(
-        (item) => item.id === "notifications"
-      );
-      if (notificationItem && unreadNotifications > 0) {
-        notificationItem.badge = unreadNotifications;
-      }
+    const res = await api.get("/moi-gioi/thong-bao");
+    if (res.data?.data) {
+      const unread = res.data.data.filter((n) => !n.is_read).length;
+      const notifItem = secondaryItems.value.find((i) => i.id === "notifications");
+      if (notifItem) notifItem.badge = unread > 0 ? unread : null;
     }
-  } catch (error) {
-    console.error("Error loading counts:", error);
+  } catch {
+    // silent
   }
 };
 
 onMounted(() => {
-  loadCounts();
-  // Refresh every 30 seconds
-  setInterval(loadCounts, 30000);
+  loadUnreadNotifications();
 });
 </script>
 
@@ -365,5 +356,26 @@ Upgrade Card .broker-sidebar__upgrade-card {
   .broker-sidebar__nav {
     gap: 12px;
   }
+}
+
+.broker-sidebar__group--bottom {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.broker-sidebar__link--upgrade {
+  background: linear-gradient(135deg, #059669, #10b981) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.broker-sidebar__link--upgrade:hover {
+  background: linear-gradient(135deg, #047857, #059669) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+}
+
+.broker-sidebar__link--upgrade .material-symbols-outlined {
+  color: white !important;
 }
 </style>

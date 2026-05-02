@@ -3,6 +3,7 @@
     <div
       class="flex w-full max-w-6xl bg-white rounded-[40px] shadow-2xl overflow-hidden min-h-[650px]"
     >
+      <!-- Left Panel (Hình ảnh) -->
       <div
         class="hidden md:flex md:w-1/2 relative bg-indigo-950 text-white p-12 flex-col justify-between"
       >
@@ -51,6 +52,7 @@
         </div>
       </div>
 
+      <!-- Right Panel (Form) -->
       <div
         class="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center bg-white"
       >
@@ -70,6 +72,7 @@
           </div>
 
           <form @submit.prevent="handleLogin" class="space-y-5">
+            <!-- Email Input -->
             <div class="space-y-2">
               <label
                 class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1"
@@ -89,12 +92,22 @@
               </div>
             </div>
 
+            <!-- Password Input -->
             <div class="space-y-2">
               <div class="flex justify-between items-center px-1">
                 <label
                   class="text-[10px] font-black text-gray-400 uppercase tracking-widest"
-                  >Mật khẩu</label
                 >
+                  Mật khẩu
+                </label>
+
+                <!-- 🔥 THÊM DÒNG NÀY -->
+                <router-link
+                  to="/khach-hang/quen-mat-khau"
+                  class="text-[10px] font-black text-gray-400 uppercase tracking-widest"
+                >
+                  Quên mật khẩu?
+                </router-link>
               </div>
               <div class="relative group">
                 <span class="absolute left-5 top-1/2 -translate-y-1/2 text-lg"
@@ -110,6 +123,7 @@
               </div>
             </div>
 
+            <!-- Submit Button -->
             <div class="pt-2">
               <button
                 type="submit"
@@ -120,6 +134,7 @@
               </button>
             </div>
 
+            <!-- Divider -->
             <div class="relative my-8 text-center">
               <div class="absolute inset-0 flex items-center">
                 <div class="w-full border-t border-gray-100"></div>
@@ -130,6 +145,7 @@
               >
             </div>
 
+            <!-- Social Login -->
             <div class="grid grid-cols-2 gap-4">
               <button
                 type="button"
@@ -157,6 +173,7 @@
             </div>
           </form>
 
+          <!-- Register Link -->
           <p
             class="text-center text-[11px] text-gray-400 mt-10 font-medium uppercase tracking-wider mt-5"
           >
@@ -174,28 +191,28 @@
 </template>
 
 <script>
-import axios from "axios";
+import api from "@/axios/config";
+import { setAuth, getToken, clearAuth } from "@/js/auth";
 import { createToaster } from "@meforma/vue-toaster";
 
-const toaster = createToaster({ position: "top-right" });
+const toaster = createToaster({ position: "top-right", duration: 3000 });
 
 export default {
   name: "KhachHangLogin",
-
   data() {
     return {
       email: "",
       password: "",
       isLoading: false,
-      rememberMe: false,
     };
   },
 
-  mounted() {},
+  mounted() {
+    this.checkLogin();
+  },
 
   methods: {
-    // ===== LOGIN =====
-    handleLogin() {
+    async handleLogin() {
       if (!this.email || !this.password) {
         toaster.error("Vui lòng nhập đầy đủ thông tin");
         return;
@@ -203,63 +220,76 @@ export default {
 
       this.isLoading = true;
 
-      axios
-        .post("http://127.0.0.1:8000/api/khach-hang/dang-nhap", {
+      try {
+        const res = await api.post("/khach-hang/dang-nhap", {
           email: this.email,
           password: this.password,
-        })
-        .then((res) => {
-          if (res.data.status) {
-            const token = res.data.token;
-            const role = res.data.data?.role || "khach-hang";
-
-            // 🔥 LƯU CHUẨN
-            localStorage.setItem("auth_token", token);
-            localStorage.setItem("user_type", role);
-            localStorage.setItem("user_info", JSON.stringify(res.data.data));
-
-            toaster.success("Đăng nhập thành công");
-
-            this.$router.push("/");
-          } else {
-            toaster.error(res.data.message || "Sai tài khoản hoặc mật khẩu");
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-          toaster.error("Đăng nhập thất bại. Vui lòng thử lại");
-        })
-        .finally(() => {
-          this.isLoading = false;
         });
+
+        if (res.data.status) {
+          const token = res.data.token;
+          const userInfo = res.data.data;
+
+          // ✅ Lưu vào key riêng cho khách hàng (không ảnh hưởng admin/moi-gioi)
+          setAuth("khach-hang", token, userInfo);
+
+          // ✅ Thông báo cho Header biết auth đã thay đổi (cùng tab)
+          window.dispatchEvent(new Event("khach-hang-auth-changed"));
+
+          toaster.success("Đăng nhập thành công");
+
+          // ✅ Redirect
+          setTimeout(() => {
+            this.$router.replace("/khach-hang/trang-chu");
+          }, 300);
+        } else {
+          toaster.error(res.data.message || "Sai tài khoản hoặc mật khẩu");
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+
+        if (err.response?.status === 401) {
+          toaster.error("Sai email hoặc mật khẩu");
+        } else if (err.response?.status === 419) {
+          toaster.error("Phiên làm việc hết hạn. Vui lòng tải lại trang");
+        } else {
+          toaster.error("Đăng nhập thất bại. Vui lòng thử lại");
+        }
+      } finally {
+        this.isLoading = false;
+      }
     },
 
-    // ===== CHECK TOKEN =====
-    checkLogin() {
-      const token = localStorage.getItem("auth_token");
+    async checkLogin() {
+      // ✅ Chỉ kiểm tra token của khách hàng
+      const token = getToken("khach-hang");
       if (!token) return;
 
-      axios
-        .get("http://127.0.0.1:8000/api/khach-hang/check-token", {
-          headers: {
-            Authorization: "Bearer " + token,
-          },
-        })
-        .then((res) => {
-          if (res.data.status) {
-            this.$router.push("/");
+      try {
+        const res = await api.get("/khach-hang/check-token");
+
+        if (res.data.status === "success" || res.data.status === true) {
+          if (this.$route.path.includes("dang-nhap")) {
+            this.$router.replace("/khach-hang/trang-chu");
           }
-        })
-        .catch(() => {
-          localStorage.clear();
-        });
+        }
+      } catch (error) {
+        if (error.response?.status === 401) {
+          clearAuth("khach-hang");
+        }
+      }
+    },
+
+    loginGoogle() {
+      toaster.info("Google login coming soon");
+    },
+    loginFacebook() {
+      toaster.info("Facebook login coming soon");
     },
   },
 };
 </script>
-
 <style scoped>
-/* Đảm bảo bo tròn được thực thi nếu Tailwind bị ghi đè */
 .rounded-full {
   border-radius: 9999px !important;
 }

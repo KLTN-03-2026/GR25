@@ -511,18 +511,10 @@
 }
 </style>
 <script>
-import axios from "axios";
+import api from "@/axios/config";
 import { createToaster } from "@meforma/vue-toaster";
 const toaster = createToaster({ position: "top-right" });
-axios.interceptors.request.use((config) => {
-  const token = localStorage.getItem("auth_token");
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-});
 export default {
   data() {
     return {
@@ -585,8 +577,8 @@ export default {
         tinh_trang: Number(this.chuc_vu.tinh_trang), // ✅ Convert sang number
       };
 
-      axios
-        .post("http://127.0.0.1:8000/api/admin/chuc-vu/create", payload)
+      api
+        .post("/admin/chuc-vu/create", payload)
         .then((response) => {
           if (response.data.status || response.data.success) {
             this.$toast.success(
@@ -639,8 +631,8 @@ export default {
         tinh_trang: Number(this.edit.tinh_trang), // Convert sang number
       };
 
-      axios
-        .post(`http://127.0.0.1:8000/api/admin/chuc-vu/update`, payload)
+      api
+        .post(`/admin/chuc-vu/update`, payload)
         .then((response) => {
           if (response.data.status || response.data.success) {
             this.$toast.success(`Cập nhật thành công!${response.data.message}`);
@@ -677,8 +669,8 @@ export default {
     return;
   }
 
-  axios
-    .delete(`http://127.0.0.1:8000/api/admin/chuc-vu/delete`, {
+  api
+    .delete(`/admin/chuc-vu/delete`, {
       data: { id: id }, // Gửi id qua request body cho DELETE
     })
     .then((res) => {
@@ -717,8 +709,8 @@ export default {
 
     // Load data chức vụ để hiển thị ở cột trái
     loadDuLieu() {
-      axios
-        .get("http://127.0.0.1:8000/api/admin/chuc-vu/data")
+      api
+        .get("/admin/chuc-vu/data")
         .then((res) => {
           this.chucVuList = res.data.data;
         })
@@ -729,11 +721,11 @@ export default {
 
     // Load data chức năng để hiển thị ở cột giữa
     layDuLieuChucNang() {
-      axios
-        .get("http://127.0.0.1:8000/api/admin/chuc-nang/data")
+      api
+        .get("/admin/chuc-nang/data")
         .then((res) => {
           if (res.data.status == false) {
-            toaster.error(res.data.message);
+            this.$toast.error(res.data.message);
           }
           this.listChucNang = res.data.data;
         });
@@ -741,13 +733,11 @@ export default {
     // Load data phân quyền cho chức vụ đã chọn ở cốt phải
     loadData() {
       if (!this.id_chuc_vu) return;
-      axios
-        .get(
-          "http://127.0.0.1:8000/api/admin/phan-quyen/data/" + this.id_chuc_vu
-        )
+      api
+        .get("/admin/phan-quyen/data/" + this.id_chuc_vu)
         .then((res) => {
           if (res.data.status == false) {
-            toaster.error(res.data.message);
+            this.$toast.error(res.data.message);
           }
           this.list_chi_tiet = res.data.data; // Gán data vào list_chi_tiet
         })
@@ -758,13 +748,11 @@ export default {
 
     // lấy data phân quyền cho chức vụ đã chọn (dùng khi click vào phân quyền để load data luôn)
     layDuLieuPhanQuyen() {
-      axios
-        .get(
-          "http://127.0.0.1:8000/api/admin/phan-quyen/data/" + this.id_chuc_vu
-        )
+      api
+        .get("/admin/phan-quyen/data/" + this.id_chuc_vu)
         .then((res) => {
           if (res.data.status == false) {
-            toaster.error(res.data.message);
+            this.$toast.error(res.data.message);
           }
           this.listPhanQuyen = res.data.data;
         });
@@ -783,7 +771,7 @@ export default {
     // Cấp quyền cho chức năng
     capQuyen(chuc_nang) {
       if (!this.quyen_dang_chon.id) {
-        toaster.warning("Vui lòng chọn chức vụ cần phân quyền!");
+        this.$toast.warning("Vui lòng chọn chức vụ cần phân quyền!");
         return;
       }
 
@@ -793,7 +781,7 @@ export default {
       );
 
       if (daTonTai) {
-        toaster.error(
+        this.$toast.error(
           `<span class="text-nowrap">Chức năng <b>${chuc_nang.ten_chuc_nang}</b> đã tồn tại!</span>`
         );
         return;
@@ -804,14 +792,11 @@ export default {
         id_chuc_nang: chuc_nang.id,
       };
 
-      axios
-        .post(
-          "http://127.0.0.1:8000/api/admin/phan-quyen/chuc-vu/create",
-          payload
-        )
+      api
+        .post("/admin/phan-quyen/chuc-vu/create", payload)
         .then((res) => {
           if (res.data.status || res.data.success) {
-            toaster.success(
+            this.$toast.success(
               `<span class="text-nowrap">Đã cấp quyền "<b>${chuc_nang.ten_chuc_nang}</b>" cho <b>${this.quyen_dang_chon.ten_chuc_vu}</b></span> `
             );
             this.loadData(); // Reload lại danh sách
@@ -851,11 +836,8 @@ export default {
 
     // Xóa quyền
     xoaQuyen(payload) {
-      axios
-        .post(
-          "http://127.0.0.1:8000/api/admin/phan-quyen/chuc-vu/delete",
-          payload
-        )
+      api
+        .post("/admin/phan-quyen/chuc-vu/delete", payload)
         .then((res) => {
           if (res.data.status || res.data.success) {
             toaster.success(res.data.message);
