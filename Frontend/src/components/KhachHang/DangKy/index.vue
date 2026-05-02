@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="min-h-screen flex items-center justify-center bg-gray-100 p-6">
     <div
       class="flex w-full max-w-6xl bg-white rounded-[40px] shadow-2xl overflow-hidden min-h-[650px]"
@@ -214,7 +214,7 @@
 
 <script setup>
 import { ref } from "vue";
-import axios from "axios";
+import api from "@/axios/config";
 import { createToaster } from "@meforma/vue-toaster";
 import { useRouter } from "vue-router";
 
@@ -227,12 +227,6 @@ const password_confirmation = ref("");
 const router = useRouter();
 const toaster = createToaster({ position: "top-right" });
 
-// ===== API =====
-const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
-  timeout: 10000,
-});
-
 const handleRegister = async () => {
   // ✅ Validate frontend (tuỳ chọn)
   if (password.value !== password_confirmation.value) {
@@ -241,16 +235,13 @@ const handleRegister = async () => {
   }
 
   try {
-    const response = await axios.post(
-      "http://127.0.0.1:8000/api/khach-hang/dang-ky",
-      {
-        ten: ten.value,
-        email: email.value,
-        so_dien_thoai: so_dien_thoai.value,
-        password: password.value,
-        password_confirmation: password_confirmation.value, // Gửi đủ
-      }
-    );
+    const response = await api.post("/khach-hang/dang-ky", {
+      ten: ten.value,
+      email: email.value,
+      so_dien_thoai: so_dien_thoai.value,
+      password: password.value,
+      password_confirmation: password_confirmation.value,
+    });
 
     console.log("✅ Register response:", response.data);
     toaster.success("Đăng ký thành công!");

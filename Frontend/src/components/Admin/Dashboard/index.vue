@@ -93,36 +93,18 @@
             </div>
 
             <div class="control-actions">
-              <button
-                class="btn-auto-refresh"
-                :class="{ active: autoRefresh }"
-                @click="toggleAutoRefresh"
-              >
-                <i
-                  class="fa-solid fa-rotate"
-                  :class="{ 'fa-spin': autoRefresh }"
-                ></i>
+              <button class="btn-auto-refresh" :class="{ active: autoRefresh }" @click="toggleAutoRefresh">
+                <i class="fa-solid fa-rotate" :class="{ 'fa-spin': autoRefresh }"></i>
               </button>
 
-              <button
-                class="btn-refresh"
-                @click="refreshAllData"
-                :disabled="loading"
-              >
-                <i
-                  class="fa-solid fa-rotate-right"
-                  :class="{ 'fa-spin': loading }"
-                ></i>
+              <button class="btn-refresh" @click="refreshAllData" :disabled="loading">
+                <i class="fa-solid fa-rotate-right" :class="{ 'fa-spin': loading }"></i>
                 <span>Làm mới</span>
               </button>
 
               <div class="period-selector">
                 <label>Khoảng thời gian</label>
-                <select
-                  v-model="timePeriod"
-                  @change="fetchChartData"
-                  class="period-select"
-                >
+                <select v-model="timePeriod" @change="fetchChartData" class="period-select">
                   <option value="7days">7 ngày qua</option>
                   <option value="30days">30 ngày qua</option>
                   <option value="3months">3 tháng qua</option>
@@ -148,12 +130,9 @@
     <div class="layer-1 stats-grid">
       <div class="stat-card stat-card-1">
         <div class="stat-icon-wrapper">
-          <div
-            class="stat-icon"
-            style="
+          <div class="stat-icon" style="
               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            "
-          >
+            ">
             <i class="fa-solid fa-users"></i>
           </div>
         </div>
@@ -166,12 +145,9 @@
 
       <div class="stat-card stat-card-2">
         <div class="stat-icon-wrapper">
-          <div
-            class="stat-icon"
-            style="
+          <div class="stat-icon" style="
               background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            "
-          >
+            ">
             <i class="fa-solid fa-user-tie"></i>
           </div>
         </div>
@@ -184,12 +160,9 @@
 
       <div class="stat-card stat-card-3">
         <div class="stat-icon-wrapper">
-          <div
-            class="stat-icon"
-            style="
+          <div class="stat-icon" style="
               background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            "
-          >
+            ">
             <i class="fa-solid fa-building"></i>
           </div>
         </div>
@@ -202,12 +175,9 @@
 
       <div class="stat-card stat-card-4">
         <div class="stat-icon-wrapper">
-          <div
-            class="stat-icon"
-            style="
+          <div class="stat-icon" style="
               background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            "
-          >
+            ">
             <i class="fa-solid fa-chart-line"></i>
           </div>
         </div>
@@ -229,21 +199,13 @@
             Doanh Thu & Giao Dịch
           </h3>
           <button class="btn-chart-toggle" @click="toggleChartType">
-            <i
-              :class="
-                isAreaChart ? 'fa-solid fa-chart-area' : 'fa-solid fa-chart-bar'
-              "
-            ></i>
+            <i :class="isAreaChart ? 'fa-solid fa-chart-area' : 'fa-solid fa-chart-bar'
+              "></i>
           </button>
         </div>
         <div class="chart-body">
-          <apexchart
-            v-if="chartLoaded"
-            :type="isAreaChart ? 'area' : 'bar'"
-            height="350"
-            :options="revenueChartOptions"
-            :series="revenueChartSeries"
-          ></apexchart>
+          <apexchart v-if="chartLoaded" :type="isAreaChart ? 'area' : 'bar'" height="350" :options="revenueChartOptions"
+            :series="revenueChartSeries"></apexchart>
           <div v-else class="chart-loading">
             <i class="fa-solid fa-circle-notch fa-spin"></i>
             Đang tải biểu đồ...
@@ -260,13 +222,8 @@
           </h3>
         </div>
         <div class="chart-body">
-          <apexchart
-            v-if="propertyChartLoaded"
-            type="donut"
-            height="350"
-            :options="propertyChartOptions"
-            :series="propertyChartSeries"
-          ></apexchart>
+          <apexchart v-if="propertyChartLoaded" type="donut" height="350" :options="propertyChartOptions"
+            :series="propertyChartSeries"></apexchart>
           <div v-else class="chart-loading">
             <i class="fa-solid fa-circle-notch fa-spin"></i>
             Đang tải biểu đồ...
@@ -298,12 +255,7 @@
               <i class="fa-solid fa-inbox"></i>
               <p>Chưa có dữ liệu</p>
             </div>
-            <div
-              v-else
-              class="favorite-item"
-              v-for="(item, index) in favorites"
-              :key="index"
-            >
+            <div v-else class="favorite-item" v-for="(item, index) in favorites" :key="index">
               <div class="favorite-avatar">
                 {{ getInitials(item.khach_hang) }}
               </div>
@@ -311,10 +263,8 @@
                 <div class="favorite-customer">{{ item.khach_hang }}</div>
                 <div class="favorite-property">{{ item.bat_dong_san }}</div>
                 <div class="favorite-meta">
-                  <span
-                    ><i class="fa-regular fa-calendar"></i>
-                    {{ item.date }}</span
-                  >
+                  <span><i class="fa-regular fa-calendar"></i>
+                    {{ item.date }}</span>
                   <span class="favorite-price">{{ item.gia_formatted }}</span>
                 </div>
               </div>
@@ -344,12 +294,7 @@
               <i class="fa-solid fa-inbox"></i>
               <p>Chưa có giao dịch</p>
             </div>
-            <div
-              v-else
-              class="transaction-item"
-              v-for="(item, index) in transactions"
-              :key="index"
-            >
+            <div v-else class="transaction-item" v-for="(item, index) in transactions" :key="index">
               <div class="transaction-avatar">
                 {{ getInitials(item.moi_gioi) }}
               </div>
@@ -357,10 +302,8 @@
                 <div class="transaction-agent">{{ item.moi_gioi }}</div>
                 <div class="transaction-package">{{ item.goi_tin }}</div>
                 <div class="transaction-meta">
-                  <span
-                    ><i class="fa-regular fa-calendar"></i>
-                    {{ item.date }}</span
-                  >
+                  <span><i class="fa-regular fa-calendar"></i>
+                    {{ item.date }}</span>
                   <span class="transaction-amount">{{
                     item.so_tien_formatted
                   }}</span>
@@ -379,9 +322,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, onUnmounted } from "vue";
-import axios from "axios";
+import { ref, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
+import api from "@/axios/config";
 
+const router = useRouter();
 const currentTime = ref("");
 const currentDate = ref("");
 const lastUpdateTime = ref("Vừa xong");
@@ -505,14 +450,7 @@ const transactionsLoading = ref(false);
 // API Methods
 const fetchStats = async () => {
   try {
-    const token = localStorage.getItem("auth_token");
-    const res = await axios.get(
-      "http://127.0.0.1:8000/api/admin/dashboard/stats",
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
+    const res = await api.get("/admin/dashboard/stats");
     if (res.data.status) {
       stats.value = res.data.data;
     }
@@ -523,14 +461,7 @@ const fetchStats = async () => {
 
 const fetchChartData = async () => {
   try {
-    const token = localStorage.getItem("auth_token");
-    const res = await axios.post(
-      "http://127.0.0.1:8000/api/admin/dashboard/revenue-chart",
-      { period: timePeriod.value },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    console.log("Chart response:", res.data); // Debug
+    const res = await api.post("/admin/dashboard/revenue-chart", { period: timePeriod.value });
 
     if (res.data.status && res.data.data) {
       const data = res.data.data;
@@ -582,14 +513,7 @@ const fetchPropertyChartData = async () => {
 const fetchFavorites = async () => {
   favoritesLoading.value = true;
   try {
-    const token = localStorage.getItem("auth_token");
-    const res = await axios.get(
-      "http://127.0.0.1:8000/api/admin/dashboard/recent-favorites?limit=5",
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
+    const res = await api.get("/admin/dashboard/recent-favorites", { params: { limit: 5 } });
     if (res.data.status) {
       favorites.value = res.data.data;
     }
@@ -603,14 +527,7 @@ const fetchFavorites = async () => {
 const fetchTransactions = async () => {
   transactionsLoading.value = true;
   try {
-    const token = localStorage.getItem("auth_token");
-    const res = await axios.get(
-      "http://127.0.0.1:8000/api/admin/dashboard/recent-package-purchases?limit=5",
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
+    const res = await api.get("/admin/dashboard/recent-package-purchases", { params: { limit: 5 } });
     if (res.data.status) {
       transactions.value = res.data.data;
     }
@@ -623,84 +540,52 @@ const fetchTransactions = async () => {
 
 const refreshAllData = () => {
   loading.value = true;
-  Promise.all([
-    fetchStats(),
-    fetchChartData(),
-    fetchFavorites(),
-    fetchTransactions(),
-  ]).finally(() => {
+  Promise.all([fetchStats(), fetchChartData(), fetchFavorites(), fetchTransactions()]).finally(() => {
     loading.value = false;
+    lastUpdateTime.value = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
   });
 };
 
 const toggleChartType = () => {
   isAreaChart.value = !isAreaChart.value;
-  revenueChartOptions.value.chart.type = isAreaChart.value ? "area" : "bar";
-  revenueChartOptions.value.stroke.width = isAreaChart.value ? 3 : 0;
+  revenueChartOptions.value = {
+    ...revenueChartOptions.value,
+    chart: { ...revenueChartOptions.value.chart, type: isAreaChart.value ? "area" : "bar" },
+    stroke: { ...revenueChartOptions.value.stroke, width: isAreaChart.value ? 3 : 0 },
+  };
 };
 
-const formatNumber = (num) => {
-  return new Intl.NumberFormat("vi-VN").format(num);
-};
+const formatNumber = (num) => new Intl.NumberFormat("vi-VN").format(num || 0);
+const formatCurrency = (amount) =>
+  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", notation: "compact" }).format(amount);
 
 const getInitials = (name) => {
   if (!name) return "??";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 };
 
-const getStatusIcon = (status) => {
-  return status === "success" ? "fa-check-circle" : "fa-clock";
-};
-
+const getStatusIcon = (status) => (status === "success" ? "fa-check-circle" : "fa-clock");
 const viewAllFavorites = () => {
-  console.log("View all favorites");
+  // router.push("/admin/bat-dong-san"); // or appropriate route
 };
-
 const viewAllTransactions = () => {
-  console.log("View all transactions");
+  router.push("/admin/giao-dich");
 };
 
 const updateTime = () => {
   const now = new Date();
-  currentTime.value = now.toLocaleTimeString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-  currentDate.value = now.toLocaleDateString("vi-VN", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  currentTime.value = now.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  currentDate.value = now.toLocaleDateString("vi-VN", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 };
 
 const toggleAutoRefresh = () => {
   autoRefresh.value = !autoRefresh.value;
-
   if (autoRefresh.value) {
-    autoRefreshInterval = setInterval(() => {
-      refreshAllData();
-    }, 30000);
+    refreshAllData(); // Initial refresh when enabled
+    autoRefreshInterval = setInterval(refreshAllData, 30000);
   } else {
-    if (autoRefreshInterval) {
-      clearInterval(autoRefreshInterval);
-    }
+    if (autoRefreshInterval) clearInterval(autoRefreshInterval);
   }
-};
-
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    notation: "compact",
-    compactDisplay: "short",
-  }).format(amount);
 };
 
 onMounted(() => {
@@ -715,7 +600,7 @@ onUnmounted(() => {
 });
 </script>
 
-import '@/assets/css/dashboard-hero.css';
+
 <style scoped>
 /* Dashboard Hero Styles */
 .dashboard-hero {
@@ -770,13 +655,16 @@ import '@/assets/css/dashboard-hero.css';
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translate(0, 0) scale(1);
   }
+
   33% {
     transform: translate(30px, -30px) scale(1.1);
   }
+
   66% {
     transform: translate(-20px, 20px) scale(0.9);
   }
@@ -785,10 +673,8 @@ import '@/assets/css/dashboard-hero.css';
 .grid-pattern {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(
-      rgba(255, 255, 255, 0.03) 1px,
-      transparent 1px
-    ),
+  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 50px 50px;
   opacity: 0.5;
@@ -1120,10 +1006,12 @@ import '@/assets/css/dashboard-hero.css';
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -1134,6 +1022,7 @@ import '@/assets/css/dashboard-hero.css';
     transform: scale(0.8);
     opacity: 1;
   }
+
   100% {
     transform: scale(2);
     opacity: 0;
@@ -1162,6 +1051,7 @@ import '@/assets/css/dashboard-hero.css';
     opacity: 0;
     transform: translateX(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -1173,6 +1063,7 @@ import '@/assets/css/dashboard-hero.css';
     opacity: 0;
     transform: translateX(30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -1642,6 +1533,7 @@ import '@/assets/css/dashboard-hero.css';
 
 /* Responsive */
 @media (max-width: 1024px) {
+
   .charts-grid,
   .layer-3 {
     grid-template-columns: 1fr;

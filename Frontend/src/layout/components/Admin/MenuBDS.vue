@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <aside class="admin-sidebar">
     <div class="admin-sidebar__brand">
       <p class="admin-sidebar__brand-name">Architectural Curator</p>
@@ -80,10 +80,16 @@ const primaryItems = [
     route: "/admin/goi-tin",
   },
   {
-    id: "transactions",
-    label: "Quản lý giao dịch",
-    icon: "payments",
+    id: "lich-su-mua-goi",
+    label: "Lịch sử mua gói",
+    icon: "history",
     route: "/admin/lich-su-mua-goi",
+  },
+  {
+    id: "transactions",
+    label: "Giao dịch",
+    icon: "payments",
+    route: "/admin/giao-dich",
   },
 ];
 

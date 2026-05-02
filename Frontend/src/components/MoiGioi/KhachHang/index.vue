@@ -171,13 +171,11 @@
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
-import axios from 'axios';
-
-// ===== CONFIG =====
-const API_BASE = 'http://127.0.0.1:8000/api/moi-gioi';
-const SSE_URL = 'http://127.0.0.1:8000/api/moi-gioi/sse/stream';
+import { useRoute } from 'vue-router';
+import api from '@/axios/config';
 
 // ===== STATE =====
+const route = useRoute();
 const searchQuery = ref('');
 const filterType = ref('all');
 const activeChatId = ref(null);
@@ -185,7 +183,6 @@ const activeConversationId = ref(null);
 const newMessage = ref('');
 const sending = ref(false);
 const chatContent = ref(null);
-const eventSource = ref(null);
 let currentEchoChannel = null; // 🔥 Echo channel reference
 
 // API Data
@@ -218,11 +215,12 @@ const activeContact = computed(() => {
 });
 
 // ===== HELPERS =====
-const getAuthToken = () => localStorage.getItem('auth_token');
+const getAuthToken = () => localStorage.getItem('moi_gioi_auth_token');
 
 const getAvatarUrl = (user) => {
   if (user?.avatar) {
-    return user.avatar.startsWith('http') ? user.avatar : `http://127.0.0.1:8000/storage/${user.avatar}`;
+    const base = import.meta.env.VITE_API_URL?.replace('/api','') || 'http://localhost:8000';
+    return user.avatar.startsWith('http') ? user.avatar : `${base}/storage/${user.avatar}`;
   }
   const name = user?.ten || 'K';
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=10b981&color=fff&size=128`;
@@ -256,10 +254,7 @@ const scrollToBottom = () => {
 async function loadConversations() {
   loadingConversations.value = true;
   try {
-    const token = getAuthToken();
-    const res = await axios.get(`${API_BASE}/chat/conversations`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await api.get('/moi-gioi/chat/conversations');
     conversations.value = res.data.data || [];
   } catch (err) {
     console.error('Lỗi load conversations:', err);
@@ -274,11 +269,7 @@ async function loadMessages() {
   
   loadingMessages.value = true;
   try {
-    const token = getAuthToken();
-    const res = await axios.get(
-      `${API_BASE}/chat/${activeConversationId.value}/messages`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    const res = await api.get(`/moi-gioi/chat/${activeConversationId.value}/messages`);
     
     messages.value = (res.data.data || []).map(msg => ({
       id: msg.id,
@@ -307,7 +298,6 @@ async function sendMessage() {
   sending.value = true;
   
   try {
-    const token = getAuthToken();
     const tempId = Date.now();
     
     messages.value.push({
@@ -319,11 +309,7 @@ async function sendMessage() {
     await nextTick();
     scrollToBottom();
     
-    await axios.post(
-      `${API_BASE}/chat/${activeConversationId.value}/message`,
-      { content },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    await api.post(`/moi-gioi/chat/${activeConversationId.value}/message`, { content });
     
     newMessage.value = '';
     
@@ -344,12 +330,7 @@ async function sendMessage() {
 
 async function markAsRead(conversationId) {
   try {
-    const token = getAuthToken();
-    await axios.post(
-      `${API_BASE}/chat/${conversationId}/read`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    await api.post(`/moi-gioi/chat/${conversationId}/read`, {});
     const conv = conversations.value.find(c => c.id === conversationId);
     if (conv) conv.unread_count = 0;
   } catch (err) {
@@ -359,11 +340,9 @@ async function markAsRead(conversationId) {
 
 async function markAllAsRead() {
   try {
-    const token = getAuthToken();
-    await axios.post(
-      `${API_BASE}/chat/read-all`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
+    const unread = conversations.value.filter(c => c.unread_count > 0);
+    await Promise.allSettled(
+      unread.map(c => api.post(`/moi-gioi/chat/${c.id}/read`, {}))
     );
     conversations.value.forEach(c => c.unread_count = 0);
   } catch (err) {
@@ -394,58 +373,6 @@ const viewCustomerInfo = () => console.log('View customer:', activeContact.value
 const attachFile = () => alert('Tính năng đính kèm file đang được phát triển');
 const sendImage = () => alert('Tính năng gửi ảnh đang được phát triển');
 
-// 🔔 ===== SSE: CHỈ XỬ LÝ NOTIFICATION (KHÔNG XỬ LÝ CHAT) =====
-function setupSSE() {
-  const token = getAuthToken();
-  if (!token) return;
-  
-  if (eventSource.value) {
-    eventSource.value.close();
-  }
-  
-  const url = `${SSE_URL}?token=${encodeURIComponent(token)}`;
-  const es = new EventSource(url);
-  eventSource.value = es;
-  
-  // 🔥 Option 1: Dùng onmessage (nhận tất cả event)
-  es.onmessage = (e) => {
-    try {
-      const data = JSON.parse(e.data);
-      
-      // 🔔 CHỈ XỬ LÝ NOTIFICATION: có field tieu_de HOẶC event type là message
-      if (data.tieu_de || e.type === 'message' || data.type === 'new-notification') {
-        console.log('🔔 Notification SSE:', data);
-        
-        // TODO: Update badge thông báo / list notification
-        // Ví dụ: increment notification badge count
-        // window.dispatchEvent(new CustomEvent('notification-received', { detail: data }));
-      }
-      
-    } catch (err) {
-      console.error('Lỗi parse SSE:', err);
-    }
-  };
-  
-  // 🔥 Option 2 (Chuẩn hơn): Dùng addEventListener cho event name cụ thể
-  // es.addEventListener('new-notification', (e) => {
-  //   try {
-  //     const data = JSON.parse(e.data);
-  //     console.log('🔔 New notification:', data);
-  //     // Update notification UI here
-  //   } catch (err) {
-  //     console.error('Lỗi parse notification:', err);
-  //   }
-  // });
-  
-  es.onerror = (err) => {
-    console.warn('SSE connection error:', err);
-    setTimeout(() => {
-      if (document.visibilityState === 'visible') {
-        setupSSE();
-      }
-    }, 5000);
-  };
-}
 
 // 🚀 ===== ECHO (REVERB): CHAT REALTIME =====
 function listenRealtime(conversationId) {
@@ -509,17 +436,32 @@ function listenRealtime(conversationId) {
 // ===== LIFECYCLE =====
 onMounted(async () => {
   await loadConversations();
-  setupSSE(); // 🔔 SSE cho notification
-  // Echo sẽ được init khi selectChat() được gọi
+  
+  // 🔥 Kiểm tra nếu có active_chat_id hoặc customer_id từ URL
+  const queryChatId = route.query.active_chat_id;
+  const queryCustomerId = route.query.customer_id;
+
+  if (queryChatId) {
+    const convId = Number(queryChatId);
+    const exists = conversations.value.find(c => c.id === convId);
+    if (exists) selectChat(convId);
+    else {
+      activeConversationId.value = convId;
+      await loadMessages();
+      listenRealtime(convId);
+    }
+  } else if (queryCustomerId) {
+    // Tìm conversation của khách hàng này
+    const customerId = Number(queryCustomerId);
+    const conv = conversations.value.find(c => c.khach_hang?.id === customerId);
+    if (conv) selectChat(conv.id);
+    else {
+        console.warn('Không tìm thấy cuộc hội thoại với khách hàng ID:', customerId);
+    }
+  }
 });
 
 onUnmounted(() => {
-  // Cleanup SSE
-  if (eventSource.value) {
-    eventSource.value.close();
-    eventSource.value = null;
-  }
-  
   // Cleanup Echo channel
   if (currentEchoChannel && window.Echo) {
     console.log('🔴 Cleanup Echo channel:', currentEchoChannel);
@@ -528,12 +470,6 @@ onUnmounted(() => {
   }
 });
 
-// Reconnect SSE khi page trở lại visible
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && !eventSource.value) {
-    setupSSE();
-  }
-});
 </script>
 
 <style scoped>

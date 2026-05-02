@@ -1,10 +1,13 @@
+/* ===== 1. GOOGLE FONTS (GIỮ NGUYÊN) ===== */
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;500;600&display=swap');
+
 @layer theme, base, components, utilities;
 /* Keep Bootstrap's base styles intact and only enable Tailwind theme + utilities. */
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 
+/* ===== 3. CUSTOM CSS - GIỮ NGUYÊN TOÀN BỘ PHẦN DƯỚI ===== */
 *,
 *::before,
 *::after {
@@ -38,9 +41,11 @@ textarea {
   font: inherit;
 }
 
-button {
-  border: 0;
-  background: transparent;
+@layer base {
+  button {
+    border: 0;
+    background: transparent;
+  }
 }
 
 .material-symbols-outlined {

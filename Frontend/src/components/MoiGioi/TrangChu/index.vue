@@ -1,360 +1,176 @@
 <template>
-  <div class="dashboard-container bg-light min-vh-100">
-    <div class="container-fluid px-4 py-4">
-      <!-- STATS CARDS - TẦNG 1 -->
-      <div class="row g-4 mb-4">
-        <!-- 1. Tổng tin đăng -->
-        <div class="col-md-6 col-xl-3">
-          <div
-            class="card border-0 shadow-sm rounded-4 h-100 position-relative overflow-hidden"
-          >
-            <div class="card-body p-4">
-              <div
-                class="d-flex justify-content-between align-items-start mb-3"
-              >
-                <div>
-                  <div
-                    class="text-uppercase text-muted small fw-bold mb-1"
-                    style="font-size: 11px; letter-spacing: 0.5px"
-                  >
-                    Tổng tin đăng
-                  </div>
-                  <h3 class="fw-bold text-primary mb-0 display-6">
-                    {{ stats.totalPosted }}
-                  </h3>
-                </div>
-                <div class="bg-primary bg-opacity-10 p-3 rounded-4">
-                  <i class="bi bi-house-door fs-4 text-primary"></i>
-                </div>
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <span
-                  class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1 small"
-                >
-                  <i class="bi bi-arrow-up-short"></i> +2 tháng này
-                </span>
-              </div>
-            </div>
-            <div class="position-absolute top-0 end-0 m-3 opacity-10">
-              <i
-                class="bi bi-house-door-fill text-primary"
-                style="font-size: 80px"
-              ></i>
-            </div>
-          </div>
-        </div>
+  <div class="min-h-screen bg-[#f0f4f8] font-['Inter'] p-6">
 
-        <!-- 2. Tin còn lại (ĐÃ SỬA) -->
-        <div class="col-md-6 col-xl-3">
-          <div
-            class="card border-0 shadow-sm rounded-4 h-100 position-relative overflow-hidden"
-          >
-            <div class="card-body p-4">
-              <div
-                class="d-flex justify-content-between align-items-start mb-3"
-              >
-                <div>
-                  <div
-                    class="text-uppercase text-muted small fw-bold mb-1"
-                    style="font-size: 11px; letter-spacing: 0.5px"
-                  >
-                    Tin còn lại
-                  </div>
-                  <h3 class="fw-bold text-success mb-0 display-6">
-                    {{ stats.remainingPosts }}
-                  </h3>
-                </div>
-                <div class="bg-success bg-opacity-10 p-3 rounded-4">
-                  <i class="bi bi-inbox fs-4 text-success"></i>
-                </div>
-              </div>
-              <div class="text-muted small">Sẵn sàng đăng tin</div>
-            </div>
-            <div class="position-absolute top-0 end-0 m-3 opacity-10">
-              <i
-                class="bi bi-inbox-fill text-success"
-                style="font-size: 80px"
-              ></i>
-            </div>
-          </div>
-        </div>
+    <!-- Page Header -->
+    <div class="mb-6">
+      <h1 class="text-2xl font-black text-gray-900">Tổng quan</h1>
+      <p class="text-sm text-gray-400">Theo dõi hiệu suất và hoạt động của bạn</p>
+    </div>
 
-        <!-- 3. Giao dịch thành công -->
-        <div class="col-md-6 col-xl-3">
-          <div
-            class="card border-0 shadow-sm rounded-4 h-100 position-relative overflow-hidden"
-          >
-            <div class="card-body p-4">
-              <div
-                class="d-flex justify-content-between align-items-start mb-3"
-              >
-                <div>
-                  <div
-                    class="text-uppercase text-muted small fw-bold mb-1"
-                    style="font-size: 11px; letter-spacing: 0.5px"
-                  >
-                    Giao dịch thành công
-                  </div>
-                  <h3 class="fw-bold text-info mb-0 display-6">
-                    {{ stats.transactionCount }}
-                  </h3>
-                </div>
-                <div class="bg-info bg-opacity-10 p-3 rounded-4">
-                  <i class="bi bi-hand-thumbs-up fs-4 text-info"></i>
-                </div>
-              </div>
-              <div class="text-muted small">Mục tiêu: <strong>15</strong></div>
-            </div>
-            <div class="position-absolute top-0 end-0 m-3 opacity-10">
-              <i
-                class="bi bi-hand-thumbs-up-fill text-info"
-                style="font-size: 80px"
-              ></i>
-            </div>
-          </div>
-        </div>
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
 
-        <!-- 4. Hoa hồng tháng này -->
-        <div class="col-md-6 col-xl-3">
-          <div
-            class="card border-0 rounded-4 h-100 text-white"
-            style="
-              background: linear-gradient(135deg, #0a164d 0%, #1a237e 100%);
-            "
-          >
-            <div class="card-body p-4 position-relative">
-              <div
-                class="d-flex justify-content-between align-items-start mb-3"
-              >
-                <div>
-                  <div
-                    class="text-uppercase small fw-bold mb-1 opacity-75"
-                    style="font-size: 11px; letter-spacing: 0.5px"
-                  >
-                    Hoa hồng tháng này
-                  </div>
-                  <h3 class="fw-bold mb-0 display-6">
-                    {{ Number(stats.totalPaid).toLocaleString("vi-VN") }}
-                  </h3>
-                </div>
-                <div class="bg-white bg-opacity-25 p-3 rounded-4">
-                  <i class="bi bi-cash-coin fs-4"></i>
-                </div>
-              </div>
-              <div class="small opacity-75">VNĐ</div>
-            </div>
-            <div class="position-absolute top-0 end-0 m-3 opacity-10">
-              <i class="bi bi-cash-coin" style="font-size: 80px"></i>
-            </div>
+      <!-- 1. Tổng tin đăng -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tổng tin đăng</p>
+            <div class="text-4xl font-black text-blue-600">{{ stats.totalPosted }}</div>
+          </div>
+          <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
           </div>
         </div>
+        <span class="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full font-semibold">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+          +2 tháng này
+        </span>
+        <div class="absolute -bottom-3 -right-3 w-20 h-20 bg-blue-50 rounded-full opacity-50"></div>
       </div>
 
-      <!-- CHART & CUSTOMER LIST - TẦNG 2 -->
-      <div class="row g-4">
-        <!-- Biểu đồ hiệu suất (Bên trái) -->
-        <div class="col-lg-8">
-          <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
-              <div
-                class="d-flex justify-content-between align-items-center mb-4"
-              >
-                <h5 class="fw-bold mb-0 text-dark">
-                  Hiệu suất tin đăng theo tuần
-                </h5>
-                <div class="btn-group" role="group">
-                  <button
-                    type="button"
-                    class="btn btn-sm"
-                    :class="
-                      chartPeriod === 'month'
-                        ? 'btn-outline-secondary'
-                        : 'btn-light'
-                    "
-                    @click="changeChartPeriod('month')"
-                  >
-                    Tháng qua
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm"
-                    :class="
-                      chartPeriod === 'week' ? 'btn-primary' : 'btn-light'
-                    "
-                    @click="changeChartPeriod('week')"
-                  >
-                    Tuần này
-                  </button>
-                </div>
-              </div>
-
-              <!-- ✅ Dùng Vue3-ApexCharts -->
-              <apexchart
-                type="bar"
-                height="300"
-                :options="chartOptions"
-                :series="chartSeries"
-              >
-              </apexchart>
-            </div>
+      <!-- 2. Tin còn lại -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tin còn lại</p>
+            <div class="text-4xl font-black text-green-600">{{ stats.remainingPosts }}</div>
+          </div>
+          <div class="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
           </div>
         </div>
-
-        <!-- Danh sách khách hàng liên hệ (Bên phải) -->
-        <div class="col-lg-4">
-          <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
-              <div class="d-flex align-items-center gap-2 mb-4">
-                <div class="bg-warning bg-opacity-25 p-2 rounded-3">
-                  <i class="bi bi-exclamation-triangle text-warning fs-5"></i>
-                </div>
-                <h5 class="fw-bold mb-0 text-dark">Liên hệ ngay</h5>
-              </div>
-
-              <div
-                class="customer-list"
-                style="max-height: 500px; overflow-y: auto"
-              >
-                <div v-if="loading.customers" class="text-center py-5">
-                  <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                  </div>
-                </div>
-
-                <div
-                  v-else-if="customers.length === 0"
-                  class="text-center py-5 text-muted"
-                >
-                  <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                  <p class="mb-0 small">Chưa có khách hàng liên hệ</p>
-                </div>
-
-                <div v-else class="space-y-3">
-                  <div
-                    v-for="(customer, index) in customers"
-                    :key="index"
-                    class="card border-0 bg-light bg-opacity-50 rounded-4 mb-3 hover-shadow transition-all cursor-pointer"
-                  >
-                    <div class="card-body p-3">
-                      <div class="d-flex gap-3">
-                        <img
-                          :src="
-                            customer.khach_hang?.avatar ||
-                            'https://ui-avatars.com/api/?name=' +
-                              encodeURIComponent(
-                                customer.khach_hang?.ten || 'KH'
-                              )
-                          "
-                          class="rounded-circle border border-2 border-white shadow-sm"
-                          width="48"
-                          height="48"
-                          alt="Customer"
-                        />
-
-                        <div class="flex-grow-1">
-                          <div
-                            class="d-flex justify-content-between align-items-start"
-                          >
-                            <div>
-                              <h6 class="fw-semibold mb-0 text-dark small">
-                                {{ customer.khach_hang?.ten }}
-                              </h6>
-                              <div
-                                class="text-primary small"
-                                style="font-size: 11px"
-                              >
-                                {{
-                                  customer.bat_dong_san?.tieu_de ||
-                                  "Quan tâm BĐS"
-                                }}
-                              </div>
-                            </div>
-                            <button
-                              class="btn btn-sm btn-light rounded-circle p-1"
-                            >
-                              <i class="bi bi-phone small text-primary"></i>
-                            </button>
-                          </div>
-
-                          <div class="mt-2">
-                            <p
-                              class="text-muted small mb-0 fst-italic"
-                              style="font-size: 12px"
-                            >
-                              "{{
-                                customer.bat_dong_san?.mo_ta?.substring(
-                                  0,
-                                  50
-                                ) || "Đang quan tâm"
-                              }}..."
-                            </p>
-                          </div>
-
-                          <div
-                            class="mt-2 d-flex justify-content-between align-items-center"
-                          >
-                            <span
-                              class="badge bg-light text-dark border small"
-                              style="font-size: 10px"
-                            >
-                              <i class="bi bi-clock me-1"></i>
-                              {{ formatRelativeTime(customer.last_contact) }}
-                            </span>
-                            <span
-                              class="text-muted small"
-                              style="font-size: 10px"
-                            >
-                              {{ customer.contact_count }} lần liên hệ
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                class="btn btn-outline-primary w-100 rounded-4 mt-3 small fw-semibold"
-              >
-                XEM TẤT CẢ KHÁCH HÀNG
-                <i class="bi bi-arrow-right ms-2"></i>
-              </button>
-            </div>
-          </div>
-        </div>
+        <p class="text-xs text-gray-400">Sẵn sàng đăng tin</p>
+        <div class="absolute -bottom-3 -right-3 w-20 h-20 bg-green-50 rounded-full opacity-50"></div>
       </div>
 
-      <!-- ALERT BANNER -->
-      <div class="mt-4">
-        <div class="card border-0 rounded-4" style="background-color: #fef3c7">
-          <div class="card-body p-4">
-            <div class="row align-items-center">
-              <div class="col-md-8">
-                <h6 class="fw-bold text-dark mb-2">
-                  <i class="bi bi-exclamation-circle text-warning me-2"></i>
-                  Gia hạn tin đăng sắp hết hạn
-                </h6>
-                <p class="text-muted mb-0 small">
-                  Có <strong>3 tin đăng</strong> tại dự án Heritage West Lake sẽ
-                  hết hiệu lực trong 48 giờ tới. Hãy gia hạn ngay để không bỏ lỡ
-                  khách hàng tiềm năng.
-                </p>
-              </div>
-              <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <button class="btn btn-dark rounded-4 px-4 small fw-semibold">
-                  GIA HẠN NGAY
-                </button>
-              </div>
-            </div>
+      <!-- 3. Lượt yêu thích -->
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Lượt yêu thích</p>
+            <div class="text-4xl font-black text-rose-500">{{ stats.totalFavorites }}</div>
+          </div>
+          <div class="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6 text-rose-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
           </div>
         </div>
+        <p class="text-xs text-gray-400">Từ khách hàng tiềm năng</p>
+        <div class="absolute -bottom-3 -right-3 w-20 h-20 bg-rose-50 rounded-full opacity-50"></div>
+      </div>
+
+      <!-- 4. Tổng tiền gói -->
+      <div class="bg-gradient-to-br from-[#0a0e27] to-[#1d4ed8] rounded-2xl p-5 shadow-sm relative overflow-hidden text-white">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <p class="text-xs font-bold text-blue-300 uppercase tracking-widest mb-1">Tổng tiền gói</p>
+            <div class="text-3xl font-black">{{ Number(stats.totalPaid).toLocaleString("vi-VN") }}</div>
+          </div>
+          <div class="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+        </div>
+        <p class="text-xs text-blue-300">VNĐ đã đầu tư</p>
+        <div class="absolute -bottom-4 -right-4 w-24 h-24 bg-white/5 rounded-full"></div>
+        <div class="absolute -top-4 -left-4 w-16 h-16 bg-white/5 rounded-full"></div>
       </div>
     </div>
+
+    <!-- Chart + Customer List -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+      <!-- Chart -->
+      <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="font-bold text-gray-800">Hiệu suất tin đăng</h2>
+          <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+            <button @click="changeChartPeriod('week')"
+              class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all"
+              :class="chartPeriod === 'week' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'">
+              Tuần này
+            </button>
+            <button @click="changeChartPeriod('month')"
+              class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all"
+              :class="chartPeriod === 'month' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'">
+              Tháng qua
+            </button>
+          </div>
+        </div>
+        <apexchart type="bar" height="280" :options="chartOptions" :series="chartSeries"></apexchart>
+      </div>
+
+      <!-- Customer List -->
+      <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 flex flex-col">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center">
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          </div>
+          <h2 class="font-bold text-gray-800">Khách hàng liên hệ</h2>
+        </div>
+
+        <!-- Loading -->
+        <div v-if="loading.customers" class="flex-1 flex items-center justify-center py-8">
+          <div class="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+
+        <!-- Empty -->
+        <div v-else-if="customers.length === 0" class="flex-1 flex flex-col items-center justify-center py-8 text-center">
+          <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+            <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </div>
+          <p class="text-sm text-gray-400">Chưa có khách hàng liên hệ</p>
+        </div>
+
+        <!-- List -->
+        <div v-else class="space-y-3 flex-1 overflow-y-auto max-h-72 pr-1">
+          <router-link 
+            v-for="(customer, index) in customers" 
+            :key="index"
+            :to="{ path: '/moi-gioi/quan-ly-khach-hang', query: { customer_id: customer.khach_hang?.id } }"
+            class="flex items-start gap-3 p-3 rounded-xl bg-gray-50 hover:bg-blue-50 transition-colors cursor-pointer group no-underline"
+          >
+            <img
+              :src="customer.khach_hang?.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(customer.khach_hang?.ten || 'KH') + '&background=dbeafe&color=3b82f6'"
+              class="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-white shadow-sm"
+              alt="Customer"
+            />
+            <div class="flex-1 min-w-0 text-left">
+              <p class="text-sm font-semibold text-gray-800 truncate mb-0">{{ customer.khach_hang?.ten }}</p>
+              <p class="text-xs text-blue-500 truncate mb-1">{{ customer.bat_dong_san?.tieu_de || 'Quan tâm BĐS' }}</p>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-gray-400">{{ formatRelativeTime(customer.last_contact) }}</span>
+                <span class="text-xs text-gray-400">{{ customer.contact_count }} lần</span>
+              </div>
+            </div>
+          </router-link>
+        </div>
+
+        <router-link to="/moi-gioi/khach-hang"
+          class="mt-4 flex items-center justify-center gap-2 py-2.5 border-2 border-blue-200 text-blue-600 text-xs font-bold rounded-xl hover:bg-blue-50 transition">
+          Xem tất cả khách hàng
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        </router-link>
+      </div>
+    </div>
+
+    <!-- Alert Banner -->
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      </div>
+      <div class="flex-1">
+        <h3 class="font-bold text-gray-800 text-sm mb-0.5">Tin đăng sắp hết hạn</h3>
+        <p class="text-sm text-gray-500">Một số tin đăng sẽ hết hiệu lực sớm. Hãy gia hạn để không bỏ lỡ khách hàng tiềm năng.</p>
+      </div>
+      <router-link to="/moi-gioi/quan-ly-bds"
+        class="flex-shrink-0 px-5 py-2.5 bg-amber-500 text-white text-sm font-bold rounded-xl hover:bg-amber-600 transition shadow-sm shadow-amber-200">
+        Quản lý tin
+      </router-link>
+    </div>
+
   </div>
 </template>
 <script>
-import axios from "axios";
+import api from "@/axios/config";
 import VueApexCharts from "vue3-apexcharts";
 
 export default {
@@ -379,7 +195,6 @@ export default {
       customers: [],
       userInfo: { ten: "Minh Quân", avatar: null },
       newContactsToday: 5,
-      baseURL: "http://127.0.0.1:8000/api",
 
       // ✅ Cấu hình ApexCharts đã fix
       chartOptions: {
@@ -446,6 +261,11 @@ export default {
     this.fetchAllStats();
     this.fetchChartData();
     this.fetchCustomers();
+    this.subscribeEcho();
+  },
+
+  beforeUnmount() {
+    // Cleanup nếu cần
   },
 
   methods: {
@@ -459,23 +279,13 @@ export default {
     async fetchAllStats() {
       this.loading.stats = true;
       try {
-        const token = localStorage.getItem("auth_token");
-        const config = {
-          headers: { Authorization: `Bearer ${token}` },
-        };
-
+        const token = localStorage.getItem("moi_gioi_auth_token");
         const [postedRes, remainingRes, favoritesRes, paymentRes] =
           await Promise.all([
-            axios.get(
-              `${this.baseURL}/moi-gioi/thong-ke/tong-tin-da-dang`,
-              config
-            ),
-            axios.get(`${this.baseURL}/moi-gioi/thong-ke/tin-con-lai`, config),
-            axios.get(
-              `${this.baseURL}/moi-gioi/thong-ke/tong-yeu-thich`,
-              config
-            ),
-            axios.get(`${this.baseURL}/moi-gioi/thong-ke/tong-tien`, config),
+            api.get("/moi-gioi/thong-ke/tong-tin-da-dang"),
+            api.get("/moi-gioi/thong-ke/tin-con-lai"),
+            api.get("/moi-gioi/thong-ke/tong-yeu-thich"),
+            api.get("/moi-gioi/thong-ke/tong-tien"),
           ]);
 
         this.stats.totalPosted = postedRes.data.data || 0;
@@ -495,16 +305,8 @@ export default {
     async fetchChartData() {
       this.loading.chart = true;
       try {
-        const token = localStorage.getItem("auth_token");
         const range = this.chartPeriod === "week" ? 7 : 30;
-
-        const response = await axios.get(
-          `${this.baseURL}/moi-gioi/thong-ke/bieu-do-bai-dang?range=${range}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
+        const response = await api.get(`/moi-gioi/thong-ke/bieu-do-bai-dang`, { params: { range } });
         this.updateChart(response.data.data);
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu biểu đồ:", error);
@@ -546,14 +348,7 @@ export default {
     async fetchCustomers() {
       this.loading.customers = true;
       try {
-        const token = localStorage.getItem("auth_token");
-        const response = await axios.get(
-          `${this.baseURL}/moi-gioi/thong-ke/khach-hang-lien-he?limit=10`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
+        const response = await api.get("/moi-gioi/thong-ke/khach-hang-lien-he", { params: { limit: 10 } });
         this.customers = response.data.data || [];
       } catch (error) {
         console.error("Lỗi khi lấy danh sách khách hàng:", error);
@@ -590,102 +385,37 @@ export default {
     },
 
     showError(message) {
-      alert(message);
+      if (this.$toast) this.$toast.error(message);
+      else alert(message);
     },
+
+    // ✅ ECHO REALTIME
+    subscribeEcho() {
+      const userStr = localStorage.getItem("moi_gioi_user_info");
+      if (!userStr) return;
+      const user = JSON.parse(userStr);
+      
+      import("@/js/services/echo").then(({ subscribeUser }) => {
+        subscribeUser(user.id, (data) => {
+          console.log("[Dashboard] New notification received:", data);
+          
+          // 1. Tăng số lượt yêu thích trên card
+          this.stats.totalFavorites += 1;
+          
+          // 2. Thêm vào danh sách "Khách hàng liên hệ" (unshift)
+          if (data.khach_hang) {
+            this.customers.unshift({
+              khach_hang: data.khach_hang,
+              bat_dong_san: { id: data.bat_dong_san_id, tieu_de: "Vừa tương tác" },
+              last_contact: new Date().toISOString(),
+              contact_count: 1
+            });
+            // Giới hạn 10 item
+            if (this.customers.length > 10) this.customers.pop();
+          }
+        });
+      });
+    }
   },
 };
 </script>
-<style scoped>
-.dashboard-container {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    sans-serif;
-}
-.hover-shadow:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-  transform: translateY(-2px);
-  transition: all 0.2s ease;
-}
-.cursor-pointer {
-  cursor: pointer;
-}
-.transition-all {
-  transition: all 0.2s ease;
-}
-
-/* Custom scrollbar */
-.customer-list::-webkit-scrollbar {
-  width: 6px;
-}
-.customer-list::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 10px;
-}
-.customer-list::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
-}
-.customer-list::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-@media (max-width: 768px) {
-  .display-6 {
-    font-size: 2rem;
-  }
-}
-/* Font và màu sắc chủ đạo */
-.dashboard-container {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    sans-serif;
-}
-
-.hover-shadow:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-  transform: translateY(-2px);
-  transition: all 0.2s ease;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.transition-all {
-  transition: all 0.2s ease;
-}
-
-/* Custom scrollbar */
-.customer-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.customer-list::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 10px;
-}
-
-.customer-list::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
-}
-
-.customer-list::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Chart container */
-.chart-container {
-  position: relative;
-}
-
-/* Card hover effects */
-.card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .display-6 {
-    font-size: 2rem;
-  }
-}
-</style>

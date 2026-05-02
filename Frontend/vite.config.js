@@ -4,10 +4,20 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [tailwindcss(), vue()],
-  resolve: {
+  plugins: [vue(),tailwindcss()],
+   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    port: 5173,
+    host: 'localhost', // ✅ Explicitly use localhost
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000', // ✅ Dùng localhost
+        changeOrigin: true,
+      }
+    }
+  }
 })

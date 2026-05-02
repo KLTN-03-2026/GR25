@@ -1,365 +1,386 @@
 <template>
-  <div class="min-h-screen bg-[#F8F9FD] p-4 md:p-8 font-sans text-[#2D3748]">
-    <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+  <div class="container-fluid py-4 dashboard-bg min-vh-100" style="
+      background-color: #f4f6f9;
+      font-family: &quot;Inter&quot;, sans-serif;
+    ">
+    <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
       <div>
-        <h1 class="text-3xl font-extrabold text-[#1A1A40]">Bất Động Sản Của Tôi</h1>
-
+        <h1 class="h3 fw-bolder text-dark mb-0">Bất Động Sản Của Tôi</h1>
+        <p class="text-muted mb-0 small">
+          Quản lý và theo dõi danh sách bất động sản
+        </p>
       </div>
       <button @click="$router.push('/moi-gioi/dang-tin')"
-        class="!bg-[#0A0A33] hover:bg-blue-900 text-white px-6 py-3 rounded-2xl flex items-center gap-2 shadow-lg transition-all active:scale-95">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        class="btn btn-primary px-4 py-2 fw-semibold d-flex align-items-center gap-2 shadow-sm rounded-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" width="20" height="20" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
-        <span class="font-semibold">Đăng Tin Mới</span>
+        Đăng Tin Mới
       </button>
     </header>
 
-    <div class="grid grid-cols-3 md:grid-cols-4 gap-4 mb-10">
-      <div
-        class="bg-white p-6 rounded-[24px] shadow-sm border-b-4 border-[#3B41E3] transition-transform hover:-translate-y-1">
-        <p class="text-[11px] uppercase tracking-wider font-bold text-gray-400">Tổng Bất Động Sản</p>
-        <p class="text-4xl font-black mt-2 text-[#3B41E3]">{{ stats.total }}</p>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="card h-100 border-0 shadow-sm rounded-4 border-bottom border-primary"
+          style="border-width: 0 0 4px 0 !important">
+          <div class="card-body p-4">
+            <p class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px">
+              Tổng Bất Động Sản
+            </p>
+            <h2 class="text-primary fw-black mb-0 display-6 fw-bold">
+              {{ stats?.total || 0 }}
+            </h2>
+          </div>
+        </div>
       </div>
-
-      <div
-        class="bg-white p-6 rounded-[24px] shadow-sm border-b-4 border-[#10B981] transition-transform hover:-translate-y-1">
-        <p class="text-[11px] uppercase tracking-wider font-bold text-gray-400">Đã Duyệt</p>
-        <p class="text-4xl font-black mt-2 text-[#10B981]">{{ stats.approved }}</p>
+      <div class="col-6 col-md-3">
+        <div class="card h-100 border-0 shadow-sm rounded-4 border-bottom border-success"
+          style="border-width: 0 0 4px 0 !important">
+          <div class="card-body p-4">
+            <p class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px">
+              Đã Duyệt
+            </p>
+            <h2 class="text-success fw-black mb-0 display-6 fw-bold">
+              {{ stats?.approved || 0 }}
+            </h2>
+          </div>
+        </div>
       </div>
-
-      <div
-        class="bg-white p-6 rounded-[24px] shadow-sm border-b-4 border-[#F59E0B] transition-transform hover:-translate-y-1">
-        <p class="text-[11px] uppercase tracking-wider font-bold text-gray-400">Chờ Duyệt</p>
-        <p class="text-4xl font-black mt-2 text-[#F59E0B]">{{ stats.pending }}</p>
+      <div class="col-6 col-md-3">
+        <div class="card h-100 border-0 shadow-sm rounded-4 border-bottom border-warning"
+          style="border-width: 0 0 4px 0 !important">
+          <div class="card-body p-4">
+            <p class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px">
+              Chờ Duyệt
+            </p>
+            <h2 class="text-warning fw-black mb-0 display-6 fw-bold">
+              {{ stats?.pending || 0 }}
+            </h2>
+          </div>
+        </div>
       </div>
-
-      <div
-        class="bg-white p-6 rounded-[24px] shadow-sm border-b-4 border-[#94A3B8] transition-transform hover:-translate-y-1">
-        <p class="text-[11px] uppercase tracking-wider font-bold text-gray-400">Từ Chối</p>
-        <p class="text-4xl font-black mt-2 text-[#94A3B8]">{{ stats.sold }}</p>
+      <div class="col-6 col-md-3">
+        <div class="card h-100 border-0 shadow-sm rounded-4 border-bottom border-secondary"
+          style="border-width: 0 0 4px 0 !important">
+          <div class="card-body p-4">
+            <p class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px">
+              Từ Chối / Đã Bán
+            </p>
+            <h2 class="text-secondary fw-black mb-0 display-6 fw-bold">
+              {{ stats?.rejected || stats?.sold || 0 }}
+            </h2>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="bg-white p-3 rounded-[20px] shadow-sm flex flex-wrap gap-3 items-center mb-8 border border-gray-100">
-      <div class="relative flex-1 min-w-[250px]">
-        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-        <input v-model="searchKeyword" type="text" placeholder="Tìm theo tên, địa chỉ hoặc giá..."
-          class="w-full bg-[#F3F4F6] border-none rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-100 outline-none" />
-      </div>
+    <ul class="nav nav-pills mb-4 gap-2 flex-nowrap overflow-auto hide-scrollbar pb-2">
+      <li class="nav-item">
+        <button @click="activeTab = 'all'" class="nav-link rounded-pill px-4 fw-semibold border transition-all" :class="activeTab === 'all' ? 'active shadow-sm' : 'bg-white text-dark'
+          ">
+          Tất cả
+        </button>
+      </li>
+      <li class="nav-item">
+        <button @click="activeTab = 'draft'" class="nav-link rounded-pill px-4 fw-semibold border transition-all"
+          :class="activeTab === 'draft' ? 'active shadow-sm' : 'bg-white text-dark'
+            ">
+          Nháp
+        </button>
+      </li>
+      <li class="nav-item">
+        <button @click="activeTab = 'pending'" class="nav-link rounded-pill px-4 fw-semibold border transition-all"
+          :class="activeTab === 'pending' ? 'active shadow-sm' : 'bg-white text-dark'
+            ">
+          Chờ duyệt
+        </button>
+      </li>
+      <li class="nav-item">
+        <button @click="activeTab = 'approved'" class="nav-link rounded-pill px-4 fw-semibold border transition-all"
+          :class="activeTab === 'approved' ? 'active shadow-sm' : 'bg-white text-dark'
+            ">
+          Đã đăng
+        </button>
+      </li>
+      <li class="nav-item">
+        <button @click="activeTab = 'rejected'" class="nav-link rounded-pill px-4 fw-semibold border transition-all"
+          :class="activeTab === 'rejected' ? 'active shadow-sm' : 'bg-white text-dark'
+            ">
+          Bị từ chối
+        </button>
+      </li>
+    </ul>
 
-      <div class="flex gap-2">
-        <div class="relative">
-          <select v-model="filterStatus"
-            class="appearance-none bg-[#F3F4F6] border-none rounded-xl pl-4 pr-10 py-3 text-sm font-medium text-gray-600 outline-none cursor-pointer">
-            <option value="">Tất cả trạng thái</option>
-            <option value="1">Đã duyệt</option>
-            <option value="0">Chờ duyệt</option>
-          </select>
-
-          <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body p-3 d-flex flex-wrap gap-3 align-items-center">
+        <div class="input-group flex-grow-1" style="max-width: 400px">
+          <span class="input-group-text bg-light border-0 text-muted rounded-start-4">🔍</span>
+          <input v-model="searchKeyword" type="text" placeholder="Tìm theo tên, địa chỉ hoặc giá..."
+            class="form-control bg-light border-0 rounded-end-4 py-2 px-3 shadow-none" />
         </div>
-
-        <!-- Reset Button -->
-        <button v-if="searchKeyword || filterStatus" @click="resetFilters"
-          class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-3 rounded-xl text-sm font-medium transition-colors">
-          ✕ Reset
+        <button v-if="searchKeyword || activeTab !== 'all'" @click="resetFilters"
+          class="btn btn-light border text-muted px-4 rounded-pill fw-medium transition-all hover-bg-gray">
+          ✕ Làm mới
         </button>
       </div>
     </div>
 
-    <div class="space-y-4 mb-10">
-      <!-- Error Message -->
-      <div v-if="errorMessage"
-        class="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-[20px] text-center font-medium animate-pulse">
-        {{ errorMessage }}
+    <div v-if="errorMessage" class="alert alert-danger rounded-4 border-0 shadow-sm text-center fw-medium mb-4">
+      {{ errorMessage }}
+    </div>
+    <div v-if="successMessage" class="alert alert-success rounded-4 border-0 shadow-sm text-center fw-medium mb-4">
+      {{ successMessage }}
+    </div>
+
+    <div v-if="loading" class="text-center py-5 text-muted">
+      <div class="spinner-border text-primary mb-3" role="status"></div>
+      <p>Đang tải dữ liệu...</p>
+    </div>
+
+    <div v-else>
+      <div v-if="
+        (searchKeyword || activeTab !== 'all') &&
+        filteredProperties?.length > 0
+      " class="mb-3 text-primary fw-semibold small">
+        ✅ Tìm thấy {{ filteredProperties?.length || 0 }} kết quả phù hợp
       </div>
 
-      <!-- Success Message -->
-      <div v-if="successMessage"
-        class="bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-[20px] text-center font-medium animate-pulse">
-        {{ successMessage }}
-      </div>
-
-      <!-- Loading -->
-      <div v-if="loading" class="text-center py-10 text-gray-500">
-        ⏳ Đang tải dữ liệu...
-      </div>
-
-      <!-- Search Result Info -->
-      <div v-if="!loading && (searchKeyword || filterStatus) && filteredProperties.length > 0"
-        class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded-xl text-sm font-medium">
-        ✅ Tìm thấy {{ filteredProperties.length }} kết quả
-      </div>
-
-      <!-- Danh sách -->
       <div v-for="item in filteredProperties" :key="item.id"
-        class="bg-white p-4 rounded-[24px] flex flex-col md:flex-row items-center gap-6 shadow-sm hover:shadow-md transition-shadow border border-transparent hover:border-blue-50">
-        <!-- IMAGE -->
-        <div class="relative w-full md:w-56 h-36 shrink-0">
-          <img :src="item.image" :alt="item.title" class="w-full h-full object-cover rounded-2xl shadow-inner"
-            @error="(e) => { e.target.src = 'https://via.placeholder.com/400x250?text=No+Image'; }" />
-
-          <div v-if="item.premium"
-            class="absolute top-3 left-3 bg-[#0D9488] text-white text-[9px] font-bold px-2 py-1 rounded-md">
-            PREMIUM
+        class="card border-0 shadow-sm mb-3 rounded-4 property-card transition-all">
+        <div class="row g-0 p-3 align-items-center">
+          <div class="col-12 col-md-3 position-relative mb-3 mb-md-0">
+            <div style="height: 150px; border-radius: 12px; overflow: hidden">
+              <img :src="item.image" :alt="item.title" class="w-100 h-100" style="object-fit: cover" />
+            </div>
+            <span v-if="item.premium"
+              class="badge bg-info text-dark position-absolute top-0 start-0 m-2 rounded-2 shadow-sm">PREMIUM</span>
+            <div v-if="item.status === 'Đã bán'"
+              class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+              style="background: rgba(0, 0, 0, 0.5); border-radius: 12px">
+              <span class="badge border border-white bg-dark fs-6">ĐÃ BÁN</span>
+            </div>
           </div>
 
-          <div v-if="item.status === 'Đã bán'"
-            class="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40">
-            <span class="bg-black/70 text-white border border-white px-4 py-1 text-xs font-bold rounded">ĐÃ BÁN</span>
+          <div class="col-12 col-md-4 px-md-4 mb-3 mb-md-0">
+            <h5 class="fw-bold text-dark mb-2 text-truncate" :title="item.title">
+              {{ item.title }}
+            </h5>
+            <p class="text-muted small mb-3 text-truncate" :title="item.dia_chi_id">
+              <span class="me-1">📍</span> {{ item.dia_chi_id }}
+            </p>
+            <div class="d-flex gap-3 text-muted small fw-medium">
+              <span v-if="item.dien_tich">📐 {{ item.dien_tich }} m²</span>
+              <span v-if="item.so_phong_ngu">🛏️ {{ item.so_phong_ngu }} PN</span>
+              <span v-if="item.so_phong_tam">🚿 {{ item.so_phong_tam }} WC</span>
+            </div>
           </div>
-        </div>
 
-        <!-- INFO -->
-        <div class="flex-1  md:text-left">
-          <h3 class="text-lg font-bold text-[#1A1A40] mb-1 leading-tight">
-            {{ item.title }}
-          </h3>
-          <p class="text-sm text-gray-400 flex items-center justify-center md:justify-start gap-1 mb-2">
-            📍 {{ item.dia_chi_id }}
-          </p>
-          <!-- Thông tin chi tiết -->
-          <div class="flex gap-3 text-xs text-gray-500 justify-center md:justify-start">
-            <span v-if="item.dien_tich" class="flex items-center gap-1">
-              📐 {{ item.dien_tich }} m²
+          <div class="col-6 col-md-3 border-md-start px-md-4">
+            <p class="text-uppercase text-muted fw-bold mb-1" style="font-size: 0.7rem">
+              Mức Giá
+            </p>
+            <h5 class="text-primary fw-bold mb-2">{{ item.price }}</h5>
+            <span class="badge rounded-pill px-3 py-2 fw-medium" :class="statusClasses(item.status)">
+              <span class="me-1">•</span>{{ item.status }}
             </span>
-            <span v-if="item.so_phong_ngu" class="flex items-center gap-1">
-              🛏️ {{ item.so_phong_ngu }} phòng
-            </span>
-            <span v-if="item.so_phong_tam" class="flex items-center gap-1">
-              🚿 {{ item.so_phong_tam }} WC
-            </span>
+            <div v-if="item.status === 'Bị từ chối'" class="mt-2">
+              <RouterLink to="/moi-gioi/thong-bao" class="text-danger small text-decoration-none">
+                <i class="bi bi-bell-fill me-1"></i>Xem lý do từ chối
+              </RouterLink>
+            </div>
           </div>
-        </div>
 
-        <!-- PRICE -->
-        <div class="w-32 text-center md:text-left">
-          <p class="text-[10px] uppercase font-bold text-gray-400 mb-1">
-            Giá
-          </p>
-
-          <p class="text-lg font-extrabold text-[#3B41E3]">
-            {{ item.price }}
-          </p>
-        </div>
-
-        <!-- STATUS -->
-        <div class="w-36 flex justify-center">
-          <span :class="statusClasses(item.status)" class="inline-flex items-center justify-center gap-1
-           min-w-[115px] h-8 px-4
-           rounded-full
-           text-[12px] font-semibold
-           whitespace-nowrap">
-            <span class="text-sm leading-none">•</span>
-            <span>{{ item.status }}</span>
-          </span>
-        </div>
-
-        <!-- ACTION -->
-        <div class="flex items-center gap-3 shrink-0">
-
-          <!-- Edit -->
-          <button @click="handleEdit(item)" title="Cập nhật" class="w-11 h-11 flex items-center justify-center
-           rounded-xl
-           bg-blue-50 text-blue-600
-           border border-blue-100
-           shadow-sm
-           transition-all duration-200
-           hover:bg-blue-600  hover:shadow-md hover:-translate-y-0.5">
-            <i class="bi bi-pencil-square text-lg"></i>
-          </button>
-
-          <!-- Delete -->
-          <button @click="handleDelete(item)" title="Xóa" class="w-11 h-11 flex items-center justify-center
-           rounded-xl
-           bg-red-50 text-red-600
-           border border-red-100
-           shadow-sm
-           transition-all duration-200
-           hover:bg-red-600  hover:shadow-md hover:-translate-y-0.5">
-            <i class="bi bi-trash text-lg"></i>
-          </button>
-
+          <div class="col-6 col-md-2 d-flex justify-content-end align-items-center gap-2 mt-3 mt-md-0">
+            <button v-if="item.status === 'Nháp'" @click="handlePublish(item)"
+              class="btn btn-success rounded-3 btn-sm fw-semibold shadow-sm px-3 py-2" title="Đăng bài">
+              Đăng
+            </button>
+            <button v-if="item.status === 'Đã đăng'" @click="handleMarkSold(item)"
+              class="btn btn-warning rounded-3 btn-sm fw-semibold shadow-sm px-3 py-2 d-flex align-items-center gap-1"
+              title="Đánh dấu đã bán">
+              <i class="bi bi-check2-circle"></i>
+              Đã bán
+            </button>
+            <button @click="handleEdit(item)"
+              class="btn btn-light border text-primary rounded-3 btn-sm d-flex align-items-center justify-content-center"
+              style="width: 40px; height: 40px" title="Cập nhật">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <button @click="handleDelete(item)"
+              class="btn btn-light border text-danger rounded-3 btn-sm d-flex align-items-center justify-content-center"
+              style="width: 40px; height: 40px" title="Xóa">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Empty -->
-      <div v-if="!loading && filteredProperties.length == 0" class="text-center py-10 text-gray-400">
-        <p v-if="searchKeyword || filterStatus" class="text-lg">
-          🔍 Không tìm thấy bất động sản phù hợp với tìm kiếm
+      <div v-if="!loading && filteredProperties?.length === 0" class="text-center py-5 bg-white rounded-4 shadow-sm">
+        <p v-if="searchKeyword || activeTab !== 'all'" class="text-muted fs-5 mb-0">
+          🔍 Không tìm thấy bất động sản phù hợp.
         </p>
-        <p v-else class="text-lg">
-          📭 Chưa có bất động sản nào
+        <p v-else class="text-muted fs-5 mb-0">
+          📭 Chưa có bất động sản nào trong hệ thống.
         </p>
       </div>
 
-      <!-- PAGINATION -->
-      <div v-if="pagination.last_page > 1" class="flex justify-center items-center gap-2 mt-8 flex-wrap">
-        <!-- Prev -->
+      <div v-if="pagination.last_page > 1"
+        class="d-flex justify-content-center align-items-center gap-2 mt-4 flex-wrap">
         <button @click="loadBatDongSan(pagination.current_page - 1)" :disabled="pagination.current_page === 1"
-          class="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 disabled:opacity-50">
-          ← Trước
+          class="btn btn-light border rounded-pill px-4 fw-medium">
+          &larr; Trước
         </button>
-
-        <!-- Number -->
-        <button v-for="page in pagination.last_page" :key="page" @click="loadBatDongSan(page)" :class="[
-          'w-10 h-10 rounded-xl font-semibold',
-          page === pagination.current_page
-            ? 'bg-[#3B41E3] '
-            : 'bg-white border hover:bg-gray-100'
-        ]">
+        <button v-for="page in pagination.last_page" :key="page" @click="loadBatDongSan(page)"
+          class="btn rounded-circle fw-bold" style="
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          " :class="page === pagination.current_page
+            ? 'btn-primary shadow-sm'
+            : 'btn-light border'
+            ">
           {{ page }}
         </button>
-
-        <!-- Next -->
         <button @click="loadBatDongSan(pagination.current_page + 1)"
           :disabled="pagination.current_page === pagination.last_page"
-          class="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 disabled:opacity-50">
-          Sau →
+          class="btn btn-light border rounded-pill px-4 fw-medium">
+          Sau &rarr;
         </button>
       </div>
     </div>
-
   </div>
-  <!-- EDIT MODAL -->
-  <div v-if="showEditModal"
-    class="fixed inset-0 bg-[#0A0A33]/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div
-      class="bg-white rounded-[32px] w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-all">
 
-      <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-white">
-        <div>
-          <h2 class="text-xl font-extrabold text-[#1A1A40]">Chỉnh sửa bài đăng</h2>
-          <p class="text-xs text-gray-400 mt-0.5">Cập nhật thông tin chi tiết cho bất động sản của bạn</p>
+  <div v-if="showEditModal" class="modal fade show d-block" tabindex="-1"
+    style="background: rgba(10, 10, 51, 0.6); backdrop-filter: blur(4px)">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 24px">
+        <div class="modal-header border-bottom px-4 py-3">
+          <div>
+            <h5 class="modal-title fw-bold text-dark mb-0">
+              Chỉnh sửa thông tin
+            </h5>
+            <small class="text-muted">Cập nhật chi tiết cho bất động sản của bạn</small>
+          </div>
+          <button type="button" class="btn-close" @click="cancelEdit"></button>
         </div>
-        <button @click="cancelEdit"
-          class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition-colors">
-          ✕
-        </button>
-      </div>
 
-      <div class="px-8 py-6 overflow-y-auto custom-scrollbar">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-
-          <div class="md:col-span-2">
-            <label class="block text-[13px] font-bold text-gray-500 mb-2 uppercase tracking-wide">📌 Tiêu Đề</label>
-            <input v-model="editingProperty.title" type="text"
-              class="w-full px-4 py-3 bg-[#F3F4F6] border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 outline-none transition-all placeholder:text-gray-400 font-medium"
-              placeholder="Ví dụ: Căn hộ cao cấp Empire City..." />
-          </div>
-          <div class="md:col-span-2">
-            <label class="block text-[13px] font-bold text-gray-500 mb-2 uppercase tracking-wide">📌 Địa Chỉ</label>
-            <input v-model="editingProperty.dia_chi_id" type="text"
-              class="w-full px-4 py-3 bg-[#F3F4F6] border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 outline-none transition-all placeholder:text-gray-400 font-medium"
-              placeholder="Ví dụ: 123 Đường ABC, Quận XYZ, Tỉnh XYZ..." />
-          </div>
-          <div>
-            <label class="block text-[13px] font-bold text-gray-500 mb-2 uppercase tracking-wide">💰 Giá (VNĐ)</label>
-            <input v-model="editingProperty.gia" type="number"
-              class="w-full px-4 py-3 bg-[#F3F4F6] border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 outline-none transition-all font-semibold" />
-          </div>
-
-          <div>
-            <label class="block text-[13px] font-bold text-gray-500 mb-2 uppercase tracking-wide">📐 Diện Tích
-              (m²)</label>
-            <input v-model="editingProperty.dien_tich" type="number"
-              class="w-full px-4 py-3 bg-[#F3F4F6] border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 outline-none transition-all" />
-          </div>
-
-          <div class="md:col-span-2 grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-[13px] font-bold text-gray-500 mb-2 uppercase tracking-wide">🛏️ Phòng
-                Ngủ</label>
-              <div class="relative">
-                <input v-model.number="editingProperty.so_phong_ngu" type="number"
-                  class="w-full px-4 py-3 bg-[#F3F4F6] border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20" />
-              </div>
+        <div class="modal-body px-4 py-4">
+          <div class="row g-4">
+            <div class="col-12">
+              <label class="form-label text-muted fw-bold small text-uppercase">📌 Tiêu Đề</label>
+              <input v-model="editingProperty.title" type="text"
+                class="form-control form-control-lg bg-light border-0 rounded-3 fs-6"
+                placeholder="Ví dụ: Căn hộ cao cấp..." />
             </div>
-            <div>
-              <label class="block text-[13px] font-bold text-gray-500 mb-2 uppercase tracking-wide">🚿 Phòng Tắm</label>
+
+            <div class="col-12">
+              <label class="form-label text-muted fw-bold small text-uppercase">📌 Địa Chỉ</label>
+              <input v-model="editingProperty.dia_chi_id" type="text"
+                class="form-control form-control-lg bg-light border-0 rounded-3 fs-6" placeholder="123 Đường ABC..." />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-muted fw-bold small text-uppercase">💰 Giá (VNĐ)</label>
+              <input v-model="editingProperty.gia" type="number"
+                class="form-control form-control-lg bg-light border-0 rounded-3 fs-6 fw-bold text-primary" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-muted fw-bold small text-uppercase">📐 Diện Tích (m²)</label>
+              <input v-model="editingProperty.dien_tich" type="number"
+                class="form-control form-control-lg bg-light border-0 rounded-3 fs-6" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-muted fw-bold small text-uppercase">🛏️ Phòng Ngủ</label>
+              <input v-model.number="editingProperty.so_phong_ngu" type="number"
+                class="form-control form-control-lg bg-light border-0 rounded-3 fs-6" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-muted fw-bold small text-uppercase">🚿 Phòng Tắm</label>
               <input v-model.number="editingProperty.so_phong_tam" type="number"
-                class="w-full px-4 py-3 bg-[#F3F4F6] border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20" />
+                class="form-control form-control-lg bg-light border-0 rounded-3 fs-6" />
+            </div>
+
+            <div class="col-12">
+              <label class="form-label text-muted fw-bold small text-uppercase">📝 Mô Tả</label>
+              <textarea v-model="editingProperty.mo_ta" rows="4" class="form-control bg-light border-0 rounded-3 fs-6"
+                placeholder="Mô tả ưu điểm..."></textarea>
             </div>
           </div>
-
-          <div class="md:col-span-2">
-            <label class="block text-[13px] font-bold text-gray-500 mb-2 uppercase tracking-wide">📝 Mô Tả</label>
-            <textarea v-model="editingProperty.mo_ta" rows="3"
-              class="w-full px-4 py-3 bg-[#F3F4F6] border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 outline-none transition-all resize-none"
-              placeholder="Mô tả ưu điểm, tiện ích của căn hộ..."></textarea>
-          </div>
         </div>
-      </div>
 
-      <div class="px-8 py-6 bg-gray-50 border-t border-gray-200 grid grid-cols-2 gap-4">
-        <button @click="cancelEdit"
-          class="h-14 border border-gray-300 rounded-xl font-semibold text-gray-600 bg-white hover:bg-gray-100 transition-colors">
-          Hủy
-        </button>
-
-        <button @click="submitEdit"
-          class="h-14 rounded-xl font-semibold text-primary bg-blue-600 hover:bg-blue-700 shadow-sm flex items-center justify-center transition-all">
-          Lưu Thay Đổi
-        </button>
+        <div class="modal-footer border-top bg-light px-4 py-3" style="
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+          ">
+          <button type="button" class="btn btn-light border px-4 py-2 rounded-3 fw-semibold" @click="cancelEdit">
+            Hủy bỏ
+          </button>
+          <button type="button" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold shadow-sm" @click="submitEdit"
+            :disabled="isSubmitting">
+            <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"
+              aria-hidden="true"></span>
+            Lưu Thay Đổi
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- DELETE MODAL -->
-  <div v-if="showDeleteModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl transform transition-all">
-      <!-- Icon -->
-      <div class="flex justify-center mb-4">
-        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-          <span class="text-4xl">⚠️</span>
+  <div v-if="showDeleteModal" class="modal fade show d-block" tabindex="-1"
+    style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg text-center p-4" style="border-radius: 24px">
+        <div class="mb-3">
+          <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 rounded-circle"
+            style="width: 80px; height: 80px">
+            <span style="font-size: 40px">⚠️</span>
+          </div>
         </div>
-      </div>
-
-      <!-- Title -->
-      <h2 class="text-2xl font-bold text-center text-[#1A1A40] mb-2">Xác Nhận Xóa</h2>
-
-      <!-- Message -->
-      <p class="text-center text-gray-600 mb-2">
-        Bạn sắp xóa bài đăng:
-      </p>
-      <p class="text-center text-lg font-semibold text-[#1A1A40] mb-6">
-        "{{ deleteProperty?.title }}"
-      </p>
-
-      <!-- Warning -->
-      <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-        <p class="text-sm text-red-700 font-medium">
-          ⚠️ Hành động này không thể hoàn tác. Bài đăng sẽ bị xóa vĩnh viễn.
+        <h4 class="fw-bold text-dark mb-2">Xác Nhận Xóa</h4>
+        <p class="text-muted mb-1">Bạn sắp xóa bài đăng:</p>
+        <p class="fw-bold text-dark fs-5 mb-4 px-3">
+          "{{ deleteProperty?.title }}"
         </p>
-      </div>
 
-      <!-- Actions -->
-      <div class="flex gap-4">
-        <button @click="cancelDelete" :disabled="isDeleting"
-          class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-          Hủy
-        </button>
+        <div class="alert alert-danger border-0 rounded-3 mb-4 small fw-medium">
+          Hành động này không thể hoàn tác. Bài đăng sẽ bị xóa vĩnh viễn.
+        </div>
 
-        <button @click="confirmDelete" :disabled="isDeleting"
-          class="flex-1 px-4 py-3 font-semibold rounded-xl transition-all shadow-sm active:scale-95 disabled:cursor-not-allowed"
-          :class="isDeleting ? 'bg-gray-300 text-gray-500' : 'bg-red-600 hover:bg-red-700 text-success shadow-red-200'">
-          <span v-if="isDeleting">⏳ Đang xóa...</span>
-          <span v-else><i class="bi bi-trash text-lg me-2"></i>  Xóa Vĩnh Viễn</span>
-        </button>
+        <div class="d-flex gap-3">
+          <button @click="cancelDelete" :disabled="isDeleting"
+            class="btn btn-light border w-50 py-2 rounded-3 fw-semibold">
+            Hủy
+          </button>
+          <button @click="confirmDelete" :disabled="isDeleting"
+            class="btn btn-danger w-50 py-2 rounded-3 fw-semibold shadow-sm">
+            <span v-if="isDeleting">⏳ Đang xử lý...</span>
+            <span v-else>Xóa Vĩnh Viễn</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
-import { useRouter } from "vue-router";
+import { ref, onMounted, computed, watch } from "vue";
+import { useRouter, RouterLink } from "vue-router";
 import api from "@/axios/config.js";
+import Swal from "sweetalert2";
 
 // ROUTER
 const router = useRouter();
@@ -368,11 +389,12 @@ const router = useRouter();
 const properties = ref([]);
 const loading = ref(false);
 const searchKeyword = ref("");
-const filterStatus = ref("");
+const activeTab = ref("all");
 const stats = ref({
   total: 0,
   approved: 0,
   pending: 0,
+  rejected: 0,
   sold: 0,
 });
 const errorMessage = ref("");
@@ -392,7 +414,8 @@ const editingProperty = ref(null);
 const isSubmitting = ref(false);
 
 // CHECK AUTH
-const token = localStorage.getItem("auth_token") || localStorage.getItem("token");
+const token =
+  localStorage.getItem("moi_gioi_auth_token");
 
 // LOAD DATA
 const loadBatDongSan = async (page = 1) => {
@@ -400,26 +423,41 @@ const loadBatDongSan = async (page = 1) => {
   errorMessage.value = "";
 
   try {
-    const res = await api.get(`/moi-gioi/bds/data?page=${page}&per_page=5`);
+    const params = { page, per_page: 5 };
+    if (activeTab.value === "draft") params.status = "draft";
+    else if (activeTab.value !== "all") params.status = "published";
+
+    const res = await api.get("/moi-gioi/bds/data", { params });
 
     if (res.data.status) {
       const result = res.data.data;
-
       const items = result.data || [];
 
-      properties.value = items.map((item) => ({
-        id: item.id,
-        title: item.tieu_de,
-        dia_chi_id: formatDiaChi(item),
-        price: Number(item.gia).toLocaleString("vi-VN") + " VNĐ",
-        status: item.is_duyet == 1 ? "Đã duyệt" : "Chờ duyệt",
-        premium: item.is_noi_bat == 1,
-        image: getImageUrl(item),
-        dien_tich: item.dien_tich,
-        so_phong_ngu: item.so_phong_ngu,
-        so_phong_tam: item.so_phong_tam,
-        raw: item,
-      }));
+      properties.value = items.map((item) => {
+        let displayStatus = "";
+        if (item.status === "draft") {
+          displayStatus = "Nháp";
+        } else {
+          if (item.trang_thai_id == 3) displayStatus = "Đã bán";
+          else if (item.is_duyet == 0) displayStatus = "Chờ duyệt";
+          else if (item.is_duyet == 1) displayStatus = "Đã đăng";
+          else if (item.is_duyet == 2) displayStatus = "Bị từ chối";
+        }
+
+        return {
+          id: item.id,
+          title: item.tieu_de,
+          dia_chi_id: formatDiaChi(item),
+          price: Number(item.gia).toLocaleString("vi-VN") + " VNĐ",
+          status: displayStatus,
+          premium: item.is_noi_bat == 1,
+          image: getImageUrl(item),
+          dien_tich: item.dien_tich,
+          so_phong_ngu: item.so_phong_ngu,
+          so_phong_tam: item.so_phong_tam,
+          raw: item,
+        };
+      });
 
       pagination.value = {
         current_page: result.current_page,
@@ -428,10 +466,9 @@ const loadBatDongSan = async (page = 1) => {
         total: result.total,
       };
 
-      calculateStats(result);
-
-      // Load stats tổng nếu chưa có trong response
-      loadStats();
+      if (res.data.stats) {
+        stats.value = res.data.stats;
+      }
     }
   } catch (error) {
     errorMessage.value = "Lỗi tải dữ liệu";
@@ -440,105 +477,51 @@ const loadBatDongSan = async (page = 1) => {
   }
 };
 
-// LOAD STATS (Tổng từ tất cả trang)
-const loadStats = async () => {
-  try {
-    // Load tất cả dữ liệu (page=1, per_page=1000) để tính tổng
-    const res = await api.get(`/moi-gioi/bds/data?page=1&per_page=1000`);
-
-    if (res.data.status && res.data.data) {
-      const result = res.data.data;
-      const items = result.data || [];
-
-      const totalApproved = items.filter((i) => i.is_duyet == 1).length;
-      const totalPending = items.filter((i) => i.is_duyet == 0).length;
-
-      stats.value = {
-        total: result.total || items.length,
-        approved: totalApproved,
-        pending: totalPending,
-        sold: 0,
-      };
-    }
-  } catch (error) {
-    console.log("Lỗi load stats:", error.message);
-  }
-};
 
 // Helper: Format địa chỉ
 const formatDiaChi = (item) => {
-  if (!item.dia_chi) {
-    return `Địa chỉ ID: ${item.dia_chi_id}`;
-  }
-
-  const quan = item.dia_chi?.quan?.ten || item.dia_chi?.quan?.ten_quan || "Quận/Huyện";
-  const tinh = item.dia_chi?.tinh?.ten || item.dia_chi?.tinh?.ten_tinh || "Tỉnh/TP";
+  if (!item.dia_chi) return `Địa chỉ ID: ${item.dia_chi_id}`;
+  const quan =
+    item.dia_chi?.quan?.ten || item.dia_chi?.quan?.ten_quan || "Quận/Huyện";
+  const tinh =
+    item.dia_chi?.tinh?.ten || item.dia_chi?.tinh?.ten_tinh || "Tỉnh/TP";
   const diaChi = item.dia_chi?.dia_chi_chi_tiet || "";
-
-  if (diaChi) {
-    return `${diaChi}, ${quan}, ${tinh}`;
-  }
-
-  return `${quan}, ${tinh}`;
+  return diaChi ? `${diaChi}, ${quan}, ${tinh}` : `${quan}, ${tinh}`;
 };
 
 // Helper: Lấy ảnh đại diện
 const getImageUrl = (item) => {
-  const baseUrl = "http://127.0.0.1:8000/storage/";
-
-  // Cách 1: Kiểm tra anh_dai_dien_url (nếu backend trả về)
-  if (item.anh_dai_dien_url) {
-    // Nếu đã là full URL
-    if (item.anh_dai_dien_url.startsWith("http")) {
-      return item.anh_dai_dien_url;
-    }
-    // Nếu chỉ là path
-    return baseUrl + item.anh_dai_dien_url;
+  if (!item) return "/no-image.png";
+  
+  // Lấy URL thô từ object hoặc string
+  let url = "";
+  if (typeof item === 'string') {
+    url = item;
+  } else {
+    url = item.anh_dai_dien_url || (item.hinh_anh?.[0]?.url) || (item.anh_dai_dien?.url) || "";
   }
-
-  // Cách 2: Tìm ảnh đánh dấu là ảnh đại diện
-  if (item.hinh_anh?.length > 0) {
-    const anhDaiDien = item.hinh_anh.find((img) => img.is_anh_dai_dien === true);
-    if (anhDaiDien) {
-      return baseUrl + anhDaiDien.url;
-    }
-    // Cách 3: Lấy ảnh đầu tiên
-    return baseUrl + item.hinh_anh[0].url;
-  }
-
-  // Cách 4: Kiểm tra anhDaiDien object (nếu backend nested)
-  if (item.anh_dai_dien && item.anh_dai_dien.url) {
-    return baseUrl + item.anh_dai_dien.url;
-  }
-
-  // Fallback: Placeholder
-  return "/no-image.png";
-};
-
-// Tính toán stats
-const calculateStats = (result) => {
-  stats.value = {
-    total: result.total || 0,
-    approved: result.total_approved || result.tong_da_duyet || 0,
-    pending: result.total_pending || result.tong_cho_duyet || 0,
-    sold: 0,
-  };
+  
+  if (!url) return "/no-image.png";
+  if (url.startsWith("http")) return url;
+  
+  const base = import.meta.env.VITE_API_URL?.replace('/api','') || 'http://localhost:8000';
+  const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+  const finalUrl = cleanUrl.startsWith('storage/') ? cleanUrl : `storage/${cleanUrl}`;
+  
+  return `${base}/${finalUrl}`;
 };
 
 // FILTER & SEARCH
 const filteredProperties = computed(() => {
   return properties.value.filter((item) => {
-    // Filter theo trạng thái
-    if (filterStatus.value) {
-      if (filterStatus.value === "1" && item.status !== "Đã duyệt") {
-        return false;
-      }
-      if (filterStatus.value === "0" && item.status !== "Chờ duyệt") {
-        return false;
-      }
-    }
+    if (activeTab.value === "draft" && item.status !== "Nháp") return false;
+    if (activeTab.value === "pending" && item.status !== "Chờ duyệt")
+      return false;
+    if (activeTab.value === "approved" && item.status !== "Đã đăng")
+      return false;
+    if (activeTab.value === "rejected" && item.status !== "Bị từ chối")
+      return false;
 
-    // Search theo keyword (tìm trong tiêu đề, địa chỉ, giá)
     if (searchKeyword.value.trim()) {
       const keyword = searchKeyword.value.toLowerCase();
       return (
@@ -547,18 +530,11 @@ const filteredProperties = computed(() => {
         item.price.includes(searchKeyword.value)
       );
     }
-
     return true;
   });
 });
 
 // ACTIONS
-const handleView = (property) => {
-  // TODO: Chuyển hướng tới trang chi tiết
-  console.log("View property:", property);
-  // router.push(`/moi-gioi/bds/${property.id}`)
-};
-
 const handleEdit = (property) => {
   editingProperty.value = {
     id: property.id,
@@ -578,7 +554,6 @@ const submitEdit = async () => {
     alert("⚠️ Vui lòng nhập tiêu đề");
     return;
   }
-
   isSubmitting.value = true;
   errorMessage.value = "";
 
@@ -593,25 +568,22 @@ const submitEdit = async () => {
       mo_ta: editingProperty.value.mo_ta,
     };
 
-    console.log("Gửi update:", updatePayload);
     const res = await api.post("/moi-gioi/bds/update", updatePayload);
 
-    console.log("Response update:", res.data);
     if (res.data.status) {
-      successMessage.value = "✅ Cập nhật bài đăng thành công! Đang chờ duyệt lại...";
+      successMessage.value = "✅ Cập nhật thành công! Đang chờ duyệt lại...";
       showEditModal.value = false;
-
       setTimeout(() => {
         loadBatDongSan();
         loadStats();
         successMessage.value = "";
       }, 2000);
     } else {
-      errorMessage.value = `❌ ${res.data.message || 'Cập nhật thất bại'}`;
+      errorMessage.value = `❌ ${res.data.message || "Cập nhật thất bại"}`;
     }
   } catch (error) {
-    console.error("Lỗi khi cập nhật:", error);
-    const message = error.response?.data?.message || error.message || "Lỗi không xác định";
+    const message =
+      error.response?.data?.message || error.message || "Lỗi không xác định";
     errorMessage.value = `❌ Cập nhật thất bại: ${message}`;
   } finally {
     isSubmitting.value = false;
@@ -634,28 +606,24 @@ const confirmDelete = async () => {
   successMessage.value = "";
 
   try {
-    const deletePayload = { id: deleteProperty.value.id };
-    console.log("Gửi delete:", deletePayload);
+    const res = await api.delete("/moi-gioi/bds/delete", {
+      data: { id: deleteProperty.value.id },
+    });
 
-    const res = await api.post("/moi-gioi/bds/delete", deletePayload);
-
-    console.log("Response delete:", res.data);
     if (res.data.status) {
       successMessage.value = "✅ Xóa bài đăng thành công!";
       showDeleteModal.value = false;
-
+      deleteProperty.value = null;
+      await loadBatDongSan();
       setTimeout(() => {
-        loadBatDongSan();
-        loadStats();
         successMessage.value = "";
       }, 1500);
     } else {
-      errorMessage.value = `❌ ${res.data.message || 'Xóa thất bại'}`;
+      errorMessage.value = res.data.message || "Xóa thất bại";
     }
   } catch (error) {
-    console.error("Lỗi khi xóa:", error);
-    const message = error.response?.data?.message || error.message || "Lỗi không xác định";
-    errorMessage.value = `❌ Xóa thất bại: ${message}`;
+    errorMessage.value =
+      error.response?.data?.message || error.message || "Lỗi xóa bài đăng";
   } finally {
     isDeleting.value = false;
   }
@@ -666,36 +634,149 @@ const cancelDelete = () => {
   deleteProperty.value = null;
 };
 
-// STATUS UI
-const statusClasses = (status) => {
-  switch (status) {
-    case "Đã duyệt":
-      return "bg-[#CCFBF1] text-[#0D9488]";
-    case "Chờ duyệt":
-      return "bg-[#FEF3C7] text-[#B45309]";
-    case "Đã bán":
-      return "bg-[#F1F5F9] text-[#64748B]";
-    default:
-      return "bg-gray-100 text-gray-500";
+const handlePublish = async (item) => {
+  const { isConfirmed } = await Swal.fire({
+    title: "Xác nhận đăng bài?",
+    text: "Bạn có chắc chắn muốn đăng bài viết này lên hệ thống?",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Đồng ý",
+    cancelButtonText: "Hủy",
+  });
+  if (!isConfirmed) return;
+
+  try {
+    const res = await api.post(`/moi-gioi/bds/${item.id}/publish`);
+    if (res.data.status) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Đã đăng bài thành công!",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      loadBatDongSan(pagination.value.current_page);
+    } else {
+      Swal.fire("Lỗi", res.data.message || "Đăng bài thất bại", "error");
+    }
+  } catch (error) {
+    Swal.fire("Lỗi", error.response?.data?.message || "Đã xảy ra lỗi", "error");
   }
 };
 
-// RESET FILTERS
+const handleMarkSold = async (item) => {
+  const { isConfirmed } = await Swal.fire({
+    title: "Xác nhận đã bán?",
+    text: "Bạn có chắc chắn muốn đánh dấu bất động sản này là ĐÃ BÁN? Tin đăng sẽ ngừng hiển thị công khai.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Xác nhận",
+    cancelButtonColor: "#f59e0b",
+    cancelButtonText: "Hủy",
+  });
+  if (!isConfirmed) return;
+
+  try {
+    const res = await api.post("/moi-gioi/bds/change-status", {
+      id: item.id,
+      trang_thai_id: 3 // ID của 'Đã bán'
+    });
+    
+    if (res.data.status) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Cập nhật thành công!",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      loadBatDongSan(pagination.value.current_page);
+    } else {
+      Swal.fire("Lỗi", res.data.message || "Cập nhật thất bại", "error");
+    }
+  } catch (error) {
+    Swal.fire("Lỗi", error.response?.data?.message || "Đã xảy ra lỗi", "error");
+  }
+};
+
+// UI STATUS CLASSES (Chuyển đổi sang Bootstrap colors)
+const statusClasses = (status) => {
+  switch (status) {
+    case "Đã đăng":
+      return "bg-success bg-opacity-10 text-success border border-success";
+    case "Chờ duyệt":
+      return "bg-warning bg-opacity-10 text-warning border border-warning";
+    case "Nháp":
+      return "bg-secondary bg-opacity-10 text-secondary border border-secondary";
+    case "Bị từ chối":
+      return "bg-danger bg-opacity-10 text-danger border border-danger";
+    case "Đã bán":
+      return "bg-dark bg-opacity-10 text-dark border border-dark";
+    default:
+      return "bg-light text-secondary border";
+  }
+};
+
 const resetFilters = () => {
   searchKeyword.value = "";
-  filterStatus.value = "";
+  activeTab.value = "all";
 };
+
+watch(activeTab, () => {
+  pagination.value.current_page = 1;
+  loadBatDongSan();
+});
 
 onMounted(() => {
   loadBatDongSan();
-  loadStats();
 });
-
 </script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-body {
-  font-family: 'Inter', sans-serif;
+<style scoped>
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+
+.property-card {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  border: 1px solid transparent !important;
+}
+
+.property-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+  border-color: #e2e8f0 !important;
+}
+
+.transition-all {
+  transition: all 0.2s ease-in-out;
+}
+
+.hover-bg-gray:hover {
+  background-color: #e9ecef !important;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.nav-pills .nav-link {
+  color: #6c757d;
+}
+
+.nav-pills .nav-link.active {
+  background-color: #0d6efd;
+  color: #fff !important;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
 }
 </style>

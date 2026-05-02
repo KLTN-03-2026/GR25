@@ -4,24 +4,18 @@
       <div class="col-12">
         <div class="card border-0 shadow-sm custom-header-card">
           <div
-            class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3 gap-3"
-          >
+            class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3 gap-3">
             <div class="p-2">
               <h4 class="mb-0 fw-bold text-primary">
                 <i class="bi bi-people-fill me-2"></i>Quản lý khách hàng
               </h4>
-              <small class="text-muted"
-                >Duy trì và quản lý cơ sở dữ liệu khách hàng tiềm năng.</small
-              >
+              <small class="text-muted">Duy trì và quản lý cơ sở dữ liệu khách hàng tiềm năng.</small>
             </div>
 
             <div class="d-flex justify-content-center align-items-center gap-2">
               <div class="input-group" style="max-width: 200px">
-                <select
-                  v-model="statusFilter"
-                  @change="applyFilter"
-                  class="form-select custom-input text-muted rounded-pill"
-                >
+                <select v-model="statusFilter" @change="applyFilter"
+                  class="form-select custom-input text-muted rounded-pill">
                   <option value="">Tất cả trạng thái</option>
                   <option value="active">Đang hoạt động</option>
                   <option value="inactive">Bị khóa</option>
@@ -29,70 +23,41 @@
               </div>
 
               <div class="input-group" style="max-width: 250px">
-                <input
-                  v-model="search"
-                  @input="onSearchInput"
-                  type="text"
-                  class="form-control custom-input rounded-start-pill"
-                  placeholder="Tìm tên, email..."
-                />
-                <button
-                  class="btn btn-outline-secondary shadow-none rounded-end-circle"
-                  type="button"
-                >
+                <input v-model="search" @input="onSearchInput" type="text"
+                  class="form-control custom-input rounded-start-pill" placeholder="Tìm tên, email..." />
+                <button class="btn btn-outline-secondary shadow-none rounded-end-circle" type="button">
                   <i class="bi bi-search"></i>
                 </button>
               </div>
 
               <!-- Export Dropdown -->
               <div class="position-relative">
-                <button
-                  @click="showExportMenu = !showExportMenu"
-                  class="btn btn-success btn-lg text-nowrap px-4 shadow-sm fw-bold rounded-pill"
-                >
+                <button @click="showExportMenu = !showExportMenu"
+                  class="btn btn-success btn-lg text-nowrap px-4 shadow-sm fw-bold rounded-pill">
                   <i class="bi bi-download me-1"></i> Export
-                  <i
-                    class="bi bi-chevron-down ms-1"
-                    style="font-size: 12px"
-                  ></i>
+                  <i class="bi bi-chevron-down ms-1" style="font-size: 12px"></i>
                 </button>
-                <div
-                  v-if="showExportMenu"
+                <div v-if="showExportMenu"
                   class="dropdown-menu show position-absolute end-0 mt-2 shadow-sm border-0 rounded-3 p-2 z-3"
-                  style="min-width: 200px"
-                >
-                  <a
-                    href="#"
-                    @click.prevent="exportData('csv')"
-                    class="dropdown-item rounded py-2 d-flex align-items-center"
-                  >
+                  style="min-width: 200px">
+                  <a href="#" @click.prevent="exportData('csv')"
+                    class="dropdown-item rounded py-2 d-flex align-items-center">
                     <i class="bi bi-filetype-csv text-success fs-5 me-2"></i>
                     Xuất file CSV
                   </a>
-                  <a
-                    href="#"
-                    @click.prevent="exportData('excel')"
-                    class="dropdown-item rounded py-2 d-flex align-items-center"
-                  >
-                    <i
-                      class="bi bi-file-earmark-excel text-primary fs-5 me-2"
-                    ></i>
+                  <a href="#" @click.prevent="exportData('excel')"
+                    class="dropdown-item rounded py-2 d-flex align-items-center">
+                    <i class="bi bi-file-earmark-excel text-primary fs-5 me-2"></i>
                     Xuất file Excel
                   </a>
-                  <a
-                    href="#"
-                    @click.prevent="exportData('pdf')"
-                    class="dropdown-item rounded py-2 d-flex align-items-center"
-                  >
+                  <a href="#" @click.prevent="exportData('pdf')"
+                    class="dropdown-item rounded py-2 d-flex align-items-center">
                     <i class="bi bi-filetype-pdf text-danger fs-5 me-2"></i>
                     Xuất file PDF
                   </a>
                 </div>
-                <div
-                  v-if="showExportMenu"
-                  @click="showExportMenu = false"
-                  class="position-fixed top-0 start-0 w-100 h-100 z-2"
-                ></div>
+                <div v-if="showExportMenu" @click="showExportMenu = false"
+                  class="position-fixed top-0 start-0 w-100 h-100 z-2"></div>
               </div>
             </div>
           </div>
@@ -104,9 +69,7 @@
       <!-- Tổng khách hàng-->
       <div class="col-md-3">
         <div class="card border-0 shadow-sm">
-          <div
-            class="card-body d-flex justify-content-between align-items-center"
-          >
+          <div class="card-body d-flex justify-content-between align-items-center">
             <div>
               <small class="text-muted fw-bold">TỔNG KHÁCH HÀNG</small>
               <h3 class="fw-bold text-primary mb-0">
@@ -121,9 +84,7 @@
       <div class="col-md-3">
         <!-- Đang hoạt động -->
         <div class="card border-0 shadow-sm bg-primary text-white">
-          <div
-            class="card-body d-flex justify-content-between align-items-center"
-          >
+          <div class="card-body d-flex justify-content-between align-items-center">
             <div>
               <small class="opacity-75 fw-bold">ĐANG HOẠT ĐỘNG</small>
               <h3 class="fw-bold mb-0">
@@ -138,9 +99,7 @@
       <!-- Khách hàng mới-->
       <div class="col-md-3">
         <div class="card border-0 shadow-sm bg-warning bg-opacity-10">
-          <div
-            class="card-body d-flex justify-content-between align-items-center"
-          >
+          <div class="card-body d-flex justify-content-between align-items-center">
             <div>
               <small class="text-warning fw-bold">KHÁCH HÀNG MỚI</small>
               <h3 class="fw-bold text-warning mb-0">
@@ -156,9 +115,7 @@
       <!-- Khách hàng bị khóa-->
       <div class="col-md-3">
         <div class="card border-0 shadow-sm bg-danger bg-opacity-10">
-          <div
-            class="card-body d-flex justify-content-between align-items-center"
-          >
+          <div class="card-body d-flex justify-content-between align-items-center">
             <div>
               <small class="text-danger fw-bold">BỊ KHÓA</small>
               <h3 class="fw-bold text-danger mb-0">
@@ -201,15 +158,12 @@
                 <td>
                   <div class="d-flex align-items-center">
                     <div
-                      class="avatar-sm me-3 border border-2 border-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center shadow-sm"
-                    >
+                      class="avatar-sm me-3 border border-2 border-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center shadow-sm">
                       {{ getInitials(v.ten) }}
                     </div>
                     <div>
                       <div class="fw-bold text-dark">{{ v.ten }}</div>
-                      <span
-                        class="badge bg-light text-dark border px-2 py-1 mt-1 small"
-                      >
+                      <span class="badge bg-light text-dark border px-2 py-1 mt-1 small">
                         ID: KH-{{ String(v.id).padStart(2, "0") }}
                       </span>
                     </div>
@@ -226,34 +180,22 @@
                 </td>
                 <td>
                   <span
-                    class="badge bg-light text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill"
-                  >
+                    class="badge bg-light text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill">
                     {{ v.bds_da_luu || 0 }}
                   </span>
                 </td>
                 <td>
-                  <button
-                    style="width: 150px"
-                    @click="changeStatus(v, !v.is_active)"
+                  <button style="width: 150px" @click="changeStatus(v, !v.is_active)"
                     :class="v.is_active ? 'badge-active' : 'badge-inactive'"
-                    class="badge px-3 py-2 rounded-pill small fw-bold border-0"
-                  >
+                    class="badge px-3 py-2 rounded-pill small fw-bold border-0">
                     {{ v.is_active ? "Đang hoạt động" : "Bị khóa" }}
                   </button>
                 </td>
                 <td class="text-end pe-5 text-nowrap">
-                  <button
-                    @click="openEdit(v)"
-                    class="btn btn-icon btn-light-primary me-2"
-                    title="Cập nhật"
-                  >
+                  <button @click="openEdit(v)" class="btn btn-icon btn-light-primary me-2" title="Cập nhật">
                     <i class="bi bi-pencil-square"></i>
                   </button>
-                  <button
-                    @click="openDelete(v)"
-                    class="btn btn-icon btn-light-danger"
-                    title="Xóa khách hàng"
-                  >
+                  <button @click="openDelete(v)" class="btn btn-icon btn-light-danger" title="Xóa khách hàng">
                     <i class="bi bi-trash"></i>
                   </button>
                 </td>
@@ -272,9 +214,7 @@
 
       <!-- ✅ Pagination Footer -->
       <div class="card-footer bg-white border-0 py-3 px-4">
-        <div
-          class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3"
-        >
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
           <!-- Info -->
           <small class="text-muted fw-medium">
             {{ paginationInfo }}
@@ -283,37 +223,23 @@
           <!-- Pagination Buttons -->
           <div class="d-flex align-items-center gap-1" v-if="totalPages > 1">
             <!-- Previous -->
-            <button
-              @click="prevPage"
-              :disabled="currentPage === 1"
-              class="btn btn-sm btn-light border"
-              :class="{ disabled: currentPage === 1 }"
-            >
+            <button @click="prevPage" :disabled="currentPage === 1" class="btn btn-sm btn-light border"
+              :class="{ disabled: currentPage === 1 }">
               &laquo;
             </button>
 
             <!-- Page Numbers -->
-            <button
-              v-for="page in visiblePages"
-              :key="page"
-              @click="goToPage(page)"
-              class="btn btn-sm btn-primary"
-              :class="
-                page === currentPage
+            <button v-for="page in visiblePages" :key="page" @click="goToPage(page)" class="btn btn-sm btn-primary"
+              :class="page === currentPage
                   ? 'btn-primary'
                   : 'btn-light border text-muted'
-              "
-            >
+                ">
               {{ page }}
             </button>
 
             <!-- Next -->
-            <button
-              @click="nextPage"
-              :disabled="currentPage === totalPages"
-              class="btn btn-sm btn-light border"
-              :class="{ disabled: currentPage === totalPages }"
-            >
+            <button @click="nextPage" :disabled="currentPage === totalPages" class="btn btn-sm btn-light border"
+              :class="{ disabled: currentPage === totalPages }">
               &raquo;
             </button>
           </div>
@@ -321,78 +247,38 @@
       </div>
     </div>
 
-    <div
-      v-if="showEdit || showDelete"
-      class="modal-backdrop fade show"
-      style="z-index: 1040"
-    ></div>
+    <div v-if="showEdit || showDelete" class="modal-backdrop fade show" style="z-index: 1040"></div>
 
-    <div
-      v-if="showEdit"
-      class="modal fade show d-block"
-      tabindex="-1"
-      style="z-index: 1050"
-    >
+    <div v-if="showEdit" class="modal fade show d-block" tabindex="-1" style="z-index: 1050">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
           <div class="modal-header border-0 pt-4 px-4 pb-0">
             <h5 class="fw-bold text-primary mb-0">
               <i class="bi bi-person-lines-fill me-2"></i>Cập nhật thông tin
             </h5>
-            <button
-              @click="closeModals"
-              type="button"
-              class="btn-close shadow-none"
-            ></button>
+            <button @click="closeModals" type="button" class="btn-close shadow-none"></button>
           </div>
           <div class="modal-body px-4 py-4">
             <div class="mb-3">
-              <label
-                class="form-label small fw-bold text-muted text-uppercase tracking-widest"
-                >Họ và tên</label
-              >
-              <input
-                v-model="edit_khach_hang.ten"
-                type="text"
-                class="form-control custom-input fw-bold"
-              />
+              <label class="form-label small fw-bold text-muted text-uppercase tracking-widest">Họ và tên</label>
+              <input v-model="edit_khach_hang.ten" type="text" class="form-control custom-input fw-bold" />
             </div>
             <div class="row g-3">
               <div class="col-md-6">
-                <label
-                  class="form-label small fw-bold text-muted text-uppercase tracking-widest"
-                  >Email</label
-                >
-                <input
-                  v-model="edit_khach_hang.email"
-                  type="email"
-                  class="form-control custom-input fw-bold"
-                />
+                <label class="form-label small fw-bold text-muted text-uppercase tracking-widest">Email</label>
+                <input v-model="edit_khach_hang.email" type="email" class="form-control custom-input fw-bold" />
               </div>
               <div class="col-md-6">
-                <label
-                  class="form-label small fw-bold text-muted text-uppercase tracking-widest"
-                  >Số điện thoại</label
-                >
-                <input
-                  v-model="edit_khach_hang.so_dien_thoai"
-                  type="text"
-                  class="form-control custom-input fw-bold"
-                />
+                <label class="form-label small fw-bold text-muted text-uppercase tracking-widest">Số điện thoại</label>
+                <input v-model="edit_khach_hang.so_dien_thoai" type="text" class="form-control custom-input fw-bold" />
               </div>
             </div>
           </div>
           <div class="modal-footer border-0 pb-4 px-4 pt-0">
-            <button
-              @click="closeModals"
-              class="btn btn-light rounded-pill px-4"
-            >
+            <button @click="closeModals" class="btn btn-light rounded-pill px-4">
               Hủy bỏ
             </button>
-            <button
-              @click="capNhatKhachHang"
-              class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"
-            >
+            <button @click="capNhatKhachHang" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
               Lưu thay đổi
             </button>
           </div>
@@ -400,19 +286,13 @@
       </div>
     </div>
 
-    <div
-      v-if="showDelete"
-      class="modal fade show d-block"
-      tabindex="-1"
-      style="z-index: 1050"
-    >
+    <div v-if="showDelete" class="modal fade show d-block" tabindex="-1" style="z-index: 1050">
       <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg rounded-4 text-center p-4">
           <div class="mb-3">
             <div
               class="avatar-sm bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center mx-auto"
-              style="width: 60px; height: 60px"
-            >
+              style="width: 60px; height: 60px">
               <i class="bi bi-exclamation-triangle fs-1"></i>
             </div>
           </div>
@@ -426,16 +306,10 @@
             Hành động này không thể hoàn tác.
           </p>
           <div class="d-flex justify-content-center gap-2">
-            <button
-              @click="closeModals"
-              class="btn btn-light rounded-pill px-4"
-            >
+            <button @click="closeModals" class="btn btn-light rounded-pill px-4">
               Hủy
             </button>
-            <button
-              @click="xoaKhachHang"
-              class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm"
-            >
+            <button @click="xoaKhachHang" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm">
               Xóa ngay
             </button>
           </div>
@@ -446,7 +320,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import api from "@/axios/config";
 import { createToaster } from "@meforma/vue-toaster";
 const toaster = createToaster({ position: "top-right" });
 
@@ -471,7 +345,6 @@ export default {
       edit_khach_hang: {},
       delete_khach_hang: {},
 
-      API_BASE: "http://127.0.0.1:8000/api/admin/khach-hang",
     };
   },
 
@@ -600,7 +473,7 @@ export default {
     },
     getToken() {
       return (
-        localStorage.getItem("token") || localStorage.getItem("auth_token")
+        localStorage.getItem("token") || localStorage.getItem("admin_auth_token")
       );
     },
     closeModals() {
@@ -615,7 +488,7 @@ export default {
       if (this.$toast) {
         this.$toast[type]?.(message);
       } else {
-        alert(message);
+        toaster[type]?.(message);
       }
     },
     handleError(err, fallbackMsg) {
@@ -623,7 +496,7 @@ export default {
       this.showToast(msg, "error");
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
-        window.location.href = "/login";
+        window.location.href = "/dang-nhap";
       }
     },
 
@@ -654,9 +527,7 @@ export default {
       try {
         const token = this.getToken();
         if (!token) return;
-        const res = await axios.get(`${this.API_BASE}/data`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get('/admin/khach-hang/data');
         if (res.data?.status) {
           this.khachHangList = res.data.data?.data || res.data.data || [];
         } else {
@@ -680,11 +551,7 @@ export default {
       try {
         const token = this.getToken();
         if (!token || !this.search.trim()) return;
-        const res = await axios.post(
-          `${this.API_BASE}/search`,
-          { keyword: this.search },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await api.post('/admin/khach-hang/search', { keyword: this.search });
         if (res.data?.status) {
           this.khachHangList = res.data.data || [];
         }
@@ -700,7 +567,7 @@ export default {
     exportData(format) {
       const token = this.getToken();
       if (!token) {
-        alert("Vui lòng đăng nhập lại");
+        this.showToast("Vui lòng đăng nhập lại", "error");
         return;
       }
 
@@ -711,7 +578,8 @@ export default {
       });
 
       // URL phải khớp với route backend: /api/admin/khach-hang/export
-      const exportUrl = `${this.API_BASE}/export?${params}`;
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+      const exportUrl = `${apiBase}/admin/khach-hang/export?${params}`;
       console.log("📤 Export URL:", exportUrl); // Debug
 
       window.open(exportUrl, "_blank");
@@ -723,11 +591,7 @@ export default {
       try {
         const token = this.getToken();
         if (!token) return;
-        const res = await axios.post(
-          `${this.API_BASE}/change-status`,
-          { id: customer.id, is_active: newStatus ? 1 : 0 },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await api.post('/admin/khach-hang/change-status', { id: customer.id, is_active: newStatus ? 1 : 0 });
         if (res.data?.status) {
           customer.is_active = newStatus;
           this.showToast(newStatus ? "Đã kích hoạt" : "Đã khóa", "success");
@@ -753,15 +617,11 @@ export default {
       try {
         const token = this.getToken();
         if (!token || !this.edit_khach_hang?.id) return;
-        const res = await axios.put(
-          `${this.API_BASE}/${this.edit_khach_hang.id}`,
-          {
-            ten: this.edit_khach_hang.ten,
-            email: this.edit_khach_hang.email,
-            so_dien_thoai: this.edit_khach_hang.so_dien_thoai,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await api.put(`/admin/khach-hang/${this.edit_khach_hang.id}`, {
+          ten: this.edit_khach_hang.ten,
+          email: this.edit_khach_hang.email,
+          so_dien_thoai: this.edit_khach_hang.so_dien_thoai,
+        });
         if (res.data?.status) {
           const idx = this.khachHangList.findIndex(
             (c) => c.id === this.edit_khach_hang.id
@@ -781,28 +641,25 @@ export default {
     },
 
     async xoaKhachHang() {
-  if (!this.delete_khach_hang?.id) return;
-  try {
-    const token = this.getToken();
-    if (!token) return;
-    
-    // ✅ Gửi id qua query string: /delete?id=123
-    const res = await axios.delete(
-      `${this.API_BASE}/delete?id=${this.delete_khach_hang.id}`, 
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    
-    if (res.data?.status) {
-      this.khachHangList = this.khachHangList.filter(
-        (v) => v.id !== this.delete_khach_hang.id
-      );
-      this.closeModals();
-      this.showToast("Xóa thành công!", "success");
+      if (!this.delete_khach_hang?.id) return;
+      try {
+        const token = this.getToken();
+        if (!token) return;
+
+        // ✅ Gửi id qua query string: /delete?id=123
+        const res = await api.delete(`/admin/khach-hang/delete?id=${this.delete_khach_hang.id}`);
+
+        if (res.data?.status) {
+          this.khachHangList = this.khachHangList.filter(
+            (v) => v.id !== this.delete_khach_hang.id
+          );
+          this.closeModals();
+          this.showToast("Xóa thành công!", "success");
+        }
+      } catch (err) {
+        this.handleError(err, "Xóa thất bại");
+      }
     }
-  } catch (err) {
-    this.handleError(err, "Xóa thất bại");
-  }
-}
   },
 };
 </script>
@@ -821,6 +678,7 @@ export default {
 .card {
   border-radius: 16px;
 }
+
 .custom-header-card {
   background: white;
 }
@@ -866,6 +724,7 @@ export default {
   padding: 15px;
   border: none;
 }
+
 .table tbody td {
   padding: 18px 15px;
   border-bottom: 1px solid #f1f1f1;
@@ -887,6 +746,7 @@ export default {
   font-size: 0.75rem;
   font-weight: 600;
 }
+
 .badge-inactive {
   background-color: #fff5f5;
   color: #c92a2a;
@@ -906,21 +766,25 @@ export default {
   border-radius: 10px;
   transition: all 0.2s;
 }
+
 .btn-light-primary {
   background: #e7f1ff;
   color: #0d6efd;
   border: none;
 }
+
 .btn-light-danger {
   background: #fff5f5;
   color: #dc3545;
   border: none;
 }
+
 .btn-light-primary:hover {
   background: #0d6efd;
   color: white;
   transform: translateY(-1px);
 }
+
 .btn-light-danger:hover {
   background: #dc3545;
   color: white;
@@ -935,6 +799,7 @@ export default {
   background-color: #fcfcfc;
   transition: all 0.2s;
 }
+
 .custom-input:focus {
   border-color: #0d6efd;
   background-color: white;
@@ -945,6 +810,7 @@ export default {
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #dee2e6;
   border-radius: 10px;

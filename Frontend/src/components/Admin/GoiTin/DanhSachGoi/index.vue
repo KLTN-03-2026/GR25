@@ -1,433 +1,251 @@
 <template>
-  <div class="package-manager p-4">
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="card border-0 shadow-sm custom-header-card">
-          <div
-            class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3 gap-3"
-          >
-            <div class="p-2">
-              <h4 class="mb-0 fw-bold text-primary">
-                <i class="bi bi-box-seam-fill me-2"></i>Quản Lý Gói Tin
-              </h4>
-              <small class="text-muted"
-                >Quản lý danh sách các gói dịch vụ và bảng giá cho môi
-                giới.</small
-              >
-            </div>
-            <button
-              class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm fw-bold d-flex align-items-center"
-              data-bs-toggle="modal"
-              data-bs-target="#createGTModal"
-            >
-              <i class="bi bi-plus-circle me-2"></i> Tạo Gói Mới
-            </button>
-          </div>
+  <div class="min-h-screen bg-[#f0f4f8] font-['Inter'] p-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <h1 class="text-2xl font-black text-gray-900">Quản lý gói tin</h1>
+        <p class="text-sm text-gray-400">Quản lý danh sách các gói dịch vụ và bảng giá cho môi giới.</p>
+      </div>
+      <button @click="showCreateModal = true"
+        class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white text-sm font-bold rounded-2xl shadow-xl shadow-blue-200 hover:shadow-2xl hover:shadow-blue-300 hover:-translate-y-1 transition-all active:scale-95 group">
+        <svg class="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+        </svg>
+        Tạo gói mới
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tổng số gói</p>
+          <div class="text-3xl font-black text-blue-600">{{ danhSachGoiTin.length }}</div>
+        </div>
+        <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </div>
+      </div>
+      <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-5 shadow-sm text-white flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-green-100 uppercase tracking-widest mb-1">Đang chạy</p>
+          <div class="text-3xl font-black">{{ danhSachGoiTin.filter(x => x.trang_thai === 'active').length }}</div>
+        </div>
+        <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"/></svg>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-5 shadow-sm border border-red-100 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-red-400 uppercase tracking-widest mb-1">Đã ngưng</p>
+          <div class="text-3xl font-black text-red-500">{{ danhSachGoiTin.filter(x => x.trang_thai === 'inactive').length }}</div>
+        </div>
+        <div class="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
       </div>
     </div>
 
-    <div class="row mb-4 g-3">
-      <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
-          <div
-            class="card-body d-flex justify-content-between align-items-center"
-          >
-            <div>
-              <small class="text-muted fw-bold">TỔNG SỐ GÓI TIN</small>
-              <h3 class="fw-bold text-primary mb-0">
-                {{ danhSachGoiTin.length }}
-              </h3>
-            </div>
-            <i class="bi bi-boxes fs-1 text-primary opacity-25"></i>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card border-0 shadow-sm bg-success text-white">
-          <div
-            class="card-body d-flex justify-content-between align-items-center"
-          >
-            <div>
-              <small class="opacity-75 fw-bold">ĐANG CHẠY</small>
-              <h3 class="fw-bold mb-0">
-                {{
-                  danhSachGoiTin.filter((x) => x.trang_thai === "active").length
-                }}
-              </h3>
-            </div>
-            <i class="bi bi-play-circle-fill fs-1 opacity-25"></i>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card border-0 shadow-sm bg-danger bg-opacity-10">
-          <div
-            class="card-body d-flex justify-content-between align-items-center"
-          >
-            <div>
-              <small class="text-danger fw-bold">ĐÃ NGƯNG</small>
-              <h3 class="fw-bold text-danger mb-0">
-                {{
-                  danhSachGoiTin.filter((x) => x.trang_thai === "inactive")
-                    .length
-                }}
-              </h3>
-            </div>
-            <i class="bi bi-pause-circle-fill fs-1 text-danger opacity-50"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card border-0 shadow-sm mb-4">
-      <div class="card-body p-0">
-        <div class="table-responsive custom-scrollbar">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light">
-              <tr>
-                <th class="ps-4">Thông tin gói</th>
-                <th class="text-end">Giá tiền</th>
-                <th class="text-center">Số lượng tin</th>
-                <th class="text-center">Thời hạn</th>
-                <th class="text-center">Trạng thái</th>
-                <th class="text-end pe-4">Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="danhSachGoiTin.length === 0">
-                <td colspan="6" class="text-center py-5 text-muted">
-                  <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                  Chưa có gói tin nào
-                </td>
-              </tr>
-
-              <tr
-                v-for="(value, index) in paginatedList"
-                :key="index"
-                class="transition-all"
-              >
-                <td class="ps-4 py-3">
-                  <div class="d-flex align-items-center">
-                    <div class="package-icon me-3 shadow-sm">
-                      <i class="bi bi-gem text-white"></i>
-                    </div>
-                    <div>
-                      <div class="fw-bold text-dark">{{ value.ten_goi }}</div>
-                      <span
-                        class="badge bg-light text-secondary border px-2 py-1 mt-1 small"
-                      >
-                        ID: #PK{{ String(value.id).padStart(3, "0") }}
-                      </span>
-                    </div>
+    <!-- Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-100">
+              <th class="text-left text-xs font-bold text-gray-400 uppercase tracking-widest px-5 py-4">Thông tin gói</th>
+              <th class="text-right text-xs font-bold text-gray-400 uppercase tracking-widest px-5 py-4">Giá tiền</th>
+              <th class="text-center text-xs font-bold text-gray-400 uppercase tracking-widest px-5 py-4">Số lượng tin</th>
+              <th class="text-center text-xs font-bold text-gray-400 uppercase tracking-widest px-5 py-4">Thời hạn</th>
+              <th class="text-center text-xs font-bold text-gray-400 uppercase tracking-widest px-5 py-4">Trạng thái</th>
+              <th class="text-right text-xs font-bold text-gray-400 uppercase tracking-widest px-5 py-4">Hành động</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            <tr v-if="danhSachGoiTin.length === 0">
+              <td colspan="6" class="text-center py-16">
+                <div class="flex flex-col items-center gap-2 text-gray-300">
+                  <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                  <p class="text-sm text-gray-400">Chưa có gói tin nào</p>
+                </div>
+              </td>
+            </tr>
+            <tr v-for="(value, index) in paginatedList" :key="index" class="hover:bg-gray-50 transition-colors">
+              <td class="px-5 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                   </div>
-                </td>
-                <td class="text-end fw-bold text-primary fs-5">
-                  {{ formatCurrency(value.gia) }}
-                </td>
-                <td class="text-center">
-                  <span
-                    class="badge bg-light text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill"
-                  >
-                    <i class="bi bi-chat-dots me-1"></i>
-                    {{ value.so_luong_tin }} tin
-                  </span>
-                </td>
-                <td class="text-center fw-medium text-muted">
-                  <i class="bi bi-calendar3 me-1"></i> {{ value.so_ngay }} ngày
-                </td>
-                <td class="text-center">
-                  <!-- ✅ Fix: So sánh string để đảo trạng thái -->
-                  <span
-                    @click="changeStatus(value, value.trang_thai !== 'active')"
-                    :class="
-                      value.trang_thai === 'active'
-                        ? 'badge-active'
-                        : 'badge-inactive'
-                    "
-                    class="badge px-3 py-2 rounded-pill small fw-bold border-0 cursor-pointer"
-                  >
-                    {{
-                      value.trang_thai === "active"
-                        ? "Đang hoạt động"
-                        : "Đã khóa"
-                    }}
-                  </span>
-                </td>
-                <td class="text-end pe-4 text-nowrap">
-                  <button
-                    @click="Object.assign(goi_tin_update, value)"
-                    class="btn btn-icon btn-light-primary me-2"
-                    data-bs-toggle="modal"
-                    data-bs-target="#updateModal"
-                    title="Cập nhật"
-                  >
-                    <i class="bi bi-pencil-square"></i>
+                  <div>
+                    <div class="font-bold text-gray-900">{{ value.ten_goi }}</div>
+                    <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">#PK{{ String(value.id).padStart(3, '0') }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="px-5 py-4 text-right font-black text-blue-600">{{ formatCurrency(value.gia) }}</td>
+              <td class="px-5 py-4 text-center">
+                <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  {{ value.so_luong_tin }} tin
+                </span>
+              </td>
+              <td class="px-5 py-4 text-center text-gray-500">
+                <span class="inline-flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  {{ value.so_ngay }} ngày
+                </span>
+              </td>
+              <td class="px-5 py-4 text-center">
+                <span @click="changeStatus(value, value.trang_thai !== 'active')" class="cursor-pointer inline-flex items-center px-3 py-1 rounded-full text-xs font-bold transition"
+                  :class="value.trang_thai === 'active' ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-600 hover:bg-red-200'">
+                  {{ value.trang_thai === 'active' ? 'Đang hoạt động' : 'Đã khóa' }}
+                </span>
+              </td>
+              <td class="px-5 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button @click="Object.assign(goi_tin_update, value); showUpdateModal = true"
+                    class="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center hover:bg-blue-600 hover:text-white hover:shadow-lg hover:shadow-blue-100 transition-all active:scale-90" title="Cập nhật">
+                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                   </button>
-                  <button
-                    @click="id_can_xoa = value.id"
-                    class="btn btn-icon btn-light-danger"
-                    data-bs-toggle="modal"
-                    data-bs-target="#deleteModal"
-                    title="Xóa"
-                  >
-                    <i class="bi bi-trash3"></i>
+                  <button @click="id_can_xoa = value.id; showDeleteModal = true"
+                    class="w-9 h-9 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white hover:shadow-lg hover:shadow-red-100 transition-all active:scale-90" title="Xóa">
+                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                   </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <!-- Pagination Footer -->
-      <div class="card-footer bg-white border-0 py-3 px-4">
-        <div
-          class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3"
-        >
-          <!-- Info -->
-          <small class="text-muted fw-medium">
-            {{ paginationInfo }}
-          </small>
 
-          <!-- Pagination Buttons -->
-          <div class="d-flex align-items-center gap-1" v-if="totalPages > 1">
-            <!-- Previous -->
-            <button
-              @click="prevPage"
-              :disabled="currentPage === 1"
-              class="btn btn-sm btn-light border"
-              :class="{ disabled: currentPage === 1 }"
-            >
-              &laquo;
-            </button>
-
-            <!-- Page Numbers -->
-            <button
-              v-for="page in visiblePages"
-              :key="page"
-              @click="goToPage(page)"
-              class="btn btn-sm btn-primary"
-              :class="
-                page === currentPage
-                  ? 'btn-primary'
-                  : 'btn-light border text-muted'
-              "
-            >
-              {{ page }}
-            </button>
-
-            <!-- Next -->
-            <button
-              @click="nextPage"
-              :disabled="currentPage === totalPages"
-              class="btn btn-sm btn-light border"
-              :class="{ disabled: currentPage === totalPages }"
-            >
-              &raquo;
-            </button>
-          </div>
+      <!-- Pagination -->
+      <div class="px-5 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p class="text-xs text-gray-400">{{ paginationInfo }}</p>
+        <div v-if="totalPages > 1" class="flex items-center gap-1">
+          <button @click="prevPage" :disabled="currentPage === 1"
+            class="w-8 h-8 rounded-lg border border-gray-200 text-gray-500 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm">&laquo;</button>
+          <button v-for="page in visiblePages" :key="page" @click="goToPage(page)"
+            class="w-8 h-8 rounded-lg text-sm font-bold transition"
+            :class="page === currentPage ? 'bg-blue-600 text-white shadow-sm' : 'border border-gray-200 text-gray-500 hover:bg-gray-50'">{{ page }}</button>
+          <button @click="nextPage" :disabled="currentPage === totalPages"
+            class="w-8 h-8 rounded-lg border border-gray-200 text-gray-500 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm">&raquo;</button>
         </div>
       </div>
     </div>
 
-    <div class="modal fade" id="createGTModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-          <div class="modal-header border-0 pt-4 px-4 pb-0">
-            <h5 class="fw-bold text-primary mb-0">
-              <i class="bi bi-plus-circle-fill me-2"></i>Thêm Gói Tin Mới
-            </h5>
-            <button
-              type="button"
-              class="btn-close shadow-none"
-              data-bs-dismiss="modal"
-            ></button>
-          </div>
-          <div class="modal-body px-4 py-4">
-            <div class="mb-3">
-              <label
-                class="form-label small fw-bold text-muted text-uppercase tracking-widest"
-                >Tên gói tin <span class="text-danger">*</span></label
-              >
-              <input
-                v-model="goi_tin_create.ten_goi"
-                type="text"
-                class="form-control custom-input fw-bold"
-                placeholder="VD: Gói VIP 1"
-              />
+    <!-- Create Modal -->
+    <Teleport to="body">
+      <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+          <div class="flex items-center justify-between p-6 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              </div>
+              <h3 class="font-black text-gray-900">Thêm gói tin mới</h3>
             </div>
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label
-                  class="form-label small fw-bold text-muted text-uppercase tracking-widest"
-                  >Giá tiền (VNĐ)</label
-                >
-                <input
-                  v-model="goi_tin_create.gia"
-                  type="number"
-                  class="form-control custom-input fw-bold"
-                  placeholder="0"
-                />
+            <button @click="showCreateModal = false" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="p-6 space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Tên gói tin <span class="text-red-500">*</span></label>
+              <input v-model="goi_tin_create.ten_goi" type="text" placeholder="VD: Gói VIP 1"
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Giá tiền (VNĐ)</label>
+                <input v-model="goi_tin_create.gia" type="number" placeholder="0"
+                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
               </div>
-              <div class="col-md-6">
-                <label
-                  class="form-label small fw-bold text-muted text-uppercase tracking-widest"
-                  >Số lượng tin</label
-                >
-                <input
-                  v-model="goi_tin_create.so_luong_tin"
-                  type="number"
-                  class="form-control custom-input fw-bold"
-                  placeholder="0"
-                />
-              </div>
-              <div class="col-12">
-                <label
-                  class="form-label small fw-bold text-muted text-uppercase tracking-widest"
-                  >Thời hạn (Ngày)</label
-                >
-                <input
-                  v-model="goi_tin_create.so_ngay"
-                  type="number"
-                  class="form-control custom-input fw-bold"
-                  placeholder="30"
-                />
+              <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Số lượng tin</label>
+                <input v-model="goi_tin_create.so_luong_tin" type="number" placeholder="0"
+                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
               </div>
             </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Thời hạn (Ngày)</label>
+              <input v-model="goi_tin_create.so_ngay" type="number" placeholder="30"
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
+            </div>
           </div>
-          <div class="modal-footer border-0 pb-4 px-4 pt-0">
-            <button
-              class="btn btn-light rounded-pill px-4"
-              data-bs-dismiss="modal"
-            >
-              Hủy bỏ
-            </button>
-            <button
-              @click="themMoiGoiTin()"
-              class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"
-              data-bs-dismiss="modal"
-            >
-              Lưu Gói Tin
-            </button>
+          <div class="flex gap-3 p-6 pt-0">
+            <button @click="showCreateModal = false" class="flex-1 py-3 border-2 border-gray-200 text-gray-500 font-bold rounded-xl hover:bg-gray-50 transition text-sm">Hủy bỏ</button>
+            <button @click="themMoiGoiTin(); showCreateModal = false" class="flex-[2] py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-100 hover:-translate-y-1 hover:shadow-xl transition-all active:scale-95 text-sm">Lưu gói tin</button>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
 
-    <div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-          <div class="modal-header border-0 pt-4 px-4 pb-0">
-            <h5 class="fw-bold text-primary mb-0">
-              <i class="bi bi-pencil-square me-2"></i>Cập Nhật Gói Tin
-            </h5>
-            <button
-              type="button"
-              class="btn-close shadow-none"
-              data-bs-dismiss="modal"
-            ></button>
-          </div>
-          <div class="modal-body px-4 py-4">
-            <div class="mb-3">
-              <label
-                class="form-label small fw-bold text-muted text-uppercase tracking-widest"
-                >Tên gói tin</label
-              >
-              <input
-                v-model="goi_tin_update.ten_goi"
-                type="text"
-                class="form-control custom-input fw-bold"
-              />
+    <!-- Update Modal -->
+    <Teleport to="body">
+      <div v-if="showUpdateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+          <div class="flex items-center justify-between p-6 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </div>
+              <h3 class="font-black text-gray-900">Cập nhật gói tin</h3>
             </div>
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label
-                  class="form-label small fw-bold text-muted text-uppercase tracking-widest"
-                  >Giá tiền (VNĐ)</label
-                >
-                <input
-                  v-model="goi_tin_update.gia"
-                  type="number"
-                  class="form-control custom-input fw-bold"
-                />
+            <button @click="showUpdateModal = false" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="p-6 space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Tên gói tin</label>
+              <input v-model="goi_tin_update.ten_goi" type="text"
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Giá tiền (VNĐ)</label>
+                <input v-model="goi_tin_update.gia" type="number"
+                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition" />
               </div>
-              <div class="col-md-6">
-                <label
-                  class="form-label small fw-bold text-muted text-uppercase tracking-widest"
-                  >Số lượng tin</label
-                >
-                <input
-                  v-model="goi_tin_update.so_luong_tin"
-                  type="number"
-                  class="form-control custom-input fw-bold"
-                />
-              </div>
-              <div class="col-12">
-                <label
-                  class="form-label small fw-bold text-muted text-uppercase tracking-widest"
-                  >Thời hạn (Ngày)</label
-                >
-                <input
-                  v-model="goi_tin_update.so_ngay"
-                  type="number"
-                  class="form-control custom-input fw-bold"
-                />
+              <div>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Số lượng tin</label>
+                <input v-model="goi_tin_update.so_luong_tin" type="number"
+                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition" />
               </div>
             </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Thời hạn (Ngày)</label>
+              <input v-model="goi_tin_update.so_ngay" type="number"
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition" />
+            </div>
           </div>
-          <div class="modal-footer border-0 pb-4 px-4 pt-0">
-            <button
-              class="btn btn-light rounded-pill px-4"
-              data-bs-dismiss="modal"
-            >
-              Hủy
-            </button>
-            <button
-              @click="capNhatGoiTin()"
-              class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"
-              data-bs-dismiss="modal"
-            >
-              Lưu thay đổi
-            </button>
+          <div class="flex gap-3 p-6 pt-0">
+            <button @click="showUpdateModal = false" class="flex-1 py-3 border-2 border-gray-200 text-gray-500 font-bold rounded-xl hover:bg-gray-50 transition text-sm">Hủy</button>
+            <button @click="capNhatGoiTin(); showUpdateModal = false" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-xl shadow-sm hover:-translate-y-0.5 transition-all text-sm">Lưu thay đổi</button>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
 
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg rounded-4 text-center p-4">
-          <div class="mb-3">
-            <div
-              class="avatar-sm bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center mx-auto"
-              style="width: 60px; height: 60px"
-            >
-              <i class="bi bi-trash3-fill fs-1"></i>
+    <!-- Delete Modal -->
+    <Teleport to="body">
+      <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center">
+          <div class="p-8">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
             </div>
-          </div>
-          <h5 class="fw-bold mb-3">Xóa gói tin?</h5>
-          <p class="text-muted small mb-4">
-            Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa gói tin
-            này khỏi hệ thống?
-          </p>
-          <div class="d-flex justify-content-center gap-2">
-            <button
-              class="btn btn-light rounded-pill px-4"
-              data-bs-dismiss="modal"
-            >
-              Hủy
-            </button>
-            <button
-              @click="xoaGoiTin()"
-              class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm"
-              data-bs-dismiss="modal"
-            >
-              Xóa ngay
-            </button>
+            <h3 class="text-xl font-black text-gray-900 mb-2">Xóa gói tin?</h3>
+            <p class="text-sm text-gray-400 mb-6">Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa gói tin này?</p>
+            <div class="flex gap-3">
+              <button @click="showDeleteModal = false" class="flex-1 py-3 border-2 border-gray-200 text-gray-500 font-bold rounded-xl hover:bg-gray-50 transition text-sm">Hủy</button>
+              <button @click="xoaGoiTin(); showDeleteModal = false" class="flex-1 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-xl shadow-sm hover:-translate-y-0.5 transition-all text-sm">Xóa ngay</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
+
   </div>
 </template>
 
@@ -443,9 +261,12 @@ export default {
       id_can_xoa: "",
       goi_tin_create: {},
       goi_tin_update: {},
+      showCreateModal: false,
+      showUpdateModal: false,
+      showDeleteModal: false,
       currentPage: 1,
       itemsPerPage: 5,
-      API_BASE: "http://127.0.0.1:8000/api/admin/goi-tin",
+      isLoading: false,
     };
   },
   computed: {
@@ -512,13 +333,16 @@ export default {
       this.isLoading = true;
 
       axios
-        .get("http://127.0.0.1:8000/api/admin/goi-tin/data")
+        .get("/admin/goi-tin/data")
         .then((res) => {
           const data = res.data.data;
           this.danhSachGoiTin = data.data || data;
         })
         .catch(() => {
-          this.toaster.error("Lỗi load dữ liệu");
+          toaster.error("Lỗi load dữ liệu");
+        })
+        .finally(() => {
+          this.isLoading = false;
         });
     },
 
@@ -534,7 +358,7 @@ export default {
     themMoiGoiTin() {
       axios
         .post(
-          "http://127.0.0.1:8000/api/admin/goi-tin/create",
+          "/admin/goi-tin/create",
           this.goi_tin_create
         )
         .then((response) => {
@@ -581,7 +405,7 @@ export default {
     capNhatGoiTin() {
       axios
         .put(
-          "http://127.0.0.1:8000/api/admin/goi-tin/update",
+          "/admin/goi-tin/update",
           this.goi_tin_update
         )
         .then((response) => {
@@ -628,9 +452,7 @@ export default {
     // ✅ XÓA GÓI TIN
     xoaGoiTin() {
       axios
-        .delete(
-          `http://127.0.0.1:8000/api/admin/goi-tin/delete/${this.id_can_xoa}`
-        )
+        .delete(`/admin/goi-tin/delete/${this.id_can_xoa}`)
         .then((response) => {
           if (
             response.data.success ||
@@ -659,7 +481,7 @@ export default {
     //  Lấy token
     getToken() {
       return (
-        localStorage.getItem("token") || localStorage.getItem("auth_token")
+        localStorage.getItem("token") || localStorage.getItem("admin_auth_token")
       );
     },
 
@@ -670,21 +492,17 @@ export default {
       try {
         const token = this.getToken();
         const res = await axios.post(
-          `${this.API_BASE}/change-status`,
-          {
-            id: item.id,
-            trang_thai: newStatus, // ✅ Gửi 'active' hoặc 'inactive'
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
+          '/admin/goi-tin/change-status',
+          { id: item.id, trang_thai: newStatus }
         );
 
         if (res.data?.status) {
           // ✅ Cập nhật UI ngay
           item.trang_thai = newStatus;
-          alert("Cập nhật thành công!");
+          this.$toast.success("Cập nhật trạng thái thành công!");
         }
       } catch (err) {
-        alert(err.response?.data?.message || "Lỗi!");
+        this.$toast.error(err.response?.data?.message || "Lỗi cập nhật trạng thái!");
       }
     },
 
@@ -693,138 +511,18 @@ export default {
       try {
         const token = this.getToken();
         const res = await axios.post(
-          `${this.API_BASE}/change-status`,
-          {
-            id: item.id,
-            trang_thai: newStatus ? "active" : "inactive", // ✅ Gửi 'active' hoặc 'inactive'
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
+          '/admin/goi-tin/change-status',
+          { id: item.id, trang_thai: newStatus ? 'active' : 'inactive' }
         );
 
         if (res.data?.status) {
           item.trang_thai = newStatus ? "active" : "inactive";
-          alert("Cập nhật thành công!");
+          this.$toast.success("Cập nhật trạng thái thành công!");
         }
       } catch (err) {
-        alert(err.response?.data?.message || "Lỗi!");
+        this.$toast.error(err.response?.data?.message || "Lỗi cập nhật trạng thái!");
       }
     },
   },
 };
 </script>
-
-<style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css");
-
-.package-manager {
-  font-family: "Inter", sans-serif;
-  background-color: #f8f9fa;
-  min-height: 100vh;
-}
-
-/* Card & Header */
-.card {
-  border-radius: 16px;
-}
-.custom-header-card {
-  background: white;
-}
-
-/* Table Design */
-.table thead th {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  font-weight: 700;
-  color: #6c757d;
-  background-color: #fcfcfc;
-  padding: 15px;
-  border: none;
-}
-.table tbody td {
-  padding: 18px 15px;
-  border-bottom: 1px solid #f1f1f1;
-}
-
-/* Package Icon Overlay */
-.package-icon {
-  width: 42px;
-  height: 42px;
-  background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-}
-
-/* Status Badges */
-.badge-active {
-  background-color: #e6fcf5;
-  color: #087f5b;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-.badge-inactive {
-  background-color: #fff5f5;
-  color: #c92a2a;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-/* Buttons & Inputs */
-.btn-icon {
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  transition: all 0.2s;
-}
-.btn-light-primary {
-  background: #e7f1ff;
-  color: #0d6efd;
-  border: none;
-}
-.btn-light-danger {
-  background: #ffe5e5;
-  color: #dc3545;
-  border: none;
-}
-.btn-light-primary:hover {
-  background: #0d6efd;
-  color: white;
-}
-.btn-light-danger:hover {
-  background: #dc3545;
-  color: white;
-}
-
-.custom-input {
-  border-radius: 12px;
-  padding: 12px 15px;
-  border: 1px solid #dee2e6;
-  background-color: #fcfcfc;
-  transition: all 0.2s;
-}
-.custom-input:focus {
-  border-color: #0d6efd;
-  background-color: white;
-  box-shadow: none;
-}
-
-/* Custom Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #dee2e6;
-  border-radius: 10px;
-}
-</style>
