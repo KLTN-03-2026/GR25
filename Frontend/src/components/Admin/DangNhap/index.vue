@@ -99,11 +99,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, getCurrentInstance } from "vue";
-import axios from "axios";
+import { ref, onMounted } from "vue";
+import api from "@/axios/config";
 import { useRouter } from "vue-router";
+import { subscribeAdmin, updateEchoToken } from "../../../js/services/echo";
+import { setAuth, getToken, clearAuth } from "@/js/auth";
+import { getCurrentInstance } from "vue";
 
-// ================= STATE =================
 const email = ref("");
 const password = ref("");
 const isLoading = ref(false);
@@ -111,38 +113,38 @@ const showPassword = ref(false);
 const rememberMe = ref(false);
 
 const router = useRouter();
-
-// ================= TOASTER =================
 const internalInstance = getCurrentInstance();
 const toaster = internalInstance.appContext.config.globalProperties.$toast;
 
-// ================= AXIOS =================
-const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
-  timeout: 10000,
-});
 
-// 🔥 AUTO GẮN TOKEN
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("auth_token");
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-});
-
-// ================= LOAD EMAIL =================
 onMounted(() => {
-  const savedEmail = localStorage.getItem("saved_admin_email");
+  // Khôi phục email nếu có
+  const savedEmail = localStorage.getItem("admin_saved_email");
   if (savedEmail) {
     email.value = savedEmail;
     rememberMe.value = true;
   }
+
+  // ✅ Check token admin riêng biệt
+  checkAdminLogin();
 });
 
-// ================= LOGIN =================
+const checkAdminLogin = async () => {
+  const token = getToken("admin");
+  if (!token) return;
+
+  try {
+    const res = await api.get("/admin/check-token");
+    if (res.data.status === "success" || res.data.status === true) {
+      router.replace("/admin/dashboard");
+    }
+  } catch (error) {
+    if (error.response?.status === 401) {
+      clearAuth("admin");
+    }
+  }
+};
+
 const xuLyDangNhap = async () => {
   if (!email.value || !password.value) {
     toaster.error("Vui lòng nhập đầy đủ thông tin");
@@ -157,54 +159,46 @@ const xuLyDangNhap = async () => {
       password: password.value,
     });
 
-    console.log("LOGIN RESPONSE:", res.data);
-
-    // ===== SUCCESS =====
     if (res.data?.token) {
+      const user = res.data.data; // Backend returns user in 'data' key
 
-      // 🔥 LƯU TOKEN
-      localStorage.setItem("auth_token", res.data.token);
+      // ✅ Lưu vào key riêng của admin (không ảnh hưởng moi-gioi/khach-hang)
+      setAuth("admin", res.data.token, user);
 
-      // 🔥 ROLE
-      localStorage.setItem("user_type", "admin");
+      // ✅ Thông báo cho Header biết auth đã thay đổi
+      window.dispatchEvent(new Event("admin-auth-changed"));
 
-      // ===== REMEMBER EMAIL =====
+      updateEchoToken(res.data.token);
+
+      if (user?.id) {
+        subscribeAdmin(user.id);
+      }
+
       if (rememberMe.value) {
-        localStorage.setItem("saved_admin_email", email.value);
+        localStorage.setItem("admin_saved_email", email.value);
       } else {
-        localStorage.removeItem("saved_admin_email");
+        localStorage.removeItem("admin_saved_email");
       }
 
       toaster.success("Đăng nhập thành công 👋");
-
-      setTimeout(() => {
-        router.push("/admin/dashboard");
-      }, 500);
-
-    } else {
-      toaster.error("Phản hồi server không hợp lệ");
+      router.push("/admin/dashboard");
+      return;
     }
 
+    toaster.error("Phản hồi server không hợp lệ");
   } catch (error) {
     console.error("LOGIN ERROR:", error);
 
-    if (error.response) {
-      const status = error.response.status;
-
-      if (status === 401) {
-        toaster.error("Sai tài khoản hoặc mật khẩu");
-      } else if (status === 500) {
-        toaster.error("Lỗi server backend");
-      } else {
-        toaster.error("Lỗi: " + status);
-      }
-
+    const status = error.response?.status;
+    if (status === 401) {
+      toaster.error("Sai tài khoản hoặc mật khẩu");
+    } else if (status === 500) {
+      toaster.error("Lỗi server backend");
     } else if (error.request) {
       toaster.error("Không kết nối được server");
     } else {
       toaster.error("Lỗi không xác định");
     }
-
   } finally {
     isLoading.value = false;
   }

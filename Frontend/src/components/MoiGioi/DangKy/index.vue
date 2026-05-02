@@ -11,7 +11,8 @@
         </div>
 
         <div class="relative z-10">
-          <div class="mb-6 inline-block px-4 py-1 bg-white/10 border border-white/20 rounded-full text-[10px] tracking-widest font-semibold uppercase">
+          <div
+            class="mb-6 inline-block px-4 py-1 bg-white/10 border border-white/20 rounded-full text-[10px] tracking-widest font-semibold uppercase">
             Dành cho Môi giới Chuyên nghiệp
           </div>
           <h2 class="text-5xl font-bold leading-tight mb-6 tracking-tighter">
@@ -36,7 +37,7 @@
       <!-- Right Side - Registration Form -->
       <div class="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center bg-white overflow-y-auto">
         <div class="w-full max-w-[420px] mx-auto">
-          
+
           <div class="mb-8 text-left">
             <h5 class="text-emerald-900 font-black text-[10px] uppercase tracking-[0.2em] mb-4">
               Broker Portal
@@ -53,7 +54,8 @@
 
             <!-- Full Name -->
             <div class="space-y-1.5">
-              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Họ và tên *</label>
+              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Họ và tên
+                *</label>
               <div class="relative">
                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-base">👤</span>
                 <input v-model="ten" type="text" placeholder="Nhập họ và tên"
@@ -75,7 +77,8 @@
 
             <!-- Phone -->
             <div class="space-y-1.5">
-              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Số điện thoại *</label>
+              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Số điện thoại
+                *</label>
               <div class="relative">
                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-base">📱</span>
                 <input v-model="so_dien_thoai" type="tel" placeholder="Nhập số điện thoại"
@@ -86,7 +89,8 @@
 
             <!-- Zalo Link (Optional) -->
             <div class="space-y-1.5">
-              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Zalo Link (Tuỳ chọn)</label>
+              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Zalo Link (Tuỳ
+                chọn)</label>
               <div class="relative">
                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-base">💬</span>
                 <input v-model="zalo_link" type="url" placeholder="https://zalo.me/..."
@@ -96,7 +100,8 @@
 
             <!-- Description (Optional) -->
             <div class="space-y-1.5">
-              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Giới thiệu bản thân (Tuỳ chọn)</label>
+              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Giới thiệu bản
+                thân (Tuỳ chọn)</label>
               <textarea v-model="mo_ta" rows="2" placeholder="Kinh nghiệm, khu vực hoạt động, chuyên môn..."
                 class="w-full px-4 py-3 bg-gray-50 !rounded-2xl focus:ring-2 focus:ring-emerald-600 border-none text-sm font-medium transition-all shadow-sm resize-none" />
             </div>
@@ -114,7 +119,8 @@
 
             <!-- Confirm Password -->
             <div class="space-y-1.5">
-              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Xác nhận mật khẩu *</label>
+              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Xác nhận mật khẩu
+                *</label>
               <div class="relative">
                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-base">🔐</span>
                 <input v-model="password_confirmation" type="password" placeholder="Nhập lại mật khẩu"
@@ -125,10 +131,10 @@
 
             <!-- Terms & Conditions -->
             <div class="flex items-start pt-1">
-              <input v-model="agreeTerms" type="checkbox" id="agree" 
+              <input v-model="agreeTerms" type="checkbox" id="agree"
                 class="w-4 h-4 mt-0.5 text-emerald-600 border-gray-300 !rounded focus:ring-emerald-500" />
               <label for="agree" class="ml-2 text-[10px] text-gray-500 leading-relaxed">
-                Tôi đồng ý với <a href="#" class="text-emerald-600 font-bold hover:underline">Điều khoản dịch vụ</a> 
+                Tôi đồng ý với <a href="#" class="text-emerald-600 font-bold hover:underline">Điều khoản dịch vụ</a>
                 và <a href="#" class="text-emerald-600 font-bold hover:underline">Chính sách bảo mật</a>
               </label>
             </div>
@@ -146,7 +152,8 @@
           <!-- Login Link -->
           <p class="text-center text-[11px] text-gray-400 mt-6 font-medium uppercase tracking-wider">
             Đã có tài khoản môi giới?
-            <router-link to="/moi-gioi/dang-nhap" class="text-emerald-900 font-black hover:underline ml-1">Đăng nhập ngay</router-link>
+            <router-link to="/moi-gioi/dang-nhap" class="text-emerald-900 font-black hover:underline ml-1">Đăng nhập
+              ngay</router-link>
           </p>
 
           <!-- Back to Customer -->
@@ -163,14 +170,15 @@
 </template>
 
 <script>
-import axios from 'axios';
+import api from '@/axios/config';
 import { createToaster } from "@meforma/vue-toaster";
+import { setAuth } from "@/js/auth";
 
 const toaster = createToaster({ position: "top-right" });
 
 export default {
   name: 'MoiGioiRegister',
-  
+
   data() {
     return {
       ten: '',
@@ -184,7 +192,7 @@ export default {
       isLoading: false
     }
   },
-  
+
   methods: {
     // ===== REGISTER FOR BROKERS =====
     async handleRegister() {
@@ -203,9 +211,7 @@ export default {
       this.isLoading = true;
 
       try {
-        const response = await axios.post(
-          'http://127.0.0.1:8000/api/moi-gioi/dang-ky',
-          {
+        const response = await api.post('/moi-gioi/dang-ky', {
             ten: this.ten,
             email: this.email,
             so_dien_thoai: this.so_dien_thoai,
@@ -224,13 +230,12 @@ export default {
           const userData = response.data.data?.moi_gioi;
 
           if (token && userData) {
-            localStorage.setItem("auth_token", token);
-            localStorage.setItem("user_type", "moi-gioi");
-            localStorage.setItem("user_info", JSON.stringify(userData));
+            // ✅ Lưu vào key riêng của môi giới (không ảnh hưởng admin/khách hàng)
+            setAuth("moi-gioi", token, userData);
           }
 
           toaster.success("Đăng ký thành công! Chào mừng bạn 🎉");
-          
+
           // Redirect to broker dashboard
           this.$router.push("/moi-gioi/trang-chu");
         } else {
@@ -246,7 +251,7 @@ export default {
 
         toaster.error(message);
         console.error('Register error:', err.response?.data);
-        
+
       } finally {
         this.isLoading = false;
       }
@@ -261,7 +266,8 @@ export default {
   border-radius: 9999px !important;
 }
 
-input:focus, textarea:focus {
+input:focus,
+textarea:focus {
   outline: none;
 }
 
@@ -275,9 +281,11 @@ input[type="checkbox"] {
   .overflow-y-auto::-webkit-scrollbar {
     width: 4px;
   }
+
   .overflow-y-auto::-webkit-scrollbar-track {
     background: transparent;
   }
+
   .overflow-y-auto::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 4px;

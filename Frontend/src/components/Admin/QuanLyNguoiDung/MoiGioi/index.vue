@@ -259,17 +259,17 @@
                   <span
                     :class="{
                       'bg-warning-subtle text-warning border-warning':
-                        v.goi_tin?.ten_goi?.includes('VIP') ||
-                        v.goi_tin?.ten_goi?.includes('Kim'),
+                        (v.ten_goi || '').includes('VIP') ||
+                        (v.ten_goi || '').includes('Kim'),
                       'bg-primary-subtle text-primary border-primary':
-                        v.goi_tin?.ten_goi?.includes('Vàng') ||
-                        v.goi_tin?.ten_goi?.includes('Bạc'),
+                        (v.ten_goi || '').includes('Vàng') ||
+                        (v.ten_goi || '').includes('Bạc'),
                       'bg-secondary-subtle text-secondary border-secondary':
-                        !v.goi_tin,
+                        !v.ten_goi || v.ten_goi === 'Chưa mua',
                     }"
                     class="badge border px-3 py-2 rounded-pill small fw-bold mb-1"
                   >
-                    {{ v.ten_goi_hien_thi }}
+                    {{ v.ten_goi || "Chưa mua" }}
                   </span>
                 </td>
                 <td class="text-center">
@@ -603,7 +603,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import api from "@/axios/config";
 import { createToaster } from "@meforma/vue-toaster";
 const toaster = createToaster({ position: "top-right" });
 
@@ -643,7 +643,6 @@ export default {
       currentPage: 1,
       itemsPerPage: 5,
 
-      API_BASE: "http://127.0.0.1:8000/api/admin/moi-gioi",
     };
   },
 
@@ -729,7 +728,7 @@ export default {
     //  Fix: Đếm VIP case-insensitive
     soGoiVIP() {
       return this.moiGioiList.filter((v) => {
-        const tenGoi = (v.ten_goi_hien_thi || "").toLowerCase();
+        const tenGoi = (v.ten_goi || "").toLowerCase();
         return (
           tenGoi.includes("vip") ||
           tenGoi.includes("kim cương") ||
@@ -812,25 +811,19 @@ export default {
     },
     getToken() {
       return (
-        localStorage.getItem("token") || localStorage.getItem("auth_token")
+        localStorage.getItem("token") || localStorage.getItem("admin_auth_token")
       );
     },
 
     async loadMoiGioi() {
       this.isLoading = true;
       try {
-        const token = localStorage.getItem("auth_token");
-        const res = await axios.get(
-          "http://127.0.0.1:8000/api/admin/moi-gioi/data",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await api.get("/admin/moi-gioi/data");
 
         if (res.data?.status) {
           this.moiGioiList = res.data.data.map((v) => ({
             ...v,
-            ten_goi_hien_thi: v.goi_tin_id
-              ? `Gói #${v.goi_tin_id}`
-              : "Chưa mua",
+            ten_goi: v.ten_goi || "Chưa mua",
             so_tin: v.so_tin_con_lai || 0,
             is_active: v.is_active,
             goi: v.ngay_het_han_goi ? "VIP" : "Cơ bản",
@@ -847,34 +840,25 @@ export default {
 
     async taoMoiGioi() {
       try {
-        const token = localStorage.getItem("auth_token");
-        await axios.post(
-          "http://127.0.0.1:8000/api/admin/moi-gioi/create",
-          this.moi_gioi,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await api.post("/admin/moi-gioi/create", this.moi_gioi);
         this.loadMoiGioi();
         this.closeModals();
+        toaster.success("Thêm môi giới thành công!");
       } catch (err) {
         console.error("Lỗi thêm:", err);
-        alert("Lỗi thêm môi giới!");
+        toaster.error(err.response?.data?.message || "Lỗi thêm môi giới!");
       }
     },
 
     async capNhatMoiGioi() {
       try {
-        const token = localStorage.getItem("auth_token");
-        await axios.post(
-          "http://127.0.0.1:8000/api/admin/moi-gioi/update",
-          this.edit_moi_gioi,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        alert("Cập nhật thành công");
+        await api.post("/admin/moi-gioi/update", { ...this.edit_moi_gioi });
+        toaster.success("Cập nhật thành công");
         this.loadMoiGioi();
         this.closeModals();
       } catch (err) {
         console.error("Lỗi update:", err);
-        alert("Cập nhật thất bại!");
+        toaster.error(err.response?.data?.message || "Cập nhật thất bại!");
       }
     },
 
@@ -882,17 +866,13 @@ export default {
     async xoaMoiGioiConfirm() {
       if (!this.delete_moi_gioi?.id) return;
       try {
-        const token = localStorage.getItem("auth_token");
-        await axios.post(
-          "http://127.0.0.1:8000/api/admin/moi-gioi/delete",
-          { id: this.delete_moi_gioi.id },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await api.delete("/admin/moi-gioi/delete", { data: { id: this.delete_moi_gioi.id } });
+        toaster.success("Xóa môi giới thành công");
         this.loadMoiGioi();
         this.closeModals();
       } catch (err) {
         console.error("Lỗi xóa:", err);
-        alert("Xóa thất bại!");
+        toaster.error(err.response?.data?.message || "Xóa thất bại!");
       }
     },
 
@@ -904,10 +884,9 @@ export default {
         //  Convert boolean → 1/0 cho database
         const payloadStatus = newStatus ? 1 : 0;
 
-        const res = await axios.post(
-          `${this.API_BASE}/change-status`,
-          { id: customer.id, is_active: payloadStatus },
-          { headers: { Authorization: `Bearer ${token}` } }
+        const res = await api.post(
+          '/admin/moi-gioi/change-status',
+          { id: customer.id, is_active: payloadStatus }
         );
 
         if (res.data?.status) {
@@ -923,7 +902,7 @@ export default {
     exportData(format) {
       const token = this.getToken();
       if (!token) {
-        alert("Vui lòng đăng nhập lại");
+        toaster.error("Vui lòng đăng nhập lại");
         return;
       }
 
@@ -934,12 +913,13 @@ export default {
       });
 
       // URL phải khớp với route backend: /api/admin/khach-hang/export
-      const exportUrl = `${this.API_BASE}/export?${params}`;
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+      const exportUrl = `${apiBase}/admin/moi-gioi/export?${params}`;
       console.log("📤 Export URL:", exportUrl); // Debug
 
       window.open(exportUrl, "_blank");
       this.showExportMenu = false;
-      this.showToast(`Đang tải file ${format.toUpperCase()}...`, "success");
+      toaster.success(`Đang tải file ${format.toUpperCase()}...`);
     },
   },
   watch: {

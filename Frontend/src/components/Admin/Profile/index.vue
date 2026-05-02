@@ -14,9 +14,6 @@
               alt="Avatar"
               class="profile-avatar"
             />
-            <button class="edit-avatar-btn">
-              <i class="bi bi-pencil-fill"></i>
-            </button>
           </div>
 
           <h2 class="profile-name">{{ profile.ten }}</h2>
@@ -24,8 +21,8 @@
 
           <div class="profile-info-list">
             <div class="info-item">
-              <span class="label">MÃ ID</span>
-              <span class="value">{{ profile.id }}</span>
+              <span class="label">MÃ ADMIN</span>
+              <span class="value">AD-{{ profile.id }}</span>
             </div>
             <div class="info-item">
               <span class="label">NGÀY GIA NHẬP</span>
@@ -279,10 +276,12 @@
 
 <script setup>
 import { ref, reactive, onMounted, getCurrentInstance } from "vue";
-import axios from "axios";
+import api from "@/axios/config";
 import Swal from "sweetalert2";
-import { api } from "@/main";
+import { clearAuth } from "@/js/auth";
 const showLogoutAllModal = ref(false);
+import { useRouter } from "vue-router";
+const router = useRouter();
 
 const profile = reactive({
   id: "",
@@ -304,59 +303,53 @@ const passwordForm = reactive({
 
 const logoutCurrent = async () => {
   try {
-    const token = localStorage.getItem("auth_token");
-    await axios.post(
-      "http://127.0.0.1:8000/api/admin/dang-xuat",
-      {},
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
-    localStorage.removeItem("auth_token");
+    await api.get("/admin/dang-xuat");
+    clearAuth("admin");
     router.push("/admin/dang-nhap");
   } catch (error) {
     console.error("Logout error:", error);
+    clearAuth("admin");
+    router.push("/admin/dang-nhap");
   }
 };
 
 // Logout tất cả thiết bị
 const logoutAll = async () => {
   try {
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      alert("Không tìm thấy token");
-      return;
-    }
+    const response = await api.post("/admin/dang-xuat-tat-ca");
 
-    const response = await api.post("/admin/dang-xuat-tat-ca", {}, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    if (response.data.status === "success") {
+      // ✅ XÓA TOKEN ADMIN (không ảnh hưởng role khác)
+      clearAuth("admin");
 
-    // Nếu response về thành công (200)
-    if (response.data.status === 'success') {
-      // Xóa local storage
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("user_type");
-      
       Swal.fire({
-        icon: 'success',
-        title: 'Thành công',
-        text: 'Đã đăng xuất từ tất cả thiết bị!',
+        icon: "success",
+        title: "Thành công",
+        text: "Đã đăng xuất từ tất cả thiết bị!",
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
       });
 
+      // ✅ REDIRECT VỀ LOGIN SAU 2 GIÂY
       setTimeout(() => {
         router.push("/admin/dang-nhap");
       }, 2000);
     }
   } catch (error) {
     console.error("Logout error:", error);
-    // Nếu có lỗi thì vẫn xóa token và về login
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("user_type");
-    router.push("/admin/dang-nhap");
+
+    // ✅ VẪN XÓA TOKEN NẾU CÓ LỖI
+    clearAuth("admin");
+
+    Swal.fire({
+      icon: "error",
+      title: "Lỗi",
+      text: "Có lỗi xảy ra khi đăng xuất",
+    });
+
+    setTimeout(() => {
+      router.push("/admin/dang-nhap");
+    }, 2000);
   } finally {
     closeModal();
   }
@@ -395,12 +388,7 @@ const changePassword = async () => {
   }
 
   try {
-    const token = localStorage.getItem("auth_token");
-    await axios.post(
-      "http://127.0.0.1:8000/api/admin/doi-mat-khau",
-      passwordForm,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    await api.post("/admin/doi-mat-khau", passwordForm);
 
     Swal.fire({
       icon: "success",
@@ -427,18 +415,7 @@ const changePassword = async () => {
 // 1. Hàm lấy profile từ API
 const fetchProfile = async () => {
   try {
-    const token = localStorage.getItem("auth_token");
-
-    const response = await axios.get(
-      "http://127.0.0.1:8000/api/admin/profile",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      }
-    );
-    console.log("API Response:", response.data);
+    const response = await api.get("/admin/profile");
 
     if (response.data.status) {
       // Đổ dữ liệu vào form
@@ -461,25 +438,14 @@ const saveProfile = async () => {
   loading.value = true;
 
   try {
-    const token = localStorage.getItem("auth_token");
-
-    await axios.post(
-      "http://127.0.0.1:8000/api/admin/update-profile",
-      {
-        id: profile.id,
-        created_at: profile.created_at,
-        ten: profile.ten,
-        email: profile.email,
-        so_dien_thoai: profile.so_dien_thoai,
-        mo_ta: profile.mo_ta,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    await api.post("/admin/update-profile", {
+      id: profile.id,
+      created_at: profile.created_at,
+      ten: profile.ten,
+      email: profile.email,
+      so_dien_thoai: profile.so_dien_thoai,
+      mo_ta: profile.mo_ta,
+    });
 
     Swal.fire("Thành công!", "Cập nhật profile thành công!", "success");
 

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <footer class="bg-[#0a0e27] text-white pt-20 pb-8 relative overflow-hidden">
     <!-- Top Gradient Line -->
     <div
