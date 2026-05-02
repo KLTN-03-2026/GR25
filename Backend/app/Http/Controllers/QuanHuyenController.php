@@ -20,4 +20,16 @@ class QuanHuyenController extends Controller
             'data' => $data
         ]);
     }
+    public function getQuanHuyenByTinh(Request $request)
+    {
+        $data = QuanHuyen::where('tinh_id', $request->tinh_id)
+            ->select('id', 'ten')
+            ->orderBy('ten', 'ASC')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $data
+        ]);
+    }
 }

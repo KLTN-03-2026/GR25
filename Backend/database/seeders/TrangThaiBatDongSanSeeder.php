@@ -12,7 +12,7 @@ class TrangThaiBatDongSanSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('trang_thai_bat_dong_sans')->insert([
+        DB::table('trang_thai_bat_dong_sans')->insertOrIgnore([
             [
                 'ten_trang_thai' => 'Chưa duyệt',
                 'created_at' => now(),

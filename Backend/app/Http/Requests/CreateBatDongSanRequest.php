@@ -12,24 +12,48 @@ class CreateBatDongSanRequest extends FormRequest
     }
 
     public function rules(): array
-    {
+{
+    $status = $this->input('status', 'draft');
+
+    // 👉 DRAFT: không bắt buộc gì
+    if ($status === 'draft') {
         return [
             'tieu_de' => 'nullable|string|max:255',
-            'gia' => 'required|numeric|min:0',
-            'dien_tich' => 'required|numeric|min:0',
-            'loai_id' => 'required|integer|exists:loai_bat_dong_sans,id',
-            'trang_thai_id' => 'required|integer|exists:trang_thai_bat_dong_sans,id',
+            'gia' => 'nullable|numeric|min:0',
+            'dien_tich' => 'nullable|numeric|min:0',
+            'loai_id' => 'nullable|integer|exists:loai_bat_dong_sans,id',
+            'trang_thai_id' => 'nullable|integer|exists:trang_thai_bat_dong_sans,id',
             'mo_ta' => 'nullable|string',
             'tinh_id' => 'nullable|integer|exists:tinh_thanhs,id',
             'quan_id' => 'nullable|integer|exists:quan_huyens,id',
             'dia_chi_id' => 'nullable|integer|exists:dia_chis,id',
             'so_phong_ngu' => 'nullable|integer|min:0',
             'so_phong_tam' => 'nullable|integer|min:0',
-            'is_noi_bat' => 'nullable|boolean',
-            'hinh_anh'        => 'nullable|array|max:10',
-            'hinh_anh.*'      => 'image|mimes:jpg,jpeg,png|max:5120',
+            'hinh_anh' => 'nullable|array|max:10',
         ];
     }
+
+    // 👉 PUBLISHED: bắt buộc đầy đủ
+    return [
+        'tieu_de' => 'required|string|max:255',
+        'gia' => 'required|numeric|min:0',
+        'dien_tich' => 'required|numeric|min:0',
+        'loai_id' => 'required|integer|exists:loai_bat_dong_sans,id',
+        'trang_thai_id' => 'required|integer|exists:trang_thai_bat_dong_sans,id',
+        
+        'tinh_id' => 'required|integer|exists:tinh_thanhs,id',
+        'quan_id' => 'required|integer|exists:quan_huyens,id',
+        'phuong_id' => 'nullable|integer|exists:phuong_xas,id',
+        'dia_chi_chi_tiet' => 'nullable|string|max:255',
+        'latitude' => 'nullable|numeric',
+        'longitude' => 'nullable|numeric',
+
+        'mo_ta' => 'nullable|string',
+        'so_phong_ngu' => 'nullable|integer|min:0',
+        'so_phong_tam' => 'nullable|integer|min:0',
+        'hinh_anh' => 'nullable|array|max:10',
+    ];
+}
 
     public function messages(): array
     {
@@ -56,9 +80,9 @@ class CreateBatDongSanRequest extends FormRequest
             'mo_ta.max' => 'Mô tả không được vượt quá 255 ký tự',
             'hinh_anh.array'        => 'Hình ảnh phải là danh sách file',
             'hinh_anh.max'          => 'Chỉ được upload tối đa 10 ảnh',
-            'hinh_anh.*.image'      => 'File phải là hình ảnh',
-            'hinh_anh.*.mimes'      => 'Hình ảnh phải có định dạng: jpg, jpeg, png',
-            'hinh_anh.*.max'        => 'Mỗi ảnh không được vượt quá 5MB',
+            // 'hinh_anh.*.image'      => 'File phải là hình ảnh',
+            // 'hinh_anh.*.mimes'      => 'Hình ảnh phải có định dạng: jpg, jpeg, png',
+            // 'hinh_anh.*.max'        => 'Mỗi ảnh không được vượt quá 5MB',
         ];
     }
 }

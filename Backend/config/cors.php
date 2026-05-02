@@ -1,23 +1,13 @@
 <?php
 
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | Cross-Origin Resource Sharing (CORS) Configuration
-    |--------------------------------------------------------------------------
-    */
-
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'broadcasting/auth'],
 
     'allowed_methods' => ['*'],
 
-    // ✅ CHO PHÉP FRONTEND CỦA BẠN GỬI REQUEST
     'allowed_origins' => [
         'http://localhost:5173',
-        'http://127.0.0.1:5173',
     ],
-
-    'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
@@ -25,6 +15,5 @@ return [
 
     'max_age' => 0,
 
-    // ✅ BẮT BUỘC TRUE ĐỂ SANCTUM/AUTH HOẠT ĐỘNG ĐÚNG
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 ];

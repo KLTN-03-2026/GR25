@@ -13,13 +13,31 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class ThongKeController extends Controller
 {
-    // Dashboard Stats (4 cards) - tổng số môi giới, khách hàng, bất động sản đã duyệt, giao dịch thành công
-    public function getDashboardStats()
+    // ✅ Helper: resolve user từ Bearer token nếu guard chưa có
+    private function resolveUser(Request $request)
     {
         $user = Auth::guard('sanctum')->user();
+        if (!$user) {
+            $token = $request->bearerToken();
+            if ($token) {
+                $pat = PersonalAccessToken::findToken($token);
+                if ($pat) {
+                    $user = $pat->tokenable;
+                    Auth::guard('sanctum')->setUser($user);
+                }
+            }
+        }
+        return $user;
+    }
+
+    // Dashboard Stats (4 cards) - tổng số môi giới, khách hàng, bất động sản đã duyệt, giao dịch thành công
+    public function getDashboardStats(Request $request)
+    {
+        $user = $this->resolveUser($request);
         if ($user) {
             $moiGioiCount = MoiGioi::count();
             $khachHangCount = KhachHang::count();
@@ -43,7 +61,7 @@ class ThongKeController extends Controller
     // Dashboard Chart (biểu đồ) - doanh thu và số giao dịch theo ngày trong khoảng thời gian chọn
     public function getRevenueChart(Request $request)
     {
-        $user = Auth::guard('sanctum')->user();
+        $user = $this->resolveUser($request);
 
         if (!$user) {
             return response()->json(['status' => false, 'message' => "Có lỗi xảy ra"], 401);
@@ -122,7 +140,7 @@ class ThongKeController extends Controller
     // Khách hàng yêu thích BĐS gần đây (5 mục mới nhất)
     public function getRecentFavorites(Request $request)
     {
-        $user = Auth::guard('sanctum')->user();
+        $user = $this->resolveUser($request);
 
         if (!$user) {
             return response()->json(['status' => false, 'message' => "Có lỗi xảy ra"], 401);
@@ -165,7 +183,7 @@ class ThongKeController extends Controller
     // Giao dịch mua gói tin gần đây (5 mục mới nhất)
     public function getRecentPackagePurchases(Request $request)
     {
-        $user = Auth::guard('sanctum')->user();
+        $user = $this->resolveUser($request);
 
         if (!$user) {
             return response()->json(['status' => false, 'message' => "Có lỗi xảy ra"], 401);
@@ -202,6 +220,85 @@ class ThongKeController extends Controller
         ]);
     }
 
+    // Dashboard overview tổng hợp: stats mở rộng + top môi giới + BDS chờ duyệt
+    public function getDashboardOverview(Request $request)
+    {
+        $user = $this->resolveUser($request);
+        if (!$user) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $today      = now()->startOfDay();
+        $thisMonth  = now()->startOfMonth();
+        $lastMonth  = now()->subMonth()->startOfMonth();
+        $lastMonthEnd = now()->subMonth()->endOfMonth();
+
+        $doanhThuThang     = (float) GiaoDich::where('trang_thai', 'success')->where('created_at', '>=', $thisMonth)->sum('so_tien');
+        $doanhThuThangTruoc = (float) GiaoDich::where('trang_thai', 'success')->whereBetween('created_at', [$lastMonth, $lastMonthEnd])->sum('so_tien');
+        $doanhThuChange    = $doanhThuThangTruoc > 0 ? round(($doanhThuThang - $doanhThuThangTruoc) / $doanhThuThangTruoc * 100, 1) : 0;
+
+        $gdHomNay    = GiaoDich::where('trang_thai', 'success')->where('created_at', '>=', $today)->count();
+        $gdHomQua    = GiaoDich::where('trang_thai', 'success')->whereBetween('created_at', [now()->subDay()->startOfDay(), now()->subDay()->endOfDay()])->count();
+
+        $choDuyet    = BatDongSan::where('is_duyet', false)->count();
+        $kh          = KhachHang::count();
+        $mg          = MoiGioi::count();
+        $bds         = BatDongSan::where('is_duyet', true)->count();
+        $gd          = GiaoDich::where('trang_thai', 'success')->count();
+
+        $topMoiGioi = MoiGioi::withCount(['batDongSans' => function ($q) {
+            $q->where('is_duyet', true);
+        }])
+            ->orderBy('bat_dong_sans_count', 'desc')
+            ->limit(5)
+            ->get(['id', 'ten', 'email', 'avatar', 'goi_tin_id', 'so_tin_con_lai', 'ngay_het_han_goi'])
+            ->map(function ($m) {
+                return [
+                    'id'         => $m->id,
+                    'ten'        => $m->ten,
+                    'email'      => $m->email,
+                    'avatar'     => $m->avatar,
+                    'so_bds'     => $m->bat_dong_sans_count,
+                    'tin_con_lai' => $m->so_tin_con_lai ?? 0,
+                ];
+            });
+
+        $bdsChoDuyet = BatDongSan::with(['moiGioi:id,ten', 'loai:id,ten_loai', 'diaChi.tinh:id,ten'])
+            ->where('is_duyet', false)
+            ->where('status', 'published')
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(function ($b) {
+                return [
+                    'id'       => $b->id,
+                    'tieu_de'  => $b->tieu_de,
+                    'gia'      => $b->gia,
+                    'loai'     => $b->loai->ten_loai ?? '—',
+                    'tinh'     => $b->diaChi->tinh->ten ?? '—',
+                    'moi_gioi' => $b->moiGioi->ten ?? '—',
+                    'ngay'     => $b->created_at->format('d/m/Y'),
+                ];
+            });
+
+        return response()->json([
+            'status' => true,
+            'stats'  => [
+                'khach_hang'       => $kh,
+                'moi_gioi'         => $mg,
+                'bat_dong_san'     => $bds,
+                'giao_dich'        => $gd,
+                'cho_duyet'        => $choDuyet,
+                'doanh_thu_thang'  => $doanhThuThang,
+                'doanh_thu_change' => $doanhThuChange,
+                'giao_dich_hom_nay' => $gdHomNay,
+                'giao_dich_hom_qua' => $gdHomQua,
+            ],
+            'top_moi_gioi'  => $topMoiGioi,
+            'bds_cho_duyet' => $bdsChoDuyet,
+        ]);
+    }
+
     private function getPaymentStatusLabel($status)
     {
         return match ($status) {
@@ -211,5 +308,30 @@ class ThongKeController extends Controller
             'expired' => 'Hết hạn',
             default => 'Unknown',
         };
+    }
+
+    // Biểu đồ tròn (Pie chart) tỷ lệ bất động sản theo trạng thái
+    public function getPropertyStatusChart(Request $request)
+    {
+        $user = $this->resolveUser($request);
+        if (!$user) {
+            return response()->json(['status' => false, 'message' => "Có lỗi xảy ra"], 401);
+        }
+
+        $choDuyet = BatDongSan::where('is_duyet', 0)->count();
+        $daDuyet = BatDongSan::where('is_duyet', 1)->count();
+        $tuChoi = BatDongSan::where('is_duyet', 2)->count();
+        $daBan = BatDongSan::where('trang_thai_id', 4)->count();
+
+        // Adjust for overlap if properties can be is_duyet=1 AND trang_thai_id=4
+        $daDuyetActive = BatDongSan::where('is_duyet', 1)->where('trang_thai_id', '!=', 4)->count();
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'labels' => ['Chờ duyệt', 'Đang hoạt động', 'Bị từ chối', 'Đã bán/Thuê'],
+                'series' => [$choDuyet, $daDuyetActive, $tuChoi, $daBan]
+            ]
+        ]);
     }
 }

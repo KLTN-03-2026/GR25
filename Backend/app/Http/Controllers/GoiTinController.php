@@ -145,17 +145,28 @@ class GoiTinController extends Controller
         }
     }
 
+    public function getPublicPackages()
+    {
+        $plans = GoiTin::where('trang_thai', 'active')
+            ->orderBy('gia', 'asc')
+            ->get(['id', 'ten_goi', 'gia', 'so_ngay', 'so_luong_tin', 'mo_ta', 'uu_tien_hien_thi']);
+
+        return response()->json([
+            'status' => true,
+            'data'   => $plans,
+        ]);
+    }
+
     public function getAll()
     {
-        // Lấy tổng số lượng TRƯỚC khi map
+        // ✅ LẤY USER HIỆN TẠI
+        $user = auth()->guard('sanctum')->user();
+
         $plans = GoiTin::where('trang_thai', 'active')
             ->orderBy('gia', 'asc')
             ->get();
 
-        $total = $plans->count(); // Đếm ở đây
-
         $formattedPlans = $plans->map(function ($plan) {
-
             return [
                 'id'            => $plan->id,
                 'name'          => $plan->ten_goi,
@@ -165,8 +176,6 @@ class GoiTinController extends Controller
                 'yearlyPrice'   => (int) ($plan->gia * 12 * 0.8),
                 'durationDays'  => (int) $plan->so_ngay,
                 'postLimit'     => (int) $plan->so_luong_tin,
-
-                // 🔥 chuẩn hơn
                 'isPopular'     => $plan->uu_tien_hien_thi == 1,
 
                 'features' => [
@@ -184,7 +193,34 @@ class GoiTinController extends Controller
             ];
         });
 
-        return response()->json(['status' => true, 'data' => $formattedPlans]);
+        // Trả về thông tin gói hiện tại + số tin còn lại + hạn dùng
+        $currentPlan = null;
+        if ($user) {
+            $isExpired = $user->ngay_het_han_goi
+                ? $user->ngay_het_han_goi->isPast()
+                : true;
+
+            $currentPlanData = $user->goi_tin_id
+                ? GoiTin::find($user->goi_tin_id)
+                : null;
+
+            $currentPlan = [
+                'id'             => $user->goi_tin_id,
+                'so_tin_con_lai' => $user->so_tin_con_lai ?? 0,
+                'ngay_het_han'   => $user->ngay_het_han_goi
+                    ? $user->ngay_het_han_goi->format('d/m/Y')
+                    : null,
+                'het_han'        => $isExpired,
+                'postLimit'      => $currentPlanData ? $currentPlanData->so_luong_tin : 0,
+                'gia_hien_tai'   => $currentPlanData ? (int) $currentPlanData->gia : 0,
+            ];
+        }
+
+        return response()->json([
+            'status'       => true,
+            'data'         => $formattedPlans,
+            'current_plan' => $currentPlan,
+        ]);
     }
 
     public function muaGoi(MuaGoiTinRequest $request)
@@ -229,5 +265,27 @@ class GoiTinController extends Controller
                 'message' => 'Lỗi: ' . $e->getMessage()
             ]);
         }
+    }
+
+    public function muaCredit(Request $request)
+    {
+        $request->validate([
+            'count' => 'required|integer|min:1|max:100',
+            'price' => 'required|numeric|min:0',
+        ]);
+
+        $user = Auth::guard('sanctum')->user();
+
+        if (!$user) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $user->increment('so_tin_con_lai', (int) $request->count);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Mua thêm ' . $request->count . ' tin đăng thành công',
+            'so_tin_con_lai' => $user->fresh()->so_tin_con_lai,
+        ]);
     }
 }

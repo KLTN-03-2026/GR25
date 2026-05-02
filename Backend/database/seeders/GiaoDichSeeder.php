@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -12,26 +13,32 @@ class GiaoDichSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('giao_dichs')->insert([
+        $paidAt1 = Carbon::now(); // ✅ Gói môi giới 1 bắt đầu hôm nay (chưa hết hạn)
+        $paidAt2 = Carbon::now()->subDays(5);
+        $paidAt4 = Carbon::now()->subDays(3);
+
+        DB::table('giao_dichs')->insertOrIgnore([
             [
                 'moi_gioi_id' => 1,
                 'goi_tin_id' => 1,
                 'so_tien' => 50000,
                 'phuong_thuc' => 'bank',
                 'trang_thai' => 'success',
-                'ma_giao_dich' => 'GD001-2026-03-29',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'paid_at' => $paidAt1,
+                'ma_giao_dich' => 'GD001-SEED',
+                'created_at' => $paidAt1,
+                'updated_at' => $paidAt1,
             ],
             [
                 'moi_gioi_id' => 2,
                 'goi_tin_id' => 2,
                 'so_tien' => 100000,
-                'phuong_thuc' => 'momo',
+                'phuong_thuc' => 'bank',
                 'trang_thai' => 'success',
-                'ma_giao_dich' => 'GD002-2026-03-29',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'paid_at' => $paidAt2,
+                'ma_giao_dich' => 'GD002-SEED',
+                'created_at' => $paidAt2,
+                'updated_at' => $paidAt2,
             ],
             [
                 'moi_gioi_id' => 3,
@@ -39,7 +46,8 @@ class GiaoDichSeeder extends Seeder
                 'so_tien' => 250000,
                 'phuong_thuc' => 'bank',
                 'trang_thai' => 'pending',
-                'ma_giao_dich' => 'GD003-2026-03-29',
+                'paid_at' => null,
+                'ma_giao_dich' => 'GD003-SEED',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -47,19 +55,21 @@ class GiaoDichSeeder extends Seeder
                 'moi_gioi_id' => 4,
                 'goi_tin_id' => 2,
                 'so_tien' => 100000,
-                'phuong_thuc' => 'cash',
+                'phuong_thuc' => 'bank',
                 'trang_thai' => 'success',
-                'ma_giao_dich' => 'GD004-2026-03-29',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'paid_at' => $paidAt4,
+                'ma_giao_dich' => 'GD004-SEED',
+                'created_at' => $paidAt4,
+                'updated_at' => $paidAt4,
             ],
             [
                 'moi_gioi_id' => 1,
                 'goi_tin_id' => 4,
                 'so_tien' => 500000,
                 'phuong_thuc' => 'bank',
-                'trang_thai' => 'fail',
-                'ma_giao_dich' => 'GD005-2026-03-29',
+                'trang_thai' => 'failed',
+                'paid_at' => null,
+                'ma_giao_dich' => 'GD005-SEED',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

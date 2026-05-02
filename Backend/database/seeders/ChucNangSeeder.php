@@ -15,7 +15,7 @@ class ChucNangSeeder extends Seeder
     {
         // DB::table('chuc_nangs')->delete();
         // DB::table('chuc_nangs')->truncate();
-        DB::table('chuc_nangs')->insert([
+        DB::table('chuc_nangs')->insertOrIgnore([
             [
                 'id' => 1,
                 'ten_chuc_nang' => 'Xem danh sách bất động sản',

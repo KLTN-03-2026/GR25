@@ -1010,7 +1010,7 @@
               "raw": "{\n  \"tieu_de\": \"Bán nhà 3 tầng tại Hà Nội\",\n  \"mo_ta\": \"Nhà đẹp, an toàn, gần trường học và siêu thị\",\n  \"gia\": 3500000000,\n  \"dien_tich\": 150,\n  \"so_phong_ngu\": 3,\n  \"so_phong_tam\": 2,\n  \"loai_id\": 1,\n  \"trang_thai_id\": 1,\n  \"tinh_id\": 1,\n  \"quan_id\": 1,\n  \"dia_chi_chi_tiet\": \"Số 123, đường Lê Lợi\",\n  \"lat\": 21.0285,\n  \"lng\": 105.8542\n}"
             },
             "url": {
-              "raw": "{{base_url}}/moi-gioi/bds/create",
+              "raw": "http://localhost:8000/api/moi-gioi/bds/create",
               "host": ["{{base_url}}"],
               "path": ["moi-gioi", "bds", "create"]
             }

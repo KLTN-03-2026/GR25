@@ -12,16 +12,21 @@ class ThongBaoSeeder extends Seeder
      */
     public function run(): void
     {
+        $moiGioiId = DB::table('moi_giois')->value('id');
+        $bdsId = DB::table('bat_dong_sans')->value('id');
+
+        if (!$moiGioiId || !$bdsId) {
+            return;
+        }
+
         DB::table('thong_baos')->insert([
             [
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
+                'moi_gioi_id' => $moiGioiId,
+                'khach_hang_id' => null,
+                'bat_dong_san_id' => $bdsId,
+                'tieu_de' => 'Tin đăng được duyệt',
+                'noi_dung' => 'Tin đăng của bạn đã được phê duyệt và đang hiển thị.',
+                'trang_thai' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

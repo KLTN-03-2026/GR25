@@ -38,7 +38,7 @@ class AdminController extends Controller
             'token' => $token,
             'token_type' => 'Bearer',
             'user_type' => 'admin',
-            'data' => $user  
+            'data' => $user
         ], 200);
     }
 
@@ -121,7 +121,7 @@ class AdminController extends Controller
 
         $user->tokens()->where('id', '!=', $currentTokenId)->delete();
 
-        $user->password = Hash::make($request->mat_khau_moi);
+        $user->password = bcrypt($request->mat_khau_moi);
         $user->save();
 
         return response()->json([
@@ -129,24 +129,6 @@ class AdminController extends Controller
             'message' => 'Đổi mật khẩu thành công! Các thiết bị khác đã được đăng xuất.',
         ]);
     }
-
-    // public function getActiveSessions(Request $request)
-    // {
-    //     $user = Auth::guard('sanctum')->user();
-    //     $currentTokenId = $user->currentAccessToken()->id;
-
-    //     $sessions = $user->tokens()->get()->map(function ($token) use ($currentTokenId) {
-    //         return [
-    //             'id' => $token->id,
-    //             'name' => $token->name, // Có thể lưu device name khi tạo token
-    //             'created_at' => $token->created_at,
-    //             'last_used_at' => $token->last_used_at,
-    //             'is_current' => $token->id === $currentTokenId,
-    //         ];
-    //     });
-
-    //     return response()->json(['sessions' => $sessions]);
-    // }
 
     public function logout()
     {
@@ -169,7 +151,6 @@ class AdminController extends Controller
     public function logoutAll()
     {
         try {
-            // Lấy user từ token hiện tại (trước khi xóa)
             $user = Auth::guard('sanctum')->user();
 
             if (!$user) {
@@ -179,16 +160,9 @@ class AdminController extends Controller
                 ], 401);
             }
 
-            // ✅ QUAN TRỌNG: Xóa token hiện tại TRƯỚC
-            $currentToken = $user->currentAccessToken();
-            if ($currentToken) {
-                $currentToken->delete();
-            }
-
-            // ✅ Sau đó xóa tất cả token còn lại
+            // ✅ XÓA TẤT CẢ TOKEN MỘT LƯỢC (bao gồm current token)
             $user->tokens()->delete();
 
-            // ✅ Trả về 200 (không phải 401)
             return response()->json([
                 'status' => 'success',
                 'message' => 'Đã đăng xuất tất cả thiết bị'
@@ -269,7 +243,7 @@ class AdminController extends Controller
 
         $user = Admin::where('email', $request->email)->first();
 
-        $user->password = Hash::make($request->password);
+        $user->password = bcrypt($request->password);
         $user->save();
 
         DB::table('password_reset_tokens')
@@ -280,5 +254,29 @@ class AdminController extends Controller
             'status' => true,
             'message' => 'Đổi mật khẩu thành công'
         ]);
+    }
+    // ✅ Lấy danh sách thông báo
+    public function getNotifications()
+    {
+        /** @var Admin $user */
+        $user = Auth::guard('sanctum')->user();
+        if (!$user) return response()->json(['message' => 'Unauthorized'], 401);
+
+        // Lấy 20 thông báo gần nhất
+        $notifications = $user->notifications()->latest()->take(20)->get();
+
+        return response()->json($notifications);
+    }
+
+    // ✅ Đánh dấu tất cả đã đọc
+    public function markNotificationsRead()
+    {
+        /** @var Admin $user */
+        $user = Auth::guard('sanctum')->user();
+        if (!$user) return response()->json(['message' => 'Unauthorized'], 401);
+
+        $user->unreadNotifications->markAsRead();
+
+        return response()->json(['status' => true, 'message' => 'Đã đánh dấu tất cả là đã đọc']);
     }
 }

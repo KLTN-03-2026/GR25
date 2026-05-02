@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Broadcasting\PrivateChannel;
 
 class MoiGioi extends Authenticatable
 {
@@ -27,6 +28,8 @@ class MoiGioi extends Authenticatable
         'goi_tin_id',
         'so_tin_con_lai',
         'ngay_het_han_goi',
+        'hash_reset',
+        'hash_reset_expires_at',
     ];
 
     protected $hidden = [
@@ -40,6 +43,7 @@ class MoiGioi extends Authenticatable
         'is_active' => 'boolean',
         'so_tin_con_lai' => 'integer',
         'ngay_het_han_goi' => 'datetime',
+        'hash_reset_expires_at' => 'datetime',
     ];
 
     public function batDongSans(): HasMany
@@ -64,5 +68,14 @@ class MoiGioi extends Authenticatable
     public function goiTin()
     {
         return $this->belongsTo(GoiTin::class, 'goi_tin_id' , 'id');
+    }
+
+    /**
+     * ✅ Route broadcast notifications → channel: private-user.{id}
+     * Channel name KHÔNG có prefix "private-" (Laravel Echo tự thêm).
+     */
+    public function receivesBroadcastNotificationsOn(): string
+    {
+        return 'user.' . $this->id;
     }
 }

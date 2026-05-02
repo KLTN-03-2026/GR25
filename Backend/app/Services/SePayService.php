@@ -43,10 +43,13 @@ class SePayService
 
     public function createPaymentUrl($orderCode, $amount, $info, $successUrl = null, $errorUrl = null, $cancelUrl = null)
     {
-        // Fallback về return URL cũ nếu không truyền 3 URL riêng
-        $successUrl = $successUrl ?? $this->resolveSePayReturnUrl(request());
-        $errorUrl = $errorUrl ?? $successUrl;
-        $cancelUrl = $cancelUrl ?? $successUrl;
+        // ✅ Lấy base URL
+        $returnUrl = $successUrl ?? config('services.sepay.return_url');
+
+        // ✅ Append QUERY PARAMS thay vì path segments
+        $successUrlWithParams = rtrim($returnUrl, '/') . '?status=success&order_code=' . $orderCode;
+        $errorUrlWithParams = rtrim($returnUrl, '/') . '?status=error&order_code=' . $orderCode;
+        $cancelUrlWithParams = rtrim($returnUrl, '/') . '?status=cancel&order_code=' . $orderCode;
 
         $checkoutData = CheckoutBuilder::make()
             ->currency('VND')
@@ -54,9 +57,9 @@ class SePayService
             ->orderAmount($amount)
             ->operation('PURCHASE')
             ->orderDescription($info)
-            ->successUrl($successUrl . '?order_code=' . $orderCode)
-            ->errorUrl($errorUrl . '?order_code=' . $orderCode)
-            ->cancelUrl($cancelUrl . '?order_code=' . $orderCode)
+            ->successUrl($successUrlWithParams)  // ✅ /payment/sepay-return?status=success&order_code=...
+            ->errorUrl($errorUrlWithParams)      // ✅ /payment/sepay-return?status=error&order_code=...
+            ->cancelUrl($cancelUrlWithParams)    // ✅ /payment/sepay-return?status=cancel&order_code=...
             ->build();
 
         return $this->client->checkout()->generateFormHtml($checkoutData);

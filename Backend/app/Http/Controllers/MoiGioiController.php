@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DatLaiMatKhauRequest;
 use App\Http\Requests\DeleteMoiGioiRequest;
 use App\Http\Requests\DestroyRequest;
+use App\Http\Requests\GuiMaQuenMatKhauRequest;
 use App\Http\Requests\MoiGioiLoginRequest;
 use App\Http\Requests\MoiGioiRegisterRequest;
 use App\Http\Requests\SearchMoiGioiRequest;
@@ -13,6 +15,8 @@ use App\Http\Requests\updatePasswordMoiGioiRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\SendOtpRequest;
 use App\Http\Requests\VerifyOtpRequest;
+use App\Http\Requests\XacThucMaQuenMatKhauRequest;
+use App\Mail\ResetPasswordCodeMail;
 use App\Models\MoiGioi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +29,7 @@ use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Mail;
 
 class MoiGioiController extends Controller
 {
@@ -46,8 +51,11 @@ class MoiGioiController extends Controller
             'message' => 'Đăng nhập thành công',
             'token' => $token,
             'token_type' => 'Bearer',
-            'user_type' => 'moi_gioi',
-            'data' => $user  
+            // 'user_type' => 'moi-gioi',
+            'data' => [
+                ...$user->toArray(),
+                'role' => 'moi-gioi',  // ✅ QUAN TRỌNG: Phải có field này
+            ]
         ], 200);
     }
 
@@ -67,7 +75,7 @@ class MoiGioiController extends Controller
 
         $user->tokens()->where('id', '!=', $currentTokenId)->delete();
 
-        $user->password = Hash::make($request->password);
+        $user->password = bcrypt($request->password);
         $user->save();
 
         return response()->json([
@@ -108,7 +116,7 @@ class MoiGioiController extends Controller
             'ten' => $request->ten,
             'email' => $request->email,
             'so_dien_thoai' => $request->so_dien_thoai,
-            'password' => Hash::make($request->input('password')),
+            'password' => bcrypt($request->input('password')),
             'zalo_link' => $request->zalo_link ?? '',
             'mo_ta' => $request->mo_ta ?? '',
             'is_active' => true,
@@ -152,7 +160,7 @@ class MoiGioiController extends Controller
     public function profile()
     {
         $user = Auth::guard('sanctum')->user();
-        
+
 
         $user->load('goiTin');
 
@@ -164,7 +172,7 @@ class MoiGioiController extends Controller
 
     public function checkToken(Request $request)
     {
-       $user = Auth::guard('sanctum')->user();
+        $user = Auth::guard('sanctum')->user();
         if ($user && $user instanceof MoiGioi) {
             return response()->json([
                 'status' => 'success',
@@ -196,6 +204,7 @@ class MoiGioiController extends Controller
         }
     }
 
+
     public function logoutAll()
     {
         $user = Auth::guard('sanctum')->user();
@@ -203,95 +212,13 @@ class MoiGioiController extends Controller
             $user->tokens()->delete();
             return response()->json([
                 'status' => 'success',
-                'message' => 'Đã đăng xuất tất cả thiết bị'
+                'message' => 'Đã đăng xuất khỏi tất cả thiết bị'
             ], 200);
-        } else {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Không tìm thấy người dùng hoặc token không hợp lệ'
-            ], 401);
         }
-    }
-
-    //Gửi OTP
-    public function sendOtp(SendOtpRequest $request)
-    {
-
-        $user = MoiGioi::where('email', $request->email)->first();
-
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Email không tồn tại'
-            ]);
-        }
-
-        $otp = rand(100000, 999999);
-
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $request->email],
-            [
-                'token' => $otp,
-                'created_at' => now()
-            ]
-        );
-
         return response()->json([
-            'status' => true,
-            'message' => 'OTP đã gửi',
-            'otp' => $otp // dev thôi
-        ]);
-    }
-
-    public function verifyOtp(VerifyOtpRequest $request)
-    {
-        $record = DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->where('token', $request->otp)
-            ->first();
-
-        if (!$record) {
-            return response()->json([
-                'status' => false,
-                'message' => 'OTP không đúng'
-            ]);
-        }
-
-        return response()->json([
-            'status' => true,
-            'message' => 'OTP hợp lệ'
-        ]);
-    }
-
-    //Reset password
-    public function resetPassword(ResetPasswordRequest $request)
-    {
-
-        $record = DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->where('token', $request->otp)
-            ->first();
-
-        if (!$record) {
-            return response()->json([
-                'status' => false,
-                'message' => 'OTP không đúng'
-            ]);
-        }
-
-        $user = MoiGioi::where('email', $request->email)->first();
-
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->delete();
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Đổi mật khẩu thành công'
-        ]);
+            'status' => 'error',
+            'message' => 'Không tìm thấy người dùng hoặc token không hợp lệ'
+        ], 401);
     }
 
     // Admin lấy danh sách môi giới
@@ -466,6 +393,135 @@ class MoiGioiController extends Controller
             default => $this->exportCsv($query, $filename)
         };
     }
+
+    // 1. Gửi mã xác nhận quên mật khẩu
+    public function guiMaQuenMatKhau(GuiMaQuenMatKhauRequest $request)
+    {
+        $mg = MoiGioi::where('email', $request->email)->first();
+
+        if (!$mg) {
+            return response()->json([
+                'status'  => 0,
+                'message' => 'Email không tồn tại trong hệ thống!',
+            ], 404);
+        }
+
+        $code = rand(100000, 999999);
+
+        $mg->update([
+            'hash_reset' => bcrypt($code),
+            'hash_reset_expires_at' => now()->addMinutes(5),
+        ]);
+
+        // Gửi mail
+        Mail::to($mg->email)->send(new ResetPasswordCodeMail($code));
+
+        return response()->json([
+            'status'  => 1,
+            'message' => 'Đã gửi mã xác nhận quên mật khẩu đến email của bạn!',
+        ]);
+    }
+
+    // 2) Xác thực mã
+    public function xacThucMaQuenMatKhau(XacThucMaQuenMatKhauRequest $request)
+    {
+        $mg = MoiGioi::where('email', $request->email)->first();
+
+        if (!$mg || !$mg->hash_reset) {
+            return response()->json([
+                'status'  => 0,
+                'message' => 'Mã không hợp lệ!',
+            ], 400);
+        }
+
+        // Check hết hạn
+        if ($mg->hash_reset_expires_at < now()) {
+            return response()->json([
+                'status' => 0,
+                'message' => 'Mã đã hết hạn!',
+            ], 400);
+        }
+
+        // Check đúng mã
+        if (!Hash::check($request->code, $mg->hash_reset)) {
+            return response()->json([
+                'status' => 0,
+                'message' => 'Mã không đúng!',
+            ], 400);
+        }
+
+        return response()->json([
+            'status'  => 1,
+            'message' => 'Mã xác nhận hợp lệ.',
+        ]);
+    }
+
+    // 3) Đặt lại mật khẩu
+    public function datLaiMatKhau(DatLaiMatKhauRequest $request)
+    {
+        \Log::info('Reset password attempt:', [
+            'email' => $request->email,
+            'code' => $request->code,
+        ]);
+
+        $mg = MoiGioi::where('email', $request->email)->first();
+
+        if (!$mg) {
+            \Log::error('Email not found');
+            return response()->json([
+                'status'  => 0,
+                'message' => 'Email không tồn tại!',
+            ], 400);
+        }
+
+        if (!$mg->hash_reset) {
+            \Log::error('Hash reset is null - code already used or not generated');
+            return response()->json([
+                'status'  => 0,
+                'message' => 'Mã xác nhận không tồn tại! Có thể đã được sử dụng.',
+                'debug' => [
+                    'hash_reset' => $mg->hash_reset,
+                    'expires_at' => $mg->hash_reset_expires_at,
+                    'now' => now(),
+                ]
+            ], 400);
+        }
+
+        if ($mg->hash_reset_expires_at < now()) {
+            return response()->json([
+                'status' => 0,
+                'message' => 'Mã đã hết hạn!',
+                'debug' => [
+                    'expires_at' => $mg->hash_reset_expires_at,
+                    'now' => now(),
+                ]
+            ], 400);
+        }
+
+        if (!Hash::check($request->code, $mg->hash_reset)) {
+            return response()->json([
+                'status' => 0,
+                'message' => 'Mã không đúng!',
+            ], 400);
+        }
+
+        $mg->update([
+            'password' => $request->password,
+            'hash_reset' => null,
+            'hash_reset_expires_at' => null,
+        ]);
+
+        return response()->json([
+            'status'  => 1,
+            'message' => 'Đặt lại mật khẩu thành công!',
+        ]);
+    }
+
+
+
+
+
+
 
     private function exportCsv($query, $filename)
     {
@@ -703,5 +759,158 @@ class MoiGioiController extends Controller
             ->setPaper('a4', 'portrait')
             ->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true])
             ->download("{$filename}.pdf");
+    }
+
+    /**
+     * ✅ Lấy danh sách môi giới
+     * GET /api/moi-gioi/danh-ba
+     */
+    /**
+     * Lấy danh sách môi giới
+     * GET /api/moi-gioi/danh-ba
+     */
+    public function danhBa(Request $request)
+    {
+        $query = MoiGioi::query()
+            ->with([
+                'batDongSans' => function ($q) {
+                    $q->where('is_duyet', true)
+                        ->select('id', 'moi_gioi_id', 'dia_chi_id', 'tieu_de')
+                        ->with([
+                            'diaChi.phuongXa',
+                            'diaChi.quan',
+                            'diaChi.tinh'
+                        ]);
+                }
+            ])
+            ->where('is_active', true)
+            ->where('id', '!=', auth()->id());
+
+        // 🔍 Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('ten', 'LIKE', "%{$search}%")
+                    ->orWhere('so_dien_thoai', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $brokers = $query->paginate(20);
+
+        $data = $brokers->getCollection()->map(function ($broker) {
+            return [
+                'id' => $broker->id,
+                'ho_ten' => $broker->ten,
+                'email' => $broker->email,
+                'so_dien_thoai' => $broker->so_dien_thoai,
+                'avatar' => $broker->avatar,
+                'mo_ta' => $broker->mo_ta,
+                'zalo_link' => $broker->zalo_link,
+
+                // 'dia_chi' => $this->extractAddressFromBDS($broker),
+                'khu_vuc_hoat_dong' => $this->extractAreasFromBDS($broker),
+
+                // 👇 THÊM ĐOẠN NÀY
+                'bai_dang' => $broker->batDongSans->map(function ($bds) {
+                    return [
+                        'id' => $bds->id,
+                        'tieu_de' => $bds->tieu_de,
+                        'dia_chi' => $this->formatDiaChi($bds->diaChi),
+                    ];
+                })->values(),
+            ];
+        });
+
+        return response()->json([
+            'status' => true,
+            'data' => $data,
+            'pagination' => [
+                'current_page' => $brokers->currentPage(),
+                'total' => $brokers->total(),
+                'per_page' => $brokers->perPage(),
+            ]
+        ]);
+    }
+
+    private function formatDiaChi($dc)
+    {
+        if (!$dc) return null;
+
+        $parts = [];
+
+        if ($dc->phuong?->ten) $parts[] = $dc->phuong->ten;
+        if ($dc->quan?->ten) $parts[] = $dc->quan->ten;
+        if ($dc->tinh?->ten) $parts[] = $dc->tinh->ten;
+
+        return implode(', ', $parts);
+    }
+
+    /**
+     * ✅ Lấy địa chỉ từ BĐS đầu tiên của môi giới
+     */
+    private function extractAreasFromBDS($broker)
+    {
+        if ($broker->batDongSans->isEmpty()) {
+            return [];
+        }
+
+        $areas = [];
+
+        foreach ($broker->batDongSans as $bds) {
+            if ($bds->diaChi) {
+                $parts = [];
+
+                if ($bds->diaChi->quan_huyen) {
+                    $parts[] = $bds->diaChi->quan_huyen;
+                }
+
+                if ($bds->diaChi->tinh_thanh) {
+                    $parts[] = $bds->diaChi->tinh_thanh;
+                }
+
+                if (!empty($parts)) {
+                    $areas[] = implode(', ', $parts);
+                }
+            }
+        }
+
+        return array_slice(array_values(array_unique($areas)), 0, 5);
+    }
+
+    public function sendContactEmail(Request $request, $id)
+    {
+        $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'customer_email' => 'required|email|max:255',
+            'subject' => 'required|string|max:255',
+            'content' => 'required|string|max:2000',
+        ]);
+
+        // ✅ Lấy môi giới từ model MoiGioi (dùng field 'ten', 'email')
+        $broker = MoiGioi::findOrFail($id);
+
+        if (!$broker->email) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Môi giới chưa có email để liên hệ',
+            ], 400);
+        }
+
+        // ✅ Gửi mail với data từ request + model
+        Mail::to($broker->email)->send(
+            new \App\Mail\ContactMoiGioiMail(
+                $request->customer_name,
+                $request->customer_email,
+                $request->subject,
+                $request->content,
+                $broker->ten
+            )
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Gửi email thành công!',
+        ]);
     }
 }

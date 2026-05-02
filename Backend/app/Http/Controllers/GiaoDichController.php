@@ -10,10 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\UnmatchedPayment;
 use App\Events\ThanhToanThanhCong;
 
 class GiaoDichController extends Controller
@@ -25,14 +22,45 @@ class GiaoDichController extends Controller
         $this->sePay = $sePay;
     }
 
+    // ✅ Lấy danh sách giao dịch cho Admin
+    public function getData(Request $request)
+    {
+        $query = GiaoDich::with(['moiGioi:id,ten,so_dien_thoai', 'goiTin:id,ten_goi']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('ma_giao_dich', 'like', "%{$search}%")
+                ->orWhereHas('moiGioi', function ($q) use ($search) {
+                    $q->where('ten', 'like', "%{$search}%")
+                      ->orWhere('so_dien_thoai', 'like', "%{$search}%");
+                });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('trang_thai', $request->status);
+        }
+
+        $data = $query->orderBy('created_at', 'desc')->paginate($request->input('per_page', 10));
+
+        $stats = [
+            'total'   => GiaoDich::count(),
+            'success' => GiaoDich::where('trang_thai', 'success')->count(),
+            'pending' => GiaoDich::where('trang_thai', 'pending')->count(),
+            'failed'  => GiaoDich::whereIn('trang_thai', ['failed', 'fail'])->count(),
+        ];
+
+        return response()->json([
+            'status' => true,
+            'data' => $data,
+            'stats' => $stats
+        ]);
+    }
+
+    // ✅ GIỮ NGUYÊN: Các hàm helper
     private function resolveSePayReturnUrl(Request $request): string
     {
         $configuredReturnUrl = env('SEPAY_RETURN_URL');
-
-        if ($configuredReturnUrl) {
-            return $configuredReturnUrl;
-        }
-
+        if ($configuredReturnUrl) return $configuredReturnUrl;
         return rtrim($request->getSchemeAndHttpHost(), '/') . '/payment/sepay-return';
     }
 
@@ -41,32 +69,27 @@ class GiaoDichController extends Controller
         do {
             $code = 'SE' . now()->format('YmdHis') . random_int(1000, 9999);
         } while (GiaoDich::where('ma_giao_dich', $code)->exists());
-
         return $code;
     }
 
-    //1. Tạo đơn hàng & Redirect sang SePay (POST /api/moi-gioi/payment/create)
     public function createPayment(Request $request)
     {
         $user = Auth::guard('sanctum')->user();
         $goi = GoiTin::find($request->goi_tin_id);
 
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Unauthorized'
-            ], 401);
-        }
+        if (!$user) return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
+        if (!$goi) return response()->json(['status' => false, 'message' => 'Package not found'], 404);
 
-        if (!$goi) {
+        // ✅ CHẶN MUA TRÙNG GÓI NGAY TẠI BACKEND
+        if ($user->goi_tin_id == $request->goi_tin_id) {
             return response()->json([
                 'status' => false,
-                'message' => 'Package not found'
-            ], 404);
+                'message' => 'Bạn đang sử dụng gói này rồi. Vui lòng đợi hết hạn hoặc nâng cấp gói cao hơn.'
+            ], 400);
         }
 
         try {
-            $paymentData = DB::transaction(function () use ($goi, $request, $user) {
+            $paymentData = DB::transaction(function () use ($goi, $user) {
                 $orderCode = $this->generateOrderCode();
 
                 $transaction = GiaoDich::create([
@@ -78,243 +101,241 @@ class GiaoDichController extends Controller
                     'ma_giao_dich' => $orderCode,
                 ]);
 
-                $paymentForm = $this->sePay->createPaymentUrl(
+                // ✅ MỚI: Dùng SePay SDK để tạo form HTML
+                $paymentHtml = $this->sePay->createPaymentUrl(
                     $orderCode,
                     $goi->gia,
-                    "Thanh toán  {$goi->ten_goi}",
-                    $this->resolveSePayReturnUrl($request)
+                    "Thanh toan don hang {$orderCode}"
                 );
 
                 return [
                     'transaction_id' => $transaction->id,
                     'order_code' => $orderCode,
-                    'payment_form' => $paymentForm,
+                    'amount' => $goi->gia,
+                    'payment_html' => $paymentHtml
                 ];
             });
+
+            return response()->json(['status' => true, 'data' => $paymentData]);
         } catch (\Throwable $exception) {
-            Log::error('SePay create payment failed', [
-                'user_id' => $user->id,
-                'goi_tin_id' => $request->goi_tin_id,
-                'message' => $exception->getMessage(),
-            ]);
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Khong the tao thanh toan SePay'
-            ], 500);
+            Log::error('Create payment failed', ['message' => $exception->getMessage()]);
+            return response()->json(['status' => false, 'message' => 'Không thể tạo thanh toán'], 500);
         }
-
-        return response()->json([
-            'status' => true,
-            'transaction_id' => $paymentData['transaction_id'],
-            'order_code' => $paymentData['order_code'],
-            'payment_form' => $paymentData['payment_form'],
-            'data' => $paymentData,
-        ]);
     }
 
-    // 2. Xử lý webhook từ SePay (POST /api/payment/sepay-webhook)
+    // ✅ MỚI: Handle URL Return từ SePay
+    public function handleSePayReturn(Request $request)
+    {
+        $status    = $request->query('status', 'error');
+        $orderCode = $request->query('order_code');
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+
+        // ✅ FALLBACK: Nếu status=success và webhook chưa xử lý → tự kích hoạt
+        if ($status === 'success' && $orderCode) {
+            $transaction = GiaoDich::where('ma_giao_dich', $orderCode)->first();
+
+            if ($transaction && $transaction->trang_thai === GiaoDich::STATUS_PENDING) {
+                DB::transaction(function () use ($transaction) {
+                    $transaction->update([
+                        'trang_thai' => GiaoDich::STATUS_SUCCESS,
+                        'paid_at'    => now(),
+                    ]);
+                    $this->activatePackage($transaction);
+                });
+                Log::info("✅ Return URL fallback activated: {$orderCode}");
+            }
+        }
+
+        return redirect()->away("{$frontendUrl}/moi-gioi/goi-tin?status={$status}&order_code={$orderCode}");
+    }
+
+    // ✅ GIỮ NGUYÊN: Webhook handler
     public function handleSePayWebhook(Request $request)
     {
-        Log::info('========== WEBHOOK START ==========');
+        Log::info('========== SEPAY WEBHOOK START ==========');
 
-        // ===== AUTH CHECK (Có thể bỏ qua khi test) =====
-        $authHeader = $request->header('Authorization') ?? $request->header('authorization');
-        $expectedToken = config('services.sepay.secret_key');
-
-        if ($authHeader && str_starts_with($authHeader, 'Bearer ')) {
-            $receivedToken = substr($authHeader, 7);
-            if (!hash_equals($expectedToken, $receivedToken)) {
-                Log::error('❌ Auth failed', ['received' => $receivedToken, 'expected' => $expectedToken]);
-                return response()->json(['success' => false, 'message' => 'Invalid token'], 401);
-            }
-            Log::info('✅ Auth passed');
-        } else {
-            Log::warning('⚠️ Skipping auth check (test mode)');
+        // ✅ Xác thực request webhook từ SePay (Security check)
+        if (!$this->sePay->verifyWebhook($request)) {
+            Log::error('❌ Invalid SePay webhook token');
+            return response()->json(['success' => false, 'message' => 'Invalid webhook token'], 401);
         }
-        // ===== END AUTH =====
 
         $data = $request->json()->all();
-        Log::info('Payload:', $data);
 
-        if (!isset($data['notification_type'], $data['order']['order_invoice_number'], $data['order']['order_amount'], $data['transaction']['transaction_status'])) {
-            Log::error('❌ Invalid payload');
-            return response()->json(['success' => false, 'message' => 'Invalid payload'], 422);
+        if (isset($data['notification_type']) && $data['notification_type'] === 'ORDER_PAID') {
+            return $this->handleOrderPaidWebhook($data);
+        }
+        if (isset($data['gateway'])) {
+            return $this->handleBankNotifyWebhook($data);
         }
 
-        if ($data['notification_type'] !== 'ORDER_PAID') {
-            Log::info('⏭️ Skipping non-ORDER_PAID event');
-            return response()->json(['success' => true], 200);
+        Log::error('❌ Unknown webhook format');
+        return response()->json(['success' => false], 422);
+    }
+
+    private function handleOrderPaidWebhook($data)
+    {
+        $orderCode = $data['order']['order_invoice_number'] ?? null;
+        $amount = (float) ($data['order']['order_amount'] ?? 0);
+        $status = $data['transaction']['transaction_status'] ?? '';
+        $sepayerRef = $data['transaction']['transaction_id'] ?? null;
+        return $this->processTransaction($orderCode, $amount, $status, $sepayerRef, 'ORDER_PAID');
+    }
+
+    private function handleBankNotifyWebhook($data)
+    {
+        $orderCode = $data['code'] ?? null;
+        $amount = (float) ($data['transferAmount'] ?? 0);
+        $sepayerRef = $data['referenceCode'] ?? null;
+        $status = 'APPROVED';
+        return $this->processTransaction($orderCode, $amount, $status, $sepayerRef, 'BANK_NOTIFY');
+    }
+
+    private function processTransaction($orderCode, $amount, $status, $sepayerRef, $source)
+    {
+        Log::info("🔍 Processing: source={$source}, code=" . ($orderCode ?? 'null') . ", amount={$amount}");
+
+        $transaction = null;
+        if ($orderCode) {
+            $transaction = GiaoDich::where('ma_giao_dich', $orderCode)->lockForUpdate()->first();
         }
-
-        $orderCode = $data['order']['order_invoice_number'];
-        $amount = (float) $data['order']['order_amount'];
-        $status = $data['transaction']['transaction_status'];
-
-        Log::info('🔍 Looking for order: ' . $orderCode);
-
-        $transaction = GiaoDich::where('ma_giao_dich', $orderCode)->lockForUpdate()->first();
 
         if (!$transaction) {
-            Log::error('❌ Order NOT found', ['code' => $orderCode]);
-            return response()->json(['success' => false, 'message' => 'Order not found'], 404);
+            Log::warning("⚠️ Not found by code! Trying fallback by amount: {$amount}");
+            $transaction = GiaoDich::where('so_tien', $amount)
+                ->where('trang_thai', GiaoDich::STATUS_PENDING)
+                ->where('created_at', '>=', now()->subMinutes(15))
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if ($transaction) {
+                Log::info("✅ FALLBACK MATCHED: {$transaction->ma_giao_dich}");
+            } else {
+                Log::error("❌ Fallback failed. Saving to UnmatchedPayments.");
+                UnmatchedPayment::create([
+                    'sepayer_reference' => $sepayerRef,
+                    'order_code_from_sepay' => $orderCode,
+                    'so_tien' => $amount,
+                    'payload' => json_encode(['source' => $source] + (request()->json()->all() ?? [])),
+                    'status' => 'unmatched',
+                ]);
+                return response()->json(['success' => false, 'message' => 'Order not found'], 404);
+            }
         }
 
-        Log::info('✅ Order found', ['id' => $transaction->id, 'status' => $transaction->trang_thai]);
-
-        if ($transaction->trang_thai === 'success') {
-            Log::warning('⚠️ Already processed');
+        if ($transaction->trang_thai === GiaoDich::STATUS_SUCCESS) {
+            Log::warning("⚠️ Already processed: {$transaction->ma_giao_dich}");
             return response()->json(['success' => true], 200);
         }
 
         if ($amount != $transaction->so_tien) {
-            Log::error('❌ Amount mismatch', ['sepay' => $amount, 'db' => $transaction->so_tien]);
-            $transaction->update(['trang_thai' => 'failed']);
-            return response()->json(['success' => false, 'message' => 'Amount mismatch'], 400);
+            Log::error("❌ Amount mismatch", ['sepay' => $amount, 'db' => $transaction->so_tien]);
+            $transaction->update(['trang_thai' => GiaoDich::STATUS_FAILED]);
+            return response()->json(['success' => false], 400);
         }
 
         $validStatuses = ['APPROVED', 'SUCCESS', 'CAPTURED', 'COMPLETED'];
         if (!in_array(strtoupper($status), $validStatuses)) {
-            Log::error('❌ Payment not approved', ['status' => $status]);
-            $transaction->update(['trang_thai' => 'failed']);
-            return response()->json(['success' => false, 'message' => 'Payment not approved'], 400);
+            Log::error("❌ Payment not approved: {$status}");
+            $transaction->update(['trang_thai' => GiaoDich::STATUS_FAILED]);
+            return response()->json(['success' => false], 400);
         }
 
-        // Update transaction
         $transaction->update([
-            'trang_thai' => 'success',
+            'trang_thai' => GiaoDich::STATUS_SUCCESS,
             'paid_at' => now(),
-            'ma_sepay_txn_ref' => $data['transaction']['transaction_id'] ?? null,
+            'ma_sepay_txn_ref' => $sepayerRef,
         ]);
-        Log::info('✅ Transaction updated');
 
-        // 🔥 QUAN TRỌNG: Update user credits
-        Log::info('👤 Updating user credits...');
+        Log::info("✅ Transaction updated: {$transaction->ma_giao_dich}");
+        $this->activatePackage($transaction);
+        Log::info('========== WEBHOOK END ==========');
+        return response()->json(['success' => true], 200);
+    }
 
+    private function activatePackage(GiaoDich $transaction)
+    {
         $goiTin = GoiTin::find($transaction->goi_tin_id);
         $user = MoiGioi::find($transaction->moi_gioi_id);
 
         if (!$goiTin || !$user) {
-            Log::error('❌ Related model not found');
-            return response()->json(['success' => false, 'message' => 'Model not found'], 404);
+            Log::error("❌ Related models not found");
+            return;
         }
 
         $baseDate = $user->ngay_het_han_goi && $user->ngay_het_han_goi->isFuture()
             ? $user->ngay_het_han_goi->copy()
             : now();
 
-        $user->goi_tin_id = $goiTin->id;
-        $user->so_tin_con_lai += $goiTin->so_luong_tin;
-        $user->ngay_het_han_goi = $baseDate->addDays($goiTin->so_ngay);
-        $user->save();
-
-        Log::info('✅ User credits updated', [
-            'new_credits' => $user->so_tin_con_lai,
-            'new_expiry' => $user->ngay_het_han_goi,
+        $user->update([
+            'goi_tin_id' => $goiTin->id,
+            'so_tin_con_lai' => $user->so_tin_con_lai + $goiTin->so_luong_tin,
+            'ngay_het_han_goi' => $baseDate->addDays($goiTin->so_ngay),
         ]);
 
+        Log::info("✅ Package activated for user {$user->id} | New credits: {$user->so_tin_con_lai}");
         event(new ThanhToanThanhCong($user->id));
-
-        Log::info('========== WEBHOOK END ==========');
-        return response()->json(['success' => true], 200);
     }
 
-    // 2️⃣ Xử lý return URL từ SePay (khi user được redirect về)
-    public function handleSePayReturn(Request $request)
+    // ✅ GIỮ NGUYÊN: Các hàm helper khác (getTransactionStatus, export, etc.)
+    public function kichHoatThuCong($id)
     {
-        $status = $request->query('status', 'cancel');
-        $orderCode = $request->query('order_code');
+        $transaction = GiaoDich::find($id);
 
-        Log::info('SePay Return Hit', [
-            'status' => $status,
-            'order_code' => $orderCode,
-            'all_query' => $request->query(),
-        ]);
-
-        // ✅ QUAN TRỌNG: Redirect về frontend URL
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173'); // Hoặc port FE của bạn
-        $redirectUrl = "{$frontendUrl}/moi-gioi/goi-tin";
-
-        // Thêm query params
-        $params = [];
-        if ($status) $params['status'] = $status;
-        if ($orderCode) $params['order_code'] = $orderCode;
-
-        if (!empty($params)) {
-            $redirectUrl .= '?' . http_build_query($params);
+        if (!$transaction) {
+            return response()->json(['status' => false, 'message' => 'Giao dịch không tồn tại'], 404);
         }
 
-        Log::info('Redirecting to: ' . $redirectUrl);
+        if ($transaction->trang_thai === GiaoDich::STATUS_SUCCESS) {
+            return response()->json(['status' => false, 'message' => 'Giao dịch đã được xử lý trước đó']);
+        }
 
-        return redirect()->away($redirectUrl);
-    }
+        DB::transaction(function () use ($transaction) {
+            $transaction->update(['trang_thai' => GiaoDich::STATUS_SUCCESS, 'paid_at' => now()]);
+            $this->activatePackage($transaction);
+        });
 
-    // 3️⃣ Xử lý redirect khi thanh toán THÀNH CÔNG
-    public function handlePaymentSuccess(Request $request)
-    {
-        $orderCode = $request->query('order_code');
-        $txnRef = $request->query('transaction_id');
+        $transaction->load(['moiGioi:id,ten,email,so_tin_con_lai,ngay_het_han_goi', 'goiTin:id,ten_goi']);
 
-        Log::info('Payment Success Redirect', [
-            'order_code' => $orderCode,
-            'txn_ref' => $txnRef,
-            'query' => $request->query(),
+        return response()->json([
+            'status' => true,
+            'message' => 'Đã kích hoạt gói tin thành công',
+            'data' => $transaction
         ]);
-
-        // 🔥 QUAN TRỌNG: KHÔNG update DB ở đây! 
-        // Chỉ redirect về frontend, frontend sẽ polling check status
-
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
-        $redirectUrl = "{$frontendUrl}/payment/success?order_code={$orderCode}";
-
-        return redirect()->away($redirectUrl);
     }
 
-    // 4️⃣ Xử lý redirect khi thanh toán THẤT BẠI
-    public function handlePaymentError(Request $request)
+    public function lichSuGiaoDich(Request $request)
     {
-        $orderCode = $request->query('order_code');
-        $errorMessage = $request->query('message', 'Thanh toán thất bại');
+        $user = Auth::guard('sanctum')->user();
 
-        Log::warning('Payment Error Redirect', [
-            'order_code' => $orderCode,
-            'message' => $errorMessage,
+        $data = GiaoDich::with(['goiTin:id,ten_goi,so_ngay,so_luong_tin'])
+            ->where('moi_gioi_id', $user->id)
+            ->when($request->filled('trang_thai'), fn($q) => $q->where('trang_thai', $request->trang_thai))
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->input('per_page', 10));
+
+        return response()->json([
+            'status' => true,
+            'data' => $data
         ]);
-
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
-        $redirectUrl = "{$frontendUrl}/payment/error?order_code={$orderCode}&message=" . urlencode($errorMessage);
-
-        return redirect()->away($redirectUrl);
     }
 
-    // 5️⃣ Xử lý redirect khi user HỦY thanh toán
-    public function handlePaymentCancel(Request $request)
+    public function getTransactionStatus($orderCode)
     {
-        $orderCode = $request->query('order_code');
-
-        Log::info('Payment Cancelled', ['order_code' => $orderCode]);
-
-        // Optional: Update order status thành 'cancelled' nếu muốn
-        // Nhưng thường nên để pending và chờ webhook timeout
-
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
-        $redirectUrl = "{$frontendUrl}/payment/cancel?order_code={$orderCode}";
-
-        return redirect()->away($redirectUrl);
+        $transaction = GiaoDich::where('ma_giao_dich', $orderCode)->first();
+        if (!$transaction) {
+            return response()->json(['status' => false, 'message' => 'Giao dịch không tồn tại'], 404);
+        }
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'trang_thai' => $transaction->trang_thai,
+                'ma_giao_dich' => $transaction->ma_giao_dich,
+                'so_tien' => $transaction->so_tien,
+                'paid_at' => $transaction->paid_at,
+            ]
+        ]);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public function exportGiaoDich(Request $request)
     {

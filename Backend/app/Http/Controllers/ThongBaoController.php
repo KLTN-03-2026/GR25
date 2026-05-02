@@ -31,15 +31,10 @@ class ThongBaoController extends Controller
         ]);
     }
 
-    public function sseStream(Request $request)
-    {
-        return app(SSEController::class)->stream($request);
-    }
-
     // Đánh dấu đã đọc tất cả
     public function markAllAsRead()
     {
-        $moiGioiId = auth('sanctum')->id(); // 🔥 FIX
+        $moiGioiId = auth('sanctum')->id();
 
         $updated = ThongBao::where('moi_gioi_id', $moiGioiId)
             ->where('trang_thai', 0)
@@ -56,7 +51,7 @@ class ThongBaoController extends Controller
     // Đánh dấu đã đọc một thông báo
     public function markAsRead($id)
     {
-        $moiGioiId = auth('sanctum')->id(); // 🔥 FIX
+        $moiGioiId = auth('sanctum')->id();
 
         $updated = ThongBao::where('id', $id)
             ->where('moi_gioi_id', $moiGioiId)
@@ -66,7 +61,7 @@ class ThongBaoController extends Controller
 
         return response()->json([
             'status' => true,
-            'updated' => $updated // debug
+            'updated' => $updated
         ]);
     }
 

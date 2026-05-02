@@ -28,4 +28,9 @@ class QuanHuyen extends Model
     {
         return $this->hasMany(BatDongSan::class, 'quan_id');
     }
+
+    public function phuongXas(): HasMany
+    {
+        return $this->hasMany(PhuongXa::class, 'quan_huyen_id');
+    }
 }

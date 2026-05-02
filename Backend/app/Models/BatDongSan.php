@@ -24,6 +24,7 @@ class BatDongSan extends Model
         'is_duyet',
         'is_noi_bat',
         'expires_at',
+        'status',
     ];
 
     protected $casts = [
@@ -39,10 +40,7 @@ class BatDongSan extends Model
     {
         return $this->belongsTo(LoaiBatDongSan::class, 'loai_id');
     }
-    public function trangThai(): BelongsTo
-    {
-        return $this->belongsTo(TrangThaiBatDongSan::class, 'trang_thai_id');
-    }
+
     public function moiGioi(): BelongsTo
     {
         return $this->belongsTo(MoiGioi::class, 'moi_gioi_id');
@@ -72,22 +70,27 @@ class BatDongSan extends Model
     {
         $anh = $this->anhDaiDien;
 
-        if ($anh) {
-            if (filter_var($anh->url, FILTER_VALIDATE_URL)) {
-                return $anh->url; // link online
+        $resolve = function ($url) {
+            if (!$url) {
+                return null;
             }
 
-            return asset('storage/' . $anh->url); // ảnh upload local
+            if (filter_var($url, FILTER_VALIDATE_URL)) {
+                return $url;
+            }
+
+            $url = ltrim($url, '/');
+            return asset('storage/' . $url);
+        };
+
+        if ($anh) {
+            return $resolve($anh->url);
         }
 
         $first = $this->hinhAnh->first();
 
         if ($first) {
-            if (filter_var($first->url, FILTER_VALIDATE_URL)) {
-                return $first->url;
-            }
-
-            return asset('storage/' . $first->url);
+            return $resolve($first->url);
         }
 
         return null;

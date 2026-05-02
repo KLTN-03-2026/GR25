@@ -12,7 +12,7 @@ class YeuThichSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('yeu_thichs')->insert([
+        DB::table('yeu_thichs')->insertOrIgnore([
             [
                 'moi_gioi_id' => 1,
                 'khach_hang_id' => 1,

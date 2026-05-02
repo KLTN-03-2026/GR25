@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('so_dien_thoai')->nullable()->index();
             $table->text('mo_ta')->nullable();
             $table->string('password');
+            $table->boolean('is_super')->default(false)->index();
             $table->boolean('is_active')->default(true)->index();
             $table->timestamps();
         });

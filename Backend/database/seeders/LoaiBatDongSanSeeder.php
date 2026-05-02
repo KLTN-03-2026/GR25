@@ -12,7 +12,7 @@ class LoaiBatDongSanSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('loai_bat_dong_sans')->insert([
+        DB::table('loai_bat_dong_sans')->insertOrIgnore([
             [
                 'ten_loai' => 'Căn hộ',
                 'created_at' => now(),

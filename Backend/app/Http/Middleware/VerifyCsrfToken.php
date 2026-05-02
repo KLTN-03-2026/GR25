@@ -13,5 +13,10 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         'payment/sepay-webhook',
+        'api/khach-hang/dang-nhap',
+        'api/moi-gioi/dang-nhap',
+        'api/admin/dang-nhap',
+        'api/khach-hang/dang-ky'
+        
     ];
 }

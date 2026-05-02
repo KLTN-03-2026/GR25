@@ -13,6 +13,7 @@ class DiaChi extends Model
     protected $fillable = [
         'tinh_id',
         'quan_id',
+        'phuong_xa_id',
         'dia_chi_chi_tiet',
         'latitude',
         'longitude',
@@ -36,5 +37,10 @@ class DiaChi extends Model
     public function batDongSans(): HasMany
     {
         return $this->hasMany(BatDongSan::class, 'dia_chi_id');
+    }
+
+    public function phuongXa(): BelongsTo
+    {
+        return $this->belongsTo(PhuongXa::class, 'phuong_xa_id');
     }
 }

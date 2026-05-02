@@ -10,21 +10,31 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class AdminMiddleware
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
-
-
     public function handle(Request $request, Closure $next): Response
     {
+        // ✅ Bước 1: Thử lấy user từ Sanctum guard (session-based / đã được resolve trước)
         $user = Auth::guard('sanctum')->user();
+
+        // ✅ Bước 2: Nếu null → fallback thủ công qua Bearer token
+        if (!$user) {
+            $token = $request->bearerToken();
+            if ($token) {
+                $accessToken = PersonalAccessToken::findToken($token);
+                if ($accessToken) {
+                    $user = $accessToken->tokenable;
+                    // Set lại trên guard để auth()->user() hoạt động trong controller
+                    Auth::guard('sanctum')->setUser($user);
+                }
+            }
+        }
+
         if ($user && $user instanceof \App\Models\Admin) {
             return $next($request);
         }
+
         return response()->json([
-            'message' => 'Bạn cần đăng nhập để thực hiện chức năng này'
+            'status'  => false,
+            'message' => 'Unauthorized: Bạn cần đăng nhập với tài khoản Admin',
         ], 401);
     }
 }

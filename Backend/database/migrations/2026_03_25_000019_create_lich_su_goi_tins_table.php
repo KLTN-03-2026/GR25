@@ -13,8 +13,9 @@ return new class extends Migration
             $table->foreignId('moi_gioi_id')->constrained('moi_giois')->cascadeOnDelete();
             $table->foreignId('goi_tin_id')->constrained('goi_tins')->cascadeOnDelete();
             $table->foreignId('giao_dich_id')->nullable()->constrained('giao_dichs')->nullOnDelete();
-            $table->timestamp('bat_dau')->nullable();
-            $table->timestamp('ket_thuc')->nullable();
+            $table->date('ngay_bat_dau')->nullable();
+            $table->date('ngay_ket_thuc')->nullable();
+            $table->string('trang_thai')->default('active')->index();
             $table->timestamps();
 
             $table->index(['moi_gioi_id', 'goi_tin_id']);

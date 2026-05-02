@@ -37,8 +37,10 @@ return [
     'sepay' => [
         'merchant_id' => env('SEPAY_MERCHANT_ID'),
         'secret_key' => env('SEPAY_SECRET_KEY'),
-        'env' => env('SEPAY_ENV', 'sandbox'),
         'webhook_token' => env('SEPAY_WEBHOOK_TOKEN'),
+        'env' => env('SEPAY_ENV', 'sandbox'), // ✅ Default sandbox
+        'return_url' => env('SEPAY_RETURN_URL'),
+        'webhook_url' => env('SEPAY_WEBHOOK_URL'),
     ],
 
 ];

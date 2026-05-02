@@ -12,16 +12,16 @@ class LichSuDinhGiaSeeder extends Seeder
      */
     public function run(): void
     {
+        $aiId = DB::table('a_i_dinh_gias')->value('id');
+
+        if (!$aiId) {
+            return;
+        }
+
         DB::table('lich_su_dinh_gias')->insert([
             [
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
+                'a_i_dinh_gia_id' => $aiId,
+                'ket_qua' => 'Seeded result',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

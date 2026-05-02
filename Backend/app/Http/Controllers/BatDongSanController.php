@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\BatDongSan;
 use App\Models\MoiGioi;
 use App\Models\LoaiBatDongSan;
-use App\Models\TrangThaiBatDongSan;
 use App\Models\TinhThanh;
 use App\Models\QuanHuyen;
 use App\Models\DiaChi;
@@ -23,37 +22,49 @@ use App\Http\Requests\SearchBatDongSanAdminRequest;
 use App\Http\Requests\UpdateImageBatDongSanRequest;
 use App\Models\PhanQuyen;
 use App\Events\BatDongSanMoiDang;
+use App\Events\BatDongSanDuocDuyet;
+use App\Events\BatDongSanBiTuChoi;
 use App\Http\Requests\DeleteBatDongSanRequest;
 
 class BatDongSanController extends Controller
 {
     // Admin
     //Lấy danh sách BDS cho admin
-    public function getData(Request $request) //chính sác rồi 
+    public function getData(Request $request)
     {
-        // $id_chuc_nang = 1; // ID chức năng xem danh sách BDS cho admin
-        // $user = Auth::guard('sanctum')->user();
-        // $check = PhanQuyen::where('id_chuc_vu', $user->id_chuc_vu)
-        //     ->where('id_chuc_nang', $id_chuc_nang)
-        //     ->first();
-        // if (!$user->is_super &&  !$check) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => "Bạn không có quyền thực hiện chức năng này"
-        //     ]);
-        // }
-        $data = BatDongSan::with([
-            'loai',
-            'moiGioi',
-            // 'trangThai',
-            'diaChi.tinh',
-            'diaChi.quan',
-            'hinhAnh' // Lấy danh sách ảnh
-        ])->paginate(10); // nếu dữ liệu nhiều
+        $query = BatDongSan::with([
+            'loai', 'moiGioi', 'diaChi.tinh', 'diaChi.quan', 'hinhAnh'
+        ]);
+
+        if ($request->filled('trang_thai')) {
+            $query->where('trang_thai_id', $request->trang_thai);
+        }
+        if ($request->filled('loai_id')) {
+            $query->where('loai_id', $request->loai_id);
+        }
+        if ($request->filled('min_price')) {
+            $query->where('gia', '>=', $request->min_price);
+        }
+        if ($request->filled('max_price')) {
+            $query->where('gia', '<=', $request->max_price);
+        }
+
+        $data = $query
+            ->orderByRaw("CASE WHEN trang_thai_id = 1 THEN 0 ELSE 1 END")
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        $stats = [
+            'total'    => BatDongSan::count(),
+            'pending'  => BatDongSan::where('trang_thai_id', 1)->count(),
+            'approved' => BatDongSan::where('trang_thai_id', 2)->count(),
+            'featured' => BatDongSan::where('is_noi_bat', true)->count(),
+        ];
 
         return response()->json([
             'status' => true,
-            'data' => $data
+            'data'   => $data,
+            'stats'  => $stats,
         ]);
     }
 
@@ -84,24 +95,17 @@ class BatDongSanController extends Controller
         $noi_dung = '%' . $keyword . '%';
 
         // Tìm kiếm
-        $data = BatDongSan::where('tieu_de', 'like', $noi_dung)
-            ->orWhere('mo_ta', 'like', $noi_dung)
-            ->orWhere('gia', 'like', $noi_dung)
-            ->orWhere('loai_id', 'like', $noi_dung)
-            ->orWhere('dia_chi_id', 'like', $noi_dung)
-            ->get();
-
-        // Kiểm tra nếu không có kết quả
-        if ($data->isEmpty()) {
-            return response()->json([
-                'status' => true,
-                'message' => 'Không tìm thấy bất động sản nào phù hợp',
-                'data' => []
-            ]);
-        }
+        $data = BatDongSan::with(['loai', 'moiGioi', 'diaChi.tinh', 'diaChi.quan', 'hinhAnh'])
+            ->where(function ($q) use ($noi_dung) {
+                $q->where('tieu_de', 'like', $noi_dung)
+                  ->orWhere('mo_ta', 'like', $noi_dung)
+                  ->orWhereHas('moiGioi', fn($mq) => $mq->where('ten', 'like', $noi_dung));
+            })
+            ->paginate(10);
 
         return response()->json([
             'status' => true,
+            'message' => $data->total() === 0 ? 'Không tìm thấy bất động sản nào phù hợp' : null,
             'data' => $data
         ]);
     }
@@ -120,24 +124,30 @@ class BatDongSanController extends Controller
                 'message' => "Bạn không có quyền thực hiện chức năng này"
             ]);
         }
-        $admin = BatDongSan::find($request->id);
-        if ($admin) {
+        $bds = BatDongSan::find($request->id);
+        if ($bds) {
             $isDuyet = (int) $request->input('is_duyet', 0);
-            $admin->is_duyet = $isDuyet;
-            if ($request->is_duyet == 1) {
-                $admin->trang_thai_id = 2; // Đã duyệt
+            $bds->is_duyet = $isDuyet;
+            if ($isDuyet == 1) {
+                $bds->trang_thai_id = 2; // Đã duyệt
+                $bds->save();
+                // ✅ Dispatch event duyệt → listener gửi notification cho môi giới
+                event(new BatDongSanDuocDuyet($bds));
             } else {
-                $admin->trang_thai_id = 3; // Từ chối
+                $bds->trang_thai_id = 6; // Bị từ chối
+                $bds->save();
+                // ✅ Dispatch event từ chối → listener gửi notification cho môi giới
+                $lyDo = $request->input('ly_do');
+                event(new BatDongSanBiTuChoi($bds, $lyDo));
             }
 
-            $admin->save();
             return response()->json([
                 'status' => true,
                 'message' => 'Thay đổi trạng thái duyệt thành công',
                 'data' => [
-                    'id' => $admin->id,
-                    'is_duyet' => $admin->is_duyet,
-                    'trang_thai_id' => $admin->trang_thai_id
+                    'id'           => $bds->id,
+                    'is_duyet'     => $bds->is_duyet,
+                    'trang_thai_id' => $bds->trang_thai_id
                 ]
             ]);
         } else {
@@ -198,10 +208,6 @@ class BatDongSanController extends Controller
                 'status' => true,
                 'message' => 'Cập nhật trạng thái thành công'
             ]);
-            return response()->json([
-                'status' => false,
-                'message' => 'Không tìm thấy BDS'
-            ]);
         }
         return response()->json([
             'status' => false,
@@ -209,20 +215,31 @@ class BatDongSanController extends Controller
         ]);
     }
 
+    public function changeStatusMoiGioi(Request $request)
+    {
+        $user = Auth::guard('sanctum')->user();
+        $bds = BatDongSan::where('id', $request->id)
+            ->where('moi_gioi_id', $user->id)
+            ->first();
+
+        if ($bds) {
+            $bds->trang_thai_id = $request->trang_thai_id;
+            $bds->save();
+            return response()->json([
+                'status' => true,
+                'message' => 'Cập nhật trạng thái thành công'
+            ]);
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Không tìm thấy bất động sản hoặc bạn không có quyền'
+        ], 403);
+    }
+
     // Chi tiết BDS (Dành cho tất cả mọi người)
     public function xemChiTietBDS($id)
     {
-        // $id_chuc_nang = 59; // ID chức năng xem danh sách BDS cho admin
-        // $user = Auth::guard('sanctum')->user();
-        // $check = PhanQuyen::where('id_chuc_vu', $user->id_chuc_vu)
-        //     ->where('id_chuc_nang', $id_chuc_nang)
-        //     ->first();
-        // if (!$user->is_super &&  !$check) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => "Bạn không có quyền thực hiện chức năng này"
-        //     ]);
-        // }
         $data = BatDongSan::with([
             'anhDaiDien',
             'hinhAnh',
@@ -231,18 +248,15 @@ class BatDongSanController extends Controller
             'diaChi',
             'diaChi.tinh',
             'diaChi.quan'
-        ])
-            ->where(function ($query) {
-                $query->whereNull('expires_at')
-                    ->orWhere('expires_at', '>', now());
-            })
-            ->find($id);
+        ])->find($id);
         if (!$data) {
             return response()->json([
                 'status' => false,
                 'message' => "Không tìm thấy bất động sản"
             ]);
         }
+
+        $data->setAppends(['anh_dai_dien_url', 'is_expired']);
 
         return response()->json([
             'status' => true,
@@ -263,21 +277,38 @@ class BatDongSanController extends Controller
             ], 401);
         }
 
-        $data = BatDongSan::with([
-            'loai',          // Lấy thông tin loại BĐS
-            'trangThai',     // Lấy thông tin trạng thái
-            'diaChi.quan',   // Lấy quận
-            'diaChi.tinh',    // Lấy tỉnh
+        $perPage = $request->per_page ?? 10;
+
+        $baseQuery = BatDongSan::where('moi_gioi_id', $user->id);
+
+        $query = BatDongSan::with([
+            'loai',
+            'diaChi.quan',
+            'diaChi.tinh',
             'hinhAnh'
         ])
             ->where('moi_gioi_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->whereHas('loai', fn($q) => $q->where('is_active', 1))
+            ->orderBy('created_at', 'desc');
+
+        // 🔥 filter draft / published
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $data = $query->paginate($perPage);
 
         return response()->json([
             'status'  => true,
             'message' => 'Lấy danh sách BĐS thành công!',
-            'data'    => $data
+            'data'    => $data,
+
+            'stats' => [
+                'total'     => (clone $baseQuery)->count(),
+                'approved'  => (clone $baseQuery)->where('is_duyet', 1)->count(),
+                'pending'   => (clone $baseQuery)->where('is_duyet', 0)->count(),
+                'rejected'  => (clone $baseQuery)->where('is_duyet', 2)->count(),
+            ]
         ]);
     }
 
@@ -288,7 +319,124 @@ class BatDongSanController extends Controller
 
         try {
             $user = Auth::guard('sanctum')->user();
+            $status = $request->input('status', 'draft');
+            $goi = $user->goiTin;
 
+            if ($status === 'published') {
+                if (!$user->is_active) {
+                    return response()->json(['status' => false, 'message' => 'Tài khoản bị khóa'], 403);
+                }
+
+                if (!$user->goi_tin_id) {
+                    return response()->json(['status' => false, 'message' => 'Bạn chưa mua gói'], 403);
+                }
+
+                if (now()->greaterThan($user->ngay_het_han_goi)) {
+                    return response()->json(['status' => false, 'message' => 'Gói đã hết hạn'], 403);
+                }
+
+                if ($user->so_tin_con_lai <= 0) {
+                    return response()->json(['status' => false, 'message' => 'Đã hết số tin đăng'], 403);
+                }
+
+                if (!$goi) {
+                    return response()->json(['status' => false, 'message' => 'Gói không hợp lệ'], 403);
+                }
+            }
+
+            // 1. Tạo hoặc lấy địa chỉ
+            $diaChi = DiaChi::create([
+                'tinh_id'           => $request->tinh_id,
+                'quan_id'           => $request->quan_id,
+                'phuong_xa_id'      => $request->phuong_id,
+                'dia_chi_chi_tiet'  => $request->dia_chi_chi_tiet,
+                'latitude'          => $request->latitude,
+                'longitude'         => $request->longitude,
+            ]);
+
+            // 2. Tạo Bất động sản
+            $batDongSan = BatDongSan::create([
+                'tieu_de'       => $request->tieu_de,
+                'gia'           => $request->gia,
+                'dien_tich'     => $request->dien_tich,
+                'loai_id'       => $request->loai_id,
+                'trang_thai_id' => $request->trang_thai_id ?? 1,
+                'mo_ta'         => $request->mo_ta,
+                'dia_chi_id'    => $diaChi->id,
+                'so_phong_ngu'  => $request->so_phong_ngu,
+                'so_phong_tam'  => $request->so_phong_tam,
+
+                // 🔥 QUAN TRỌNG
+                'is_noi_bat'  => ($status === 'published' && $goi) ? $goi->gan_nhan_vip : false,
+                'expires_at'  => ($status === 'published' && $goi) ? now()->addDays($goi->so_ngay) : null,
+                'status'      => $status,
+
+                'moi_gioi_id' => $user->id,
+                'is_duyet'    => false, // Luôn chờ duyệt
+            ]);
+
+            if ($request->hasFile('hinh_anh')) {
+                foreach ($request->file('hinh_anh') as $index => $file) {
+                    $path = $file->store('bds/' . $batDongSan->id, 'public');
+
+                    HinhAnhBatDongSan::create([
+                        'bds_id' => $batDongSan->id,
+                        'url' => $path,
+                        'thu_tu' => $index,
+                        'is_anh_dai_dien' => $index == 0,
+                    ]);
+                }
+            }
+
+            if ($status === 'published') {
+                $user->decrement('so_tin_con_lai');
+                \Illuminate\Support\Facades\Log::info('EVENT FIRED: BatDongSanMoiDang from store', ['bds_id' => $batDongSan->id]);
+                event(new BatDongSanMoiDang($batDongSan));
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => $status === 'published' ? 'Đăng tin thành công' : 'Đã lưu nháp',
+                'data' => $batDongSan
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    //
+    public function publish($id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $user = Auth::guard('sanctum')->user();
+
+            $bds = BatDongSan::where('id', $id)
+                ->where('moi_gioi_id', $user->id)
+                ->first();
+
+            if (!$bds) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Không tìm thấy bài đăng'
+                ], 404);
+            }
+
+            if ($bds->status === 'published') {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Bài đã được đăng trước đó'
+                ]);
+            }
+
+            // 🔥 CHECK GÓI (giống store)
             if (!$user->is_active) {
                 return response()->json(['status' => false, 'message' => 'Tài khoản bị khóa'], 403);
             }
@@ -311,45 +459,53 @@ class BatDongSanController extends Controller
                 return response()->json(['status' => false, 'message' => 'Gói không hợp lệ'], 403);
             }
 
-            $batDongSan = BatDongSan::create([
-                'tieu_de'       => $request->tieu_de,
-                'gia'           => $request->gia,
-                'dien_tich'     => $request->dien_tich,
-                'loai_id'       => $request->loai_id,
-                'trang_thai_id' => $request->trang_thai_id,
-                'mo_ta'         => $request->mo_ta,
-                'dia_chi_id'    => $request->dia_chi_id,
-                'so_phong_ngu'  => $request->so_phong_ngu,
-                'so_phong_tam'  => $request->so_phong_tam,
-
-                // 🔥 QUAN TRỌNG
-                'is_noi_bat'  => $goi->gan_nhan_vip,
-                'expires_at'  => now()->addDays($goi->so_ngay),
-
-                'moi_gioi_id' => $user->id,
-                'is_duyet'    => false,
+            // 🔥 UPDATE
+            $bds->update([
+                'status' => 'published',
+                'is_noi_bat' => $goi->gan_nhan_vip,
+                'expires_at' => now()->addDays($goi->so_ngay),
+                'is_duyet' => false,
             ]);
 
-            if ($request->hasFile('hinh_anh')) {
-                foreach ($request->file('hinh_anh') as $index => $file) {
-                    $path = $file->store('bds/' . $batDongSan->id, 'public');
-
-                    HinhAnhBatDongSan::create([
-                        'bds_id' => $batDongSan->id,
-                        'url' => $path,
-                        'thu_tu' => $index,
-                        'is_anh_dai_dien' => $index == 0,
-                    ]);
-                }
-            }
-
+            // 🔥 TRỪ TIN
             $user->decrement('so_tin_con_lai');
 
+            // 🔥 EVENT
+            \Illuminate\Support\Facades\Log::info('EVENT FIRED: BatDongSanMoiDang from publish', ['bds_id' => $bds->id]);
+            event(new BatDongSanMoiDang($bds));
+
             DB::commit();
-            event(new BatDongSanMoiDang($batDongSan));
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Đăng tin thành công',
+                'data' => $bds
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Lỗi: ' . $e->getMessage()
+            ], 500);
         }
+    }
+
+
+    // Danh sách BDS của tôi
+    public function index(Request $request)
+    {
+        $user = Auth::guard('sanctum')->user();
+
+        $query = BatDongSan::where('moi_gioi_id', $user->id);
+
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        return response()->json([
+            'data' => $query->latest()->get()
+        ]);
     }
 
     // Cập nhật bài đăng BDS (Dành cho môi giới, admin chỉ có thể duyệt khách hàng không có quyền này)
@@ -364,20 +520,82 @@ class BatDongSanController extends Controller
                 'message' => 'Bạn chỉ được cập nhật bài đăng của chính mình'
             ], 403);
         }
-        $oldData = $data->toArray();
+
         //Lấy dữ liệu hợp lệ
         $updateData = $request->validated();
         unset($updateData['id']);
-        //Update
-        $data->fill($updateData);
-        $data->is_duyet = false;
-        $data->save();
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Cập nhật data thành công và đang chờ duyệt lại',
-            'data' => $data
-        ]);
+        DB::beginTransaction();
+        try {
+            //Update basic info
+            $data->fill($updateData);
+
+            // Chỉ reset is_duyet khi update bài đã published (không reset khi đang là nháp)
+            if ($data->status !== 'draft') {
+                $data->is_duyet = false;
+                $data->trang_thai_id = 1; // Chờ admin duyệt lại
+            }
+            $data->save();
+
+            // Update DiaChi nếu có thông tin địa chỉ mới
+            if ($data->dia_chi_id) {
+                $diaChi = \App\Models\DiaChi::find($data->dia_chi_id);
+                if ($diaChi) {
+                    $diaChi->update([
+                        'tinh_id'          => $request->tinh_id ?? $diaChi->tinh_id,
+                        'quan_id'          => $request->quan_id ?? $diaChi->quan_id,
+                        'phuong_xa_id'     => $request->phuong_id ?? $diaChi->phuong_xa_id,
+                        'dia_chi_chi_tiet' => $request->dia_chi_chi_tiet ?? $diaChi->dia_chi_chi_tiet,
+                        'latitude'         => $request->latitude ?? $diaChi->latitude,
+                        'longitude'        => $request->longitude ?? $diaChi->longitude,
+                    ]);
+                }
+            }
+
+            // Xóa ảnh cũ được chỉ định xóa
+            if ($request->has('deleted_images')) {
+                $deletedIds = $request->input('deleted_images');
+                if (is_array($deletedIds) && count($deletedIds) > 0) {
+                    \App\Models\HinhAnhBatDongSan::whereIn('id', $deletedIds)
+                        ->where('bds_id', $data->id)
+                        ->delete();
+                }
+            }
+
+            // Upload ảnh mới nếu có
+            if ($request->hasFile('hinh_anh')) {
+                $currentMaxThuTu = $data->hinhAnh()->max('thu_tu') ?? -1;
+                foreach ($request->file('hinh_anh') as $index => $file) {
+                    $path = $file->store('bds/' . $data->id, 'public');
+                    HinhAnhBatDongSan::create([
+                        'bds_id'          => $data->id,
+                        'url'             => $path,
+                        'thu_tu'          => $currentMaxThuTu + $index + 1,
+                        'is_anh_dai_dien' => $index == 0 && !$data->hinhAnh()->where('is_anh_dai_dien', true)->exists(),
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            // Fire event if it requires re-approval
+            if ($data->status !== 'draft') {
+                \Illuminate\Support\Facades\Log::info('EVENT FIRED: BatDongSanMoiDang from update', ['bds_id' => $data->id]);
+                event(new BatDongSanMoiDang($data));
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Cập nhật data thành công và đang chờ duyệt lại',
+                'data' => $data->load(['hinhAnh', 'diaChi.tinh', 'diaChi.quan'])
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Lỗi cập nhật: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     // Xóa bài đăng BDS (Dành cho môi giới, admin chỉ có thể duyệt khách hàng không có quyền này)
@@ -448,80 +666,3 @@ class BatDongSanController extends Controller
         ]);
     }
 }
-
-
-// $user = Auth::guard('sanctum')->user();
-
-        // // chưa mua gói
-        // if (!$user->goi_tin_id) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => 'Bạn chưa mua gói'
-        //     ], 403);
-        // }
-
-        // // hết hạn gói
-        // if ($user->ngay_het_han_goi < now()) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => 'Gói đã hết hạn'
-        //     ], 403);
-        // }
-
-        // // hết tin
-        // if ($user->so_tin_con_lai <= 0) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => 'Đã hết số tin đăng'
-        //     ], 403);
-        // }
-
-        // $goi = $user->goiTin;
-
-        // $batDongSan = BatDongSan::create([
-        //     'tieu_de'       => $request->tieu_de,
-        //     'gia'           => $request->gia,
-        //     'dien_tich'     => $request->dien_tich,
-        //     'loai_id'       => $request->loai_id,
-        //     'trang_thai_id' => $request->trang_thai_id,
-        //     'mo_ta'         => $request->mo_ta,
-        //     'dia_chi_id'    => $request->dia_chi_id,
-        //     'so_phong_ngu'  => $request->so_phong_ngu,
-        //     'so_phong_tam'  => $request->so_phong_tam,
-
-        //     // 🔥 QUAN TRỌNG
-        //     'is_noi_bat'  => $goi->gan_nhan_vip,
-        //     'expires_at'  => now()->addDays($goi->so_ngay),
-
-        //     'moi_gioi_id' => $user->id,
-        //     'is_duyet'    => false,
-        // ]);
-
-
-
-        // if ($request->hasFile('hinh_anh')) {
-        //     foreach ($request->file('hinh_anh') as $index => $file) {
-        //         $path = $file->store('bds/' . $batDongSan->id, 'public');
-
-        //         HinhAnhBatDongSan::create([
-        //             'bds_id'          => $batDongSan->id,
-        //             'url'             => $path,
-        //             'thu_tu'          => $index,
-        //             'is_anh_dai_dien' => false,
-        //         ]);
-        //     }
-        // }
-
-        // $user->decrement('so_tin_con_lai');
-
-        // event(new BatDongSanMoiDang($batDongSan));
-
-        // return response()->json([
-        //     'status'  => true,
-        //     'message' => 'Tạo BĐS thành công và đang chờ duyệt',
-        //     'data'    => [
-        //         'id' => $batDongSan->id,
-        //         'tieu_de' => $batDongSan->tieu_de,
-        //         'anh_dai_dien' => $batDongSan->anh_dai_dien_url,
-        //     ]
-        // ], 201);
