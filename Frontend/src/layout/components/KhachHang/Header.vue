@@ -30,15 +30,83 @@
           <router-link to="/khach-hang/ban-do" class="nav-link">
             <span class="nav-label">Bản đồ</span>
           </router-link>
+<<<<<<< HEAD
+=======
+
+          <router-link to="/khach-hang/dinh-gia-ai" class="nav-link">
+            <span class="nav-label"><i class="bi bi-robot text-warning me-1"></i> Định giá AI</span>
+          </router-link>
+
+          <router-link to="/khach-hang/tinh-vay" class="nav-link">
+            <span class="nav-label"><i class="fa-solid fa-calculator" style="color:#10b981;margin-right:4px"></i> Tính Vay</span>
+          </router-link>
+>>>>>>> qlkh-login
         </nav>
 
         <!-- Actions -->
         <div class="actions">
+<<<<<<< HEAD
+=======
+          <!-- 🌙 Dark Mode Toggle -->
+          <button @click="toggleDarkMode" class="btn-darkmode" :title="isDarkMode ? 'Chuyển sáng' : 'Chuyển tối'" :aria-label="isDarkMode ? 'Light mode' : 'Dark mode'">
+            <i v-if="isDarkMode" class="fa-solid fa-sun"></i>
+            <i v-else class="fa-solid fa-moon"></i>
+          </button>
+
+>>>>>>> qlkh-login
           <!-- Nút Đăng tin -->
           <button @click="handlePostListing" class="btn-post">
             <span class="label">Đăng tin</span>
           </button>
 
+<<<<<<< HEAD
+=======
+          <!-- 🔔 Nút Thông báo lịch hẹn -->
+          <div class="notif-trigger-wrapper" v-if="isLoggedIn">
+            <button @click.stop="toggleAppointmentNotifPanel" class="btn-notif" aria-label="Thông báo lịch hẹn">
+              <span class="material-symbols-outlined icon">notifications</span>
+              <span v-if="appointmentNotifUnreadCount > 0" class="notif-badge">{{ appointmentNotifUnreadCount }}</span>
+            </button>
+
+            <!-- 🔔 APPOINTMENT NOTIFICATION PANEL -->
+            <transition name="notif-slide">
+              <div v-if="showAppointmentNotifPanel" class="notif-panel appointment-panel" @click.stop>
+                <div class="notif-header">
+                  <h3 class="notif-title flex items-center gap-2">
+                    <span class="material-symbols-outlined text-emerald-500">calendar_month</span>
+                    Thông báo lịch hẹn
+                  </h3>
+                  <span class="notif-count">{{ appointmentNotifs.length }} thông báo</span>
+                </div>
+
+                <div class="notif-list">
+                  <div v-for="item in appointmentNotifs.slice(0, 5)" :key="item.id" class="notif-item-wrapper"
+                    :class="{ unread: !item.da_doc }">
+                    <div class="notif-item" @click="handleAppointmentNotifClick(item)">
+                      <div class="notif-content">
+                        <p class="notif-text font-semibold" :class="item.loai === 'lich_hen' ? 'text-emerald-600' : ''">{{ item.tieu_de || 'Thông báo lịch hẹn' }}</p>
+                        <p class="notif-detail text-sm text-gray-500">{{ item.noi_dung || 'Xem chi tiết lịch hẹn' }}</p>
+                        <span class="notif-time">{{ item.thoi_gian ? formatTime(item.thoi_gian) : 'Vừa xong' }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div v-if="appointmentNotifs.length === 0" class="notif-empty">
+                    <div class="notif-empty-icon">📭</div>
+                    <p class="notif-empty-title">Chưa có thông báo lịch hẹn</p>
+                  </div>
+                </div>
+
+                <div class="notif-footer">
+                  <router-link to="/khach-hang/lich-hen" class="notif-btn-primary" @click="showAppointmentNotifPanel = false">
+                    Xem tất cả lịch hẹn
+                  </router-link>
+                </div>
+              </div>
+            </transition>
+          </div>
+
+>>>>>>> qlkh-login
           <!-- ✅ Nút Tin đã lưu -->
           <div class="saved-trigger-wrapper" v-if="isLoggedIn">
             <button @click.stop="toggleNotifPanel" class="btn-saved" aria-label="Tin đã lưu">
@@ -216,6 +284,16 @@
                     <span class="item-arrow-new">→</span>
                   </router-link>
 
+<<<<<<< HEAD
+=======
+                  <!-- Lịch hẹn xem nhà -->
+                  <router-link to="/khach-hang/lich-hen" class="dropdown-item-new" @click="showMenu = false">
+                    <span class="item-icon-new material-symbols-outlined text-emerald-500">calendar_month</span>
+                    <span class="item-label-new">Lịch hẹn xem nhà</span>
+                    <span class="item-arrow-new">→</span>
+                  </router-link>
+
+>>>>>>> qlkh-login
                   <!-- Chat với môi giới -->
                   <div class="dropdown-item-new chat-broker-item" @click="handleChatWithBroker">
                     <span class="item-icon-new">💬</span>
@@ -297,6 +375,12 @@ export default {
 
   data() {
     return {
+<<<<<<< HEAD
+=======
+      // Dark mode
+      isDarkMode: false,
+
+>>>>>>> qlkh-login
       // User Auth
       user: null,
       token: null,
@@ -324,6 +408,16 @@ export default {
       conversations: [],
       unreadCount: 0,
       loadingChat: false,
+<<<<<<< HEAD
+=======
+      
+      // 📅 Appointment Notifications
+      appointmentNotifs: [],
+      previousAppointmentNotifCount: 0,
+      appointmentPollInterval: null,
+      showAppointmentNotifPanel: false,
+      appointmentNotifUnreadCount: 0,
+>>>>>>> qlkh-login
     };
   },
 
@@ -375,9 +469,23 @@ export default {
   },
 
   async mounted() {
+<<<<<<< HEAD
     const isLogged = this.checkLogin();
     if (isLogged) {
       await this.loadSavedNotifications();
+=======
+    // Dark mode: restore from localStorage
+    const saved = localStorage.getItem("dark-mode");
+    if (saved === "true" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      this.isDarkMode = true;
+      document.documentElement.classList.add("dark");
+    }
+
+    const isLogged = this.checkLogin();
+    if (isLogged) {
+      await this.loadSavedNotifications();
+      this.startAppointmentPolling(); // 📅 Start polling for appointment notifications
+>>>>>>> qlkh-login
     }
 
     // Event Listeners
@@ -407,6 +515,15 @@ export default {
       clearTimeout(this.menuTimer);
       this.menuTimer = null;
     }
+<<<<<<< HEAD
+=======
+    
+    // 📅 Cleanup appointment polling
+    if (this.appointmentPollInterval) {
+      clearInterval(this.appointmentPollInterval);
+      this.appointmentPollInterval = null;
+    }
+>>>>>>> qlkh-login
   },
 
   methods: {
@@ -427,6 +544,18 @@ export default {
           this.token = token;
           this.user = JSON.parse(userStr);
           this.userType = "khach-hang";
+<<<<<<< HEAD
+=======
+          
+          import("@/js/services/echo").then((module) => {
+            const { updateEchoToken, subscribeCustomer } = module;
+            if (updateEchoToken) updateEchoToken(this.token);
+            if (subscribeCustomer && typeof subscribeCustomer === 'function') {
+              this.subscribeEchoCustomer(subscribeCustomer);
+            }
+          }).catch(err => console.log('Echo service not available:', err));
+          
+>>>>>>> qlkh-login
           return true;
         } catch (e) {
           console.error("Parse user error:", e);
@@ -437,12 +566,59 @@ export default {
         this.token = token;
         this.userType = "khach-hang";
         this.user = this.user || { ten: "Khách hàng" };
+<<<<<<< HEAD
+=======
+        
+        import("@/js/services/echo").then((module) => {
+          const { updateEchoToken, subscribeCustomer } = module;
+          if (updateEchoToken) updateEchoToken(this.token);
+          if (subscribeCustomer && typeof subscribeCustomer === 'function') {
+            this.subscribeEchoCustomer(subscribeCustomer);
+          }
+        }).catch(err => console.log('Echo service not available:', err));
+        
+>>>>>>> qlkh-login
         return true;
       } else {
         this.clearData();
       }
       return false;
     },
+<<<<<<< HEAD
+=======
+    
+    subscribeEchoCustomer(subscribeCustomer) {
+      const userId = this.user?.id;
+      if (!userId) return;
+
+      subscribeCustomer(userId, (data) => {
+        // Nếu là tin nhắn của chính mình gửi (từ tab khác) thì bỏ qua
+        if (data.loai === 'tin_nhan' && data.sender_type === 'khach_hang') {
+          return;
+        }
+
+        if (this.$toast && data.loai === 'tin_nhan') {
+          this.$toast.info(data.tieu_de || "Tin nhắn mới", { 
+            position: 'top-right', 
+            duration: 6000,
+            onClick: () => {
+              // Dispatch event to open chat panel
+              this.showMenu = false;
+              this.showChatPanel = true;
+              this.loadConversations().then(() => {
+                const conv = this.conversations.find(c => Number(c.id) === Number(data.conversation_id));
+                if (conv) {
+                  this.openChat(conv);
+                }
+              });
+            }
+          });
+          // Update unread chat badge
+          this.unreadCount += 1;
+        }
+      });
+    },
+>>>>>>> qlkh-login
 
     // ✅ Handler khi có auth thay đổi trong cùng tab
     async onAuthChanged() {
@@ -485,6 +661,13 @@ export default {
       if (!e.target.closest(".chat-trigger-wrapper")) {
         this.showChatPanel = false;
       }
+<<<<<<< HEAD
+=======
+      // 📅 Close appointment notification panel when clicking outside
+      if (!e.target.closest(".notif-trigger-wrapper")) {
+        this.showAppointmentNotifPanel = false;
+      }
+>>>>>>> qlkh-login
     },
 
     preventSelect(e) {
@@ -621,6 +804,98 @@ export default {
       }
     },
 
+<<<<<<< HEAD
+=======
+    // 📅 Fetch appointment notifications
+    async fetchAppointmentNotifications() {
+      const token = localStorage.getItem("khach_hang_auth_token");
+      if (!token) return;
+      
+      try {
+        // Lấy lịch hẹn để hiển thị thông báo
+        const res = await api.get('/khach-hang/lich-hen/danh-sach');
+        if (res.data?.status && res.data.data) {
+          const appointments = res.data.data;
+          
+          // Map to notification format
+          console.log('[Appointments] Raw data:', appointments);
+          this.appointmentNotifs = appointments.map(item => {
+            const tieu_de = item.status_label || (
+              item.trang_thai === 'cho_xac_nhan' ? '⏰ Chờ xác nhận' : 
+              item.trang_thai === 'da_xac_nhan' ? '✅ Đã xác nhận' :
+              item.trang_thai === 'hoan_thanh' ? '🎉 Hoàn thành' : '❌ Đã hủy'
+            );
+            const noi_dung = item.bat_dong_san?.tieu_de 
+              ? `${item.bat_dong_san.tieu_de} - ${item.ngay_hen} ${item.gio_hen}`
+              : `${item.ngay_hen || 'N/A'} ${item.gio_hen || ''}`;
+            const thoi_gian = item.updated_at || item.created_at || new Date().toISOString();
+            
+            return {
+              id: item.id,
+              tieu_de,
+              noi_dung,
+              thoi_gian,
+              da_doc: item.trang_thai !== 'cho_xac_nhan',
+              loai: 'lich_hen',
+              trang_thai: item.trang_thai,
+            };
+          });
+          console.log('[Appointments] Mapped:', this.appointmentNotifs);
+          
+          // Count unread (cho_xac_nhan)
+          this.appointmentNotifUnreadCount = this.appointmentNotifs.filter(
+            n => n.trang_thai === 'cho_xac_nhan'
+          ).length;
+        }
+      } catch (err) {
+        console.error("Lỗi fetch appointment notifications:", err);
+      }
+    },
+
+    // 📅 Appointment Notification Polling
+    startAppointmentPolling() {
+      console.log('[Customer Polling] Appointment notifications started - 10s');
+      this.appointmentPollInterval = setInterval(() => {
+        if (this.isLoggedIn) {
+          this.fetchAppointmentNotifications();
+        }
+      }, 10000);
+    },
+
+    async fetchAppointmentNotifications() {
+      const token = localStorage.getItem("khach_hang_auth_token");
+      if (!token) return;
+      
+      try {
+        // Lấy lịch hẹn để kiểm tra status change
+        const res = await api.get('/khach-hang/lich-hen/danh-sach');
+        if (res.data?.status && res.data.data) {
+          const appointments = res.data.data;
+          
+          // Check for status changes
+          if (this.appointmentNotifs.length > 0) {
+            appointments.forEach(newItem => {
+              const oldItem = this.appointmentNotifs.find(o => o.id === newItem.id);
+              if (oldItem && oldItem.trang_thai !== newItem.trang_thai) {
+                if (oldItem.trang_thai === 'cho_xac_nhan') {
+                  if (newItem.trang_thai === 'da_xac_nhan') {
+                    this.$toast?.success(`✅ Lịch hẹn ${newItem.ngay_hen} lúc ${newItem.gio_hen} đã được xác nhận!`, { duration: 5000 });
+                  } else if (newItem.trang_thai === 'huy') {
+                    this.$toast?.error(`❌ Lịch hẹn ${newItem.ngay_hen} lúc ${newItem.gio_hen} đã bị từ chối. ${newItem.ly_do_huy || ''}`, { duration: 5000 });
+                  }
+                }
+              }
+            });
+          }
+          
+          this.appointmentNotifs = appointments;
+        }
+      } catch (err) {
+        console.error("Lỗi fetch appointment notifications:", err);
+      }
+    },
+
+>>>>>>> qlkh-login
     formatTime(dateStr) {
       if (!dateStr) return "Vừa xong";
       const now = new Date();
@@ -653,15 +928,52 @@ export default {
       this.showNotifPanel = !this.showNotifPanel;
       this.showMenu = false;
       this.showChatPanel = false;
+<<<<<<< HEAD
+=======
+      this.showAppointmentNotifPanel = false;
+>>>>>>> qlkh-login
       if (this.showNotifPanel && this.isLoggedIn) {
         this.loadSavedNotifications();
       }
     },
 
+<<<<<<< HEAD
     handleNotifClick(item) {
       if (item.swipeOffset < -80) return;
       this.showNotifPanel = false;
       this.$router.push(`/khach-hang/chi-tiet-bat-dong-san/${item.propertyId}`);
+=======
+    // 📅 Appointment Notification Panel
+    toggleAppointmentNotifPanel() {
+      this.showAppointmentNotifPanel = !this.showAppointmentNotifPanel;
+      this.showMenu = false;
+      this.showChatPanel = false;
+      this.showNotifPanel = false;
+      if (this.showAppointmentNotifPanel && this.isLoggedIn) {
+        this.fetchAppointmentNotifications();
+      }
+    },
+
+    handleAppointmentNotifClick(item) {
+      this.showAppointmentNotifPanel = false;
+      if (!item.da_doc) {
+        item.da_doc = true;
+        this.appointmentNotifUnreadCount = Math.max(0, this.appointmentNotifUnreadCount - 1);
+      }
+      this.$router.push('/khach-hang/lich-hen');
+    },
+
+    handleNotifClick(item) {
+      if (item.swipeOffset < -80) return;
+      this.showNotifPanel = false;
+      
+      // 📅 Navigate to appointment page for appointment notifications
+      if (item.loai === 'lich_hen' || item.text?.includes('Lịch hẹn') || item.text?.includes('đã đặt lịch')) {
+        this.$router.push('/khach-hang/lich-hen');
+      } else {
+        this.$router.push(`/khach-hang/chi-tiet-bat-dong-san/${item.propertyId}`);
+      }
+>>>>>>> qlkh-login
     },
 
     handleMouseDown(e, item) {
@@ -814,6 +1126,20 @@ export default {
         this.unreadCount++;
       }
     },
+<<<<<<< HEAD
+=======
+
+    toggleDarkMode() {
+      this.isDarkMode = !this.isDarkMode;
+      if (this.isDarkMode) {
+        document.documentElement.classList.add("dark");
+        localStorage.setItem("dark-mode", "true");
+      } else {
+        document.documentElement.classList.remove("dark");
+        localStorage.setItem("dark-mode", "false");
+      }
+    },
+>>>>>>> qlkh-login
   },
 };
 </script>
@@ -1016,6 +1342,32 @@ export default {
   position: relative;
 }
 
+<<<<<<< HEAD
+=======
+.btn-darkmode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+.btn-darkmode:hover {
+  background: #e0e7ff;
+  border-color: #818cf8;
+  color: #4f46e5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.2);
+}
+
+>>>>>>> qlkh-login
 .btn-saved {
   display: flex;
   align-items: center;
@@ -1057,6 +1409,85 @@ export default {
   }
 }
 
+<<<<<<< HEAD
+=======
+/* 🔔 Notification Button */
+.notif-trigger-wrapper {
+  position: relative;
+}
+
+.btn-notif {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.btn-notif:hover {
+  background: #f0f9ff;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.btn-notif .icon {
+  font-size: 18px;
+  color: #64748b;
+}
+
+.btn-notif:hover .icon {
+  color: #3b82f6;
+}
+
+.notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+}
+
+/* Appointment Panel */
+.appointment-panel {
+  min-width: 320px;
+}
+
+.appointment-panel .notif-item-wrapper.unread {
+  background: #f0fdf4;
+  border-left: 3px solid #10b981;
+}
+
+.notif-btn-primary {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.notif-btn-primary:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+>>>>>>> qlkh-login
 .btn-login {
   padding: 10px 22px;
   border-radius: 999px;

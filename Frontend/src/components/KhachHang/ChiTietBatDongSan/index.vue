@@ -245,6 +245,15 @@
                   Nhắn tin tư vấn
                 </button>
 
+<<<<<<< HEAD
+=======
+                <button @click="openBookingModal"
+                  class="flex items-center justify-center gap-3 w-full py-5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-[20px] font-black transition-all shadow-lg shadow-emerald-500/30 hover:-translate-y-1 active:scale-95 group">
+                  <span class="material-symbols-outlined group-hover:rotate-12 transition-transform">calendar_month</span>
+                  Đặt lịch xem nhà
+                </button>
+
+>>>>>>> qlkh-login
                 <div class="pt-6 border-t border-gray-50 flex items-center justify-around">
                   <div class="text-center">
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Đánh giá</p>
@@ -356,6 +365,18 @@
         </div>
       </div>
     </transition>
+<<<<<<< HEAD
+=======
+
+    <!-- 📅 Booking Modal -->
+    <DatLichModal
+      v-if="showBookingModal"
+      :propertyId="property?.id"
+      :propertyTitle="property?.tieu_de"
+      @close="showBookingModal = false"
+      @success="onBookingSuccess"
+    />
+>>>>>>> qlkh-login
   </div>
 </template>
 
@@ -363,9 +384,21 @@
 import api from '@/axios/config';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+<<<<<<< HEAD
 
 export default {
   name: 'PropertyDetailLuxury',
+=======
+import { saveToRecentlyViewed } from '@/js/recentlyViewed';
+import DatLichModal from '@/components/KhachHang/LichHen/DatLichModal.vue';
+import { createToaster } from '@meforma/vue-toaster';
+
+const toaster = createToaster({ position: 'top-right', duration: 4000 });
+
+export default {
+  name: 'PropertyDetailLuxury',
+  components: { DatLichModal },
+>>>>>>> qlkh-login
   data() {
     return {
       loading: true,
@@ -376,7 +409,12 @@ export default {
       currentImageIndex: 0,
       favoriteIds: [],
       toast: { visible: false, message: '', type: 'warning', icon: null, timer: null },
+<<<<<<< HEAD
       map: null
+=======
+      map: null,
+      showBookingModal: false
+>>>>>>> qlkh-login
     };
   },
   watch: {
@@ -472,9 +510,27 @@ export default {
         if (res.data.status) {
           this.property = res.data.data;
           this.loadSimilarProperties(id);
+<<<<<<< HEAD
           setTimeout(() => {
             this.initMap();
           }, 500);
+=======
+          setTimeout(() => { this.initMap(); }, 500);
+
+          // Lưu vào danh sách đã xem gần đây
+          const p = res.data.data;
+          const loc = p.dia_chi?.quan?.ten
+            ? `${p.dia_chi.quan.ten}, ${p.dia_chi.tinh?.ten || ''}`
+            : 'Đang cập nhật';
+          saveToRecentlyViewed({
+            id: p.id,
+            name: p.tieu_de || 'Bất động sản',
+            image: p.anh_dai_dien_url || (p.hinh_anh?.[0]?.url) || null,
+            gia: p.gia,
+            loai: p.loai?.ten_loai || 'BĐS',
+            location: loc,
+          });
+>>>>>>> qlkh-login
         } else { this.error = 'Bất động sản không tồn tại'; }
       } catch (err) { this.error = 'Lỗi kết nối máy chủ'; } finally { this.loading = false; }
     },
@@ -509,7 +565,15 @@ export default {
       return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
     },
     viewProperty(id) { this.$router.push(`/khach-hang/chi-tiet-bat-dong-san/${id}`); window.scrollTo({ top: 0, behavior: 'smooth' }); },
+<<<<<<< HEAD
     
+=======
+    openBookingModal() { this.showBookingModal = true; },
+    onBookingSuccess() {
+      this.showBookingModal = false;
+      // Toast already shown in DatLichModal
+    },
+>>>>>>> qlkh-login
     initMap() {
       const lat = this.property?.dia_chi?.latitude || this.property?.dia_chi?.lat;
       const lng = this.property?.dia_chi?.longitude || this.property?.dia_chi?.lng;

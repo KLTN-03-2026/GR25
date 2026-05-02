@@ -241,7 +241,70 @@
       </div>
     </section>
 
+<<<<<<< HEAD
     <!-- 5. CTA SECTION -->
+=======
+    <!-- 5. RECENTLY VIEWED SECTION -->
+    <section v-if="recentlyViewed.length > 0" class="py-16 px-6 bg-slate-50">
+      <div class="container mx-auto max-w-7xl">
+        <div class="flex justify-between items-end mb-8 reveal-item">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="material-symbols-outlined text-blue-500 text-xl">history</span>
+              <span class="text-xs font-bold text-blue-500 uppercase tracking-widest">Lịch sử duyệt</span>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-bold text-slate-900">Bạn đã xem gần đây</h2>
+          </div>
+          <button @click="clearRecent" class="text-sm text-slate-400 hover:text-rose-500 transition-colors flex items-center gap-1">
+            <span class="material-symbols-outlined text-base">delete_sweep</span>
+            Xóa lịch sử
+          </button>
+        </div>
+
+        <div class="flex gap-5 overflow-x-auto pb-3 no-scrollbar snap-x snap-mandatory">
+          <div
+            v-for="item in recentlyViewed"
+            :key="item.id"
+            class="snap-start flex-shrink-0 w-64 bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+            @click="viewProperty(item.id)"
+          >
+            <!-- Image -->
+            <div class="relative h-40 bg-slate-100 overflow-hidden">
+              <img
+                :src="item.image || defaultImage"
+                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                :alt="item.name"
+                @error="handleImageError"
+                loading="lazy"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+              <span class="absolute top-3 left-3 px-2 py-0.5 bg-white/90 backdrop-blur text-[10px] font-bold text-slate-700 uppercase rounded-md">
+                {{ item.loai }}
+              </span>
+              <span class="absolute bottom-3 left-3 text-white font-bold text-base drop-shadow">
+                {{ formatPriceDisplay(item.gia) }}
+              </span>
+            </div>
+
+            <!-- Info -->
+            <div class="p-4">
+              <p class="text-sm font-semibold text-slate-800 line-clamp-2 leading-snug mb-2 min-h-[40px]">{{ item.name }}</p>
+              <div class="flex items-center gap-1 text-slate-400">
+                <span class="material-symbols-outlined text-[13px]">location_on</span>
+                <span class="text-xs truncate">{{ item.location }}</span>
+              </div>
+              <div class="mt-2 flex items-center gap-1 text-[10px] text-slate-300">
+                <span class="material-symbols-outlined text-[11px]">schedule</span>
+                <span>{{ formatViewedAt(item.viewed_at) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. CTA SECTION -->
+>>>>>>> qlkh-login
     <section class="py-24 px-6">
       <div class="container mx-auto max-w-6xl reveal-item">
         <div class="relative bg-blue-600 rounded-3xl p-12 lg:p-20 overflow-hidden shadow-2xl shadow-blue-600/20 text-center">
@@ -281,6 +344,10 @@
 <script>
 import api from "@/axios/config";
 import { getToken } from "@/js/auth";
+<<<<<<< HEAD
+=======
+import { getRecentlyViewed, clearRecentlyViewed } from "@/js/recentlyViewed";
+>>>>>>> qlkh-login
 
 export default {
   name: "HomePage",
@@ -304,6 +371,10 @@ export default {
         timer: null,
       },
       observer: null,
+<<<<<<< HEAD
+=======
+      recentlyViewed: [],
+>>>>>>> qlkh-login
     };
   },
 
@@ -318,6 +389,10 @@ export default {
   },
 
   mounted() {
+<<<<<<< HEAD
+=======
+    this.recentlyViewed = getRecentlyViewed();
+>>>>>>> qlkh-login
     this.loadProperties().then(() => {
       if (getToken("khach-hang")) {
         this.syncFavoriteList();
@@ -473,7 +548,11 @@ export default {
           gia: item.gia_display || item.gia,
           image: imageUrl,
           isFavorite: item.is_favorite || false,
+<<<<<<< HEAD
           isExclusive: Math.random() > 0.8 // Random logic for mockup exclusive badge
+=======
+          isExclusive: item.is_noi_bat || false // Random logic for mockup exclusive badge
+>>>>>>> qlkh-login
         };
       });
     },
@@ -551,12 +630,42 @@ export default {
       if (gia >= 1_000_000_000) return Math.floor(gia / 1_000_000_000) + " Tỷ";
       if (gia >= 1_000_000) return Math.floor(gia / 1_000_000) + " Triệu";
       return "Liên hệ";
+<<<<<<< HEAD
     }
+=======
+    },
+
+    clearRecent() {
+      clearRecentlyViewed();
+      this.recentlyViewed = [];
+    },
+
+    formatViewedAt(isoStr) {
+      if (!isoStr) return '';
+      const d = new Date(isoStr);
+      const now = new Date();
+      const diffMs = now - d;
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1) return 'Vừa xem';
+      if (diffMin < 60) return `${diffMin} phút trước`;
+      const diffH = Math.floor(diffMin / 60);
+      if (diffH < 24) return `${diffH} giờ trước`;
+      const diffD = Math.floor(diffH / 24);
+      return `${diffD} ngày trước`;
+    },
+>>>>>>> qlkh-login
   },
 };
 </script>
 
 <style scoped>
+<<<<<<< HEAD
+=======
+/* Hide scrollbar for recently viewed row */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+>>>>>>> qlkh-login
 /* 1. Scroll Reveal Animations */
 .reveal-item {
   opacity: 0;

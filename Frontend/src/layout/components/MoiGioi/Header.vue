@@ -142,12 +142,28 @@
 
                 <!-- Menu Items -->
                 <div class="dropdown-items-new">
+<<<<<<< HEAD
                   <!-- Đăng tin mới -->
                   <router-link to="/moi-gioi/dang-tin" class="dropdown-item-new primary" role="menuitem"
                     @click="showMenu = false">
                     <span class="item-icon-new">✎</span>
                     <span class="item-label-new">Đăng tin mới</span>
                     <span class="item-badge-new hot">HOT</span>
+=======
+                  <!-- 📊 Dashboard -->
+                  <router-link to="/moi-gioi/dashboard" class="dropdown-item-new primary" role="menuitem"
+                    @click="showMenu = false">
+                    <span class="item-icon-new">📊</span>
+                    <span class="item-label-new">Dashboard</span>
+                    <span class="item-badge-new hot">MỚI</span>
+                  </router-link>
+
+                  <!-- Đăng tin mới -->
+                  <router-link to="/moi-gioi/dang-tin" class="dropdown-item-new" role="menuitem"
+                    @click="showMenu = false">
+                    <span class="item-icon-new">✎</span>
+                    <span class="item-label-new">Đăng tin mới</span>
+>>>>>>> qlkh-login
                   </router-link>
 
                   <!-- Quản lý tin đăng -->
@@ -166,7 +182,19 @@
                     <span class="item-arrow-new">→</span>
                   </router-link>
 
+<<<<<<< HEAD
                   <!-- 🔥 MỚI: Chat với khách hàng -->
+=======
+                  <!-- � Lịch hẹn xem nhà -->
+                  <router-link to="/moi-gioi/lich-hen" class="dropdown-item-new primary" role="menuitem"
+                    @click="showMenu = false">
+                    <span class="item-icon-new">📅</span>
+                    <span class="item-label-new">Lịch hẹn xem nhà</span>
+                    <span class="item-badge-new">MỚI</span>
+                  </router-link>
+
+                  <!-- 🔥 Chat với khách hàng -->
+>>>>>>> qlkh-login
                   <div class="dropdown-item-new chat-customer-item" @click="handleChatWithCustomer" role="menuitem">
                     <span class="item-icon-new">💬</span>
                     <span class="item-label-new">Chat với khách hàng</span>
@@ -308,6 +336,10 @@ export default {
       remainingPosts: null, // null = đang loading, -1 = không giới hạn
       loadingPosts: false,
       hasNewNotifications: false, // ✅ Theo dõi thông báo mới
+<<<<<<< HEAD
+=======
+      previousUnreadCount: 0, // ✅ Theo dõi số thông báo chưa đọc trước đó
+>>>>>>> qlkh-login
       statsListings: 0,
       statsCustomers: 0,
       selectedBdsId: null,
@@ -368,7 +400,14 @@ export default {
     this.fetchRemainingPosts();
     this.fetchDropdownStats();
     this.startPolling();
+<<<<<<< HEAD
     this.subscribeEcho();   // ✅ Real-time notifications
+=======
+    // ✅ subscribeEcho gọi sau checkLogin (user đã có sẵn) trong một tick sau
+    this.$nextTick(() => {
+      this.subscribeEcho();
+    });
+>>>>>>> qlkh-login
     document.addEventListener("click", this.handleClickOutside);
     // ✅ storage event: chỉ trigger khi localStorage thay đổi từ TAB KHÁC
     // (KHÔNG dùng focus vì nó chạy khi switch tab làm checkLogin sai)
@@ -396,9 +435,21 @@ export default {
     // ========== ✅ ECHO REALTIME (dùng service) ==========
     subscribeEcho() {
       const userId = this.user?.id;
+<<<<<<< HEAD
       if (!userId) return;
 
       subscribeUser(userId, (data) => {
+=======
+      console.log('[Header] subscribeEcho called, userId:', userId, '| Echo ready:', !!window.Echo);
+      if (!userId) return;
+
+      subscribeUser(userId, (data) => {
+        // ✅ Nếu là tin nhắn của chính mình gửi (từ tab khác) thì bỏ qua
+        if (data.loai === 'tin_nhan' && data.sender_type === 'moi_gioi') {
+          return;
+        }
+
+>>>>>>> qlkh-login
         // data là payload từ Laravel Broadcast
         this.notifications.unshift({
           id: data.id ?? Date.now(),
@@ -414,24 +465,73 @@ export default {
         this.unreadCount += 1;
         this.hasNewNotifications = true;
 
+<<<<<<< HEAD
         // ✅ Dùng VueToaster (Global) để hiển thị thông báo
         if (this.$toast) {
           this.$toast.info(data.tieu_de || "Bạn có thông báo mới!", {
             position: "top-right",
             duration: 5000,
           });
+=======
+        // ✅ Hiển thị toast với nội dung phù hợp theo loại thông báo
+        const toastMsg = this._buildToastMessage(data);
+        if (this.$toast) {
+          if (data.loai === 'tin_nhan') {
+            this.$toast.info(toastMsg, { 
+              position: 'top-right', 
+              duration: 6000,
+              onClick: () => {
+                // Điều hướng sang trang chat
+                this.$router.push({
+                  path: '/moi-gioi/quan-ly-khach-hang',
+                  query: { active_chat_id: data.conversation_id }
+                });
+              }
+            });
+          } else if (data.loai === 'tu_choi') {
+            this.$toast.error(toastMsg, { position: 'top-right', duration: 6000 });
+          } else if (data.loai === 'approved') {
+            this.$toast.success(toastMsg, { position: 'top-right', duration: 6000 });
+          } else {
+            // yeu_thich / khach_moi / pending
+            this.$toast.info(toastMsg, { position: 'top-right', duration: 6000 });
+          }
+>>>>>>> qlkh-login
         }
         
         // Cập nhật lại stats ở dropdown nếu đang mở
         this.fetchDropdownStats();
+<<<<<<< HEAD
 
         // Nếu đang mở dropdown thì refresh list để sync dữ liệu chính xác từ DB nếu cần
+=======
+>>>>>>> qlkh-login
         if (this.showNotifications) {
           this.fetchNotifications();
         }
       });
     },
 
+<<<<<<< HEAD
+=======
+    // ✅ Build nội dung toast rõ ràng theo loại thông báo
+    _buildToastMessage(data) {
+      if (data.loai === 'lich_hen' || data.tieu_de?.includes('Lịch hẹn')) {
+        return `📅 ${data.noi_dung || data.tieu_de}`;
+      }
+      if (data.loai === 'yeu_thich' || data.loai === 'khach_moi') {
+        return data.noi_dung || `❤️ ${data.tieu_de}`;
+      }
+      if (data.loai === 'approved') {
+        return data.noi_dung || `✅ ${data.tieu_de}`;
+      }
+      if (data.loai === 'tu_choi') {
+        return data.noi_dung || `❌ ${data.tieu_de}`;
+      }
+      return data.noi_dung || data.tieu_de || 'Bạn có thông báo mới!';
+    },
+
+>>>>>>> qlkh-login
     leaveEcho() {
       leaveAllChannels();
     },
@@ -483,12 +583,20 @@ export default {
       }
     },
     // ========== TOAST & COPY ==========
+<<<<<<< HEAD
     triggerToast(message) {
+=======
+    triggerToast(message, duration = 3000) {
+>>>>>>> qlkh-login
       this.toastMessage = message;
       this.showToast = true;
       setTimeout(() => {
         this.showToast = false;
+<<<<<<< HEAD
       }, 3000);
+=======
+      }, duration);
+>>>>>>> qlkh-login
     },
     async copyToClipboard(text, label) {
       if (!text) return;
@@ -518,6 +626,12 @@ export default {
           // ✅ Cập nhật token cho Echo
           updateEchoToken(token);
 
+<<<<<<< HEAD
+=======
+          // ✅ Re-subscribe Echo nếu chưa subscribe (ví dụ: login từ tab khác)
+          this.subscribeEcho();
+
+>>>>>>> qlkh-login
           // ✅ Refresh dữ liệu mỗi khi check login (chuyển trang, storage change)
           this.fetchRemainingPosts();
           this.fetchNotifications();
@@ -552,14 +666,22 @@ export default {
       }, 600);
     },
     // ========== NOTIFICATIONS ==========
+<<<<<<< HEAD
     async fetchNotifications() {
+=======
+    async fetchNotifications(silent = false) {
+>>>>>>> qlkh-login
       this.loadingNotifications = true;
       const token = localStorage.getItem("moi_gioi_auth_token");
       if (!token) return;
       try {
         const res = await api.get("/moi-gioi/thong-bao");
         if (res.data?.status === true && res.data.data) {
+<<<<<<< HEAD
           this.notifications = res.data.data.map((item) => ({
+=======
+          const newNotifications = res.data.data.map((item) => ({
+>>>>>>> qlkh-login
             id: item.id,
             loai: this.determineNotificationType(item),
             tieu_de: item.tieu_de || "Thông báo mới",
@@ -571,7 +693,30 @@ export default {
             khach_hang_id: item.khach_hang_id || null,
             bat_dong_san_id: item.bat_dong_san_id || null,
           }));
+<<<<<<< HEAD
           this.unreadCount = this.notifications.filter((n) => !n.da_doc).length;
+=======
+          
+          // 🔔 Detect new notifications and show toast
+          const newUnreadCount = newNotifications.filter((n) => !n.da_doc).length;
+          console.log(`[Polling] Unread: ${newUnreadCount}, Previous: ${this.previousUnreadCount}`);
+          
+          // Show toast for new notifications (not on initial load when previousUnreadCount is 0)
+          if (this.previousUnreadCount > 0 && newUnreadCount > this.previousUnreadCount) {
+            // Find new unread notifications
+            const newItems = newNotifications.filter(
+              n => !n.da_doc && !this.notifications.find(o => o.id === n.id)
+            );
+            console.log(`[Polling] New items detected:`, newItems);
+            newItems.forEach(item => {
+              this.triggerToast(this._buildToastMessage(item), 5000);
+            });
+          }
+          
+          this.notifications = newNotifications;
+          this.unreadCount = this.notifications.filter((n) => !n.da_doc).length;
+          this.previousUnreadCount = this.unreadCount;
+>>>>>>> qlkh-login
         } else {
           this.notifications = [];
           this.unreadCount = 0;
@@ -584,6 +729,11 @@ export default {
     },
     determineNotificationType(item) {
       const tieuDe = (item.tieu_de || "").toLowerCase();
+<<<<<<< HEAD
+=======
+      if (tieuDe.includes("lịch hẹn") || tieuDe.includes("appointment"))
+        return "lich_hen";
+>>>>>>> qlkh-login
       if (tieuDe.includes("khách hàng") || tieuDe.includes("user"))
         return "khach_moi";
       if (tieuDe.includes("duyệt") || tieuDe.includes("phê duyệt"))
@@ -627,11 +777,25 @@ export default {
     },
     handleNotificationClick(item) {
       if (this.isDragging) return;
+<<<<<<< HEAD
+=======
+      
+      // Đánh dấu đã đọc
+>>>>>>> qlkh-login
       if (!item.da_doc) {
         item.da_doc = true;
         this.unreadCount = Math.max(0, this.unreadCount - 1);
         this.markAsRead(item.id);
       }
+<<<<<<< HEAD
+=======
+      
+      // 📅 Navigate based on notification type
+      if (item.loai === 'lich_hen' || item.tieu_de?.includes('Lịch hẹn')) {
+        this.showNotifications = false;
+        this.$router.push('/moi-gioi/lich-hen');
+      }
+>>>>>>> qlkh-login
     },
     async markAsRead(id) {
       try {
@@ -760,6 +924,7 @@ export default {
       }
     },
 
+<<<<<<< HEAD
     // ✅ Cập nhật polling để refresh số tin mỗi 30s
     startPolling() {
       this.pollingInterval = setInterval(() => {
@@ -769,6 +934,18 @@ export default {
           this.fetchDropdownStats();
         }
       }, 30000);
+=======
+    // ✅ Cập nhật polling để refresh số tin mỗi 5s (nhanh hơn cho real-time)
+    startPolling() {
+      console.log('[Polling] Started - checking every 5s');
+      this.pollingInterval = setInterval(() => {
+        if (this.isLoggedIn) {
+          console.log('[Polling] Checking notifications...');
+          this.fetchNotifications(true); // silent mode - show toast if new
+          this.fetchRemainingPosts();
+        }
+      }, 5000); // 5s cho real-time hơn
+>>>>>>> qlkh-login
     },
   },
 };

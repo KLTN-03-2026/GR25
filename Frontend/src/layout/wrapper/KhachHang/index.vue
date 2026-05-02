@@ -11,20 +11,32 @@
     <!-- Footer -->
     <Footer />
 
+<<<<<<< HEAD
     <!-- FAB -->
     <!-- <button class="fixed bottom-8 right-8 bg-primary text-white p-4 rounded-full shadow-xl hover:scale-110 transition-transform flex items-center gap-2 z-40">
       <span class="material-symbols-outlined">calendar_month</span>
       <span class="font-bold hidden md:inline">Đặt lịch</span>
     </button> -->
+=======
+    <!-- Chat Bot -->
+    <ChatBot />
+>>>>>>> qlkh-login
   </div>
 </template>
 
 <script>
 import Header from "../../components/KhachHang/Header.vue";
 import Footer from "../../components/KhachHang/Footer.vue";
+<<<<<<< HEAD
 
 export default {
   components: { Header, Footer },
+=======
+import ChatBot from "../../../components/KhachHang/ChatBot/index.vue";
+
+export default {
+  components: { Header, Footer, ChatBot },
+>>>>>>> qlkh-login
 };
 </script>
 

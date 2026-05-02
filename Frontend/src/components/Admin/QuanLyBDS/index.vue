@@ -103,7 +103,11 @@
                 <option value="">Tất cả trạng thái</option>
                 <option value="1">Chờ duyệt</option>
                 <option value="2">Đã duyệt</option>
+<<<<<<< HEAD
                 <option value="3">Từ chối</option>
+=======
+                <option value="6">Từ chối</option>
+>>>>>>> qlkh-login
                 <option value="4">Đã bán</option>
               </select>
             </div>
@@ -214,7 +218,23 @@
                     </div>
                   </div>
                   <div class="col-md-3 text-end" v-if="bds.trang_thai_id == 1">
+<<<<<<< HEAD
                      <button @click="viewProperty(bds.id)" class="btn btn-warning fw-bold px-4 rounded-pill shadow-sm w-100 text-dark">Duyệt ngay</button>
+=======
+                     <div class="d-flex gap-2 justify-content-end">
+                       <button @click="approveProperty(bds.id)" class="btn btn-success fw-bold px-3 rounded-pill shadow-sm text-white" title="Duyệt ngay">
+                         <i class="bi bi-check-circle-fill me-1"></i>Duyệt
+                       </button>
+                       <button @click="openRejectModal(bds)" class="btn btn-outline-danger fw-bold px-3 rounded-pill" title="Từ chối">
+                         <i class="bi bi-x-circle-fill me-1"></i>Từ chối
+                       </button>
+                     </div>
+                  </div>
+                  <div class="col-md-3 text-end" v-else>
+                    <button @click="viewProperty(bds.id)" class="btn btn-outline-primary fw-bold px-3 rounded-pill" title="Xem chi tiết">
+                      <i class="bi bi-eye-fill me-1"></i>Chi tiết
+                    </button>
+>>>>>>> qlkh-login
                   </div>
                 </div>
               </div>
@@ -426,7 +446,11 @@ export default {
         { value: "", label: "Tất cả", activeClass: "btn-primary text-white" },
         { value: "1", label: "Chờ duyệt", activeClass: "btn-warning text-dark" },
         { value: "2", label: "Đã duyệt", activeClass: "btn-success text-white" },
+<<<<<<< HEAD
         { value: "3", label: "Từ chối", activeClass: "btn-danger text-white" },
+=======
+        { value: "6", label: "Từ chối", activeClass: "btn-danger text-white" },
+>>>>>>> qlkh-login
       ],
       selectedProperty: null,
       showModal: false,
@@ -632,7 +656,18 @@ export default {
             to: response.data.data.to || data.length,
             total: response.data.data.total || data.length,
           };
+<<<<<<< HEAD
           this.updateStatistics();
+=======
+          if (response.data.stats) {
+            this.statistics.total = response.data.stats.total || this.pagination.total;
+            this.statistics.pending = response.data.stats.pending || 0;
+            this.statistics.approved = response.data.stats.approved || 0;
+            this.statistics.featured = response.data.stats.featured || 0;
+          } else {
+            this.updateStatistics();
+          }
+>>>>>>> qlkh-login
           this.urgentApprovals = response.data.data.urgent_count || 0;
         }
       } catch (error) {
@@ -758,7 +793,11 @@ export default {
       try {
         const response = await api.post(`/admin/bds/duyet`, { 
           id: bdsId, 
+<<<<<<< HEAD
           is_duyet: 2, 
+=======
+          is_duyet: 0, 
+>>>>>>> qlkh-login
           ly_do: this.rejectReason 
         });
 

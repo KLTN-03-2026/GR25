@@ -161,6 +161,27 @@ const routes = [
     name: "KhachHangNangCapMoiGioi",
     meta: { layout: "khach-hang", roles: ["khach-hang"] }
   },
+<<<<<<< HEAD
+=======
+  {
+    path: "/khach-hang/dinh-gia-ai",
+    component: () => import("../components/KhachHang/DinhGia/index.vue"),
+    name: "KhachHangDinhGiaAI",
+    meta: { layout: "khach-hang" }
+  },
+  {
+    path: "/khach-hang/tinh-vay",
+    component: () => import("../components/KhachHang/TinhVay/index.vue"),
+    name: "KhachHangTinhVay",
+    meta: { layout: "khach-hang" }
+  },
+  {
+    path: "/khach-hang/lich-hen",
+    component: () => import("../components/KhachHang/LichHen/index.vue"),
+    name: "KhachHangLichHen",
+    meta: { layout: "khach-hang", roles: ["khach-hang"] }
+  },
+>>>>>>> qlkh-login
   // {
   //   path: "/khach-hang/ve-chung-toi",
   //   component: () => import("../components/KhachHang/VeChungToi/index.vue"),
@@ -206,6 +227,15 @@ const routes = [
     meta: { layout: "moi-gioi", roles: ["moi-gioi"] }  // ✅ Thêm roles
   },
   {
+<<<<<<< HEAD
+=======
+    path: "/moi-gioi/dashboard",
+    component: () => import("../components/MoiGioi/Dashboard/index.vue"),
+    name: "MoiGioiDashboard",
+    meta: { layout: "moi-gioi", roles: ["moi-gioi"] }
+  },
+  {
+>>>>>>> qlkh-login
     path: "/moi-gioi/dang-tin",
     component: () => import("../components/MoiGioi/DangTin/index.vue"),
     name: "MoiGioiDangTin",
@@ -247,6 +277,15 @@ const routes = [
     name: "MoiGioiLichSuMuaTin",
     meta: { layout: "moi-gioi", roles: ["moi-gioi"] }
   },
+<<<<<<< HEAD
+=======
+  {
+    path: "/moi-gioi/lich-hen",
+    component: () => import("../components/MoiGioi/LichHen/index.vue"),
+    name: "MoiGioiLichHen",
+    meta: { layout: "moi-gioi", roles: ["moi-gioi"] }
+  },
+>>>>>>> qlkh-login
 
   // ===== ADMIN THÊM =====
   {
