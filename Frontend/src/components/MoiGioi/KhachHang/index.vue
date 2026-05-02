@@ -228,9 +228,7 @@ const getAvatarUrl = (user) => {
 
 const formatTime = (dateStr) => {
   if (!dateStr) return '';
-  // Fix UTC parsing
-  const safeDateStr = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z';
-  const date = new Date(safeDateStr);
+  const date = new Date(dateStr);
   const now = new Date();
   const diff = Math.floor((now - date) / 1000);
   
@@ -242,8 +240,7 @@ const formatTime = (dateStr) => {
 
 const formatMessageTime = (dateStr) => {
   if (!dateStr) return '';
-  const safeDateStr = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z';
-  return new Date(safeDateStr).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  return new Date(dateStr).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 };
 
 const scrollToBottom = () => {

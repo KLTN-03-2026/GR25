@@ -30,24 +30,10 @@
           <router-link to="/khach-hang/ban-do" class="nav-link">
             <span class="nav-label">Bản đồ</span>
           </router-link>
-
-          <router-link to="/khach-hang/dinh-gia-ai" class="nav-link">
-            <span class="nav-label"><i class="bi bi-robot text-warning me-1"></i> Định giá AI</span>
-          </router-link>
-
-          <router-link to="/khach-hang/tinh-vay" class="nav-link">
-            <span class="nav-label"><i class="fa-solid fa-calculator" style="color:#10b981;margin-right:4px"></i> Tính Vay</span>
-          </router-link>
         </nav>
 
         <!-- Actions -->
         <div class="actions">
-          <!-- 🌙 Dark Mode Toggle -->
-          <button @click="toggleDarkMode" class="btn-darkmode" :title="isDarkMode ? 'Chuyển sáng' : 'Chuyển tối'" :aria-label="isDarkMode ? 'Light mode' : 'Dark mode'">
-            <i v-if="isDarkMode" class="fa-solid fa-sun"></i>
-            <i v-else class="fa-solid fa-moon"></i>
-          </button>
-
           <!-- Nút Đăng tin -->
           <button @click="handlePostListing" class="btn-post">
             <span class="label">Đăng tin</span>
@@ -311,9 +297,6 @@ export default {
 
   data() {
     return {
-      // Dark mode
-      isDarkMode: false,
-
       // User Auth
       user: null,
       token: null,
@@ -392,13 +375,6 @@ export default {
   },
 
   async mounted() {
-    // Dark mode: restore from localStorage
-    const saved = localStorage.getItem("dark-mode");
-    if (saved === "true" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-      this.isDarkMode = true;
-      document.documentElement.classList.add("dark");
-    }
-
     const isLogged = this.checkLogin();
     if (isLogged) {
       await this.loadSavedNotifications();
@@ -451,12 +427,6 @@ export default {
           this.token = token;
           this.user = JSON.parse(userStr);
           this.userType = "khach-hang";
-          
-          import("@/js/services/echo").then(({ updateEchoToken, subscribeCustomer }) => {
-            updateEchoToken(this.token);
-            this.subscribeEchoCustomer(subscribeCustomer);
-          });
-          
           return true;
         } catch (e) {
           console.error("Parse user error:", e);
@@ -467,49 +437,11 @@ export default {
         this.token = token;
         this.userType = "khach-hang";
         this.user = this.user || { ten: "Khách hàng" };
-        
-        import("@/js/services/echo").then(({ updateEchoToken, subscribeCustomer }) => {
-          updateEchoToken(this.token);
-          this.subscribeEchoCustomer(subscribeCustomer);
-        });
-        
         return true;
       } else {
         this.clearData();
       }
       return false;
-    },
-    
-    subscribeEchoCustomer(subscribeCustomer) {
-      const userId = this.user?.id;
-      if (!userId) return;
-
-      subscribeCustomer(userId, (data) => {
-        // Nếu là tin nhắn của chính mình gửi (từ tab khác) thì bỏ qua
-        if (data.loai === 'tin_nhan' && data.sender_type === 'khach_hang') {
-          return;
-        }
-
-        if (this.$toast && data.loai === 'tin_nhan') {
-          this.$toast.info(data.tieu_de || "Tin nhắn mới", { 
-            position: 'top-right', 
-            duration: 6000,
-            onClick: () => {
-              // Dispatch event to open chat panel
-              this.showMenu = false;
-              this.showChatPanel = true;
-              this.loadConversations().then(() => {
-                const conv = this.conversations.find(c => Number(c.id) === Number(data.conversation_id));
-                if (conv) {
-                  this.openChat(conv);
-                }
-              });
-            }
-          });
-          // Update unread chat badge
-          this.unreadCount += 1;
-        }
-      });
     },
 
     // ✅ Handler khi có auth thay đổi trong cùng tab
@@ -882,17 +814,6 @@ export default {
         this.unreadCount++;
       }
     },
-
-    toggleDarkMode() {
-      this.isDarkMode = !this.isDarkMode;
-      if (this.isDarkMode) {
-        document.documentElement.classList.add("dark");
-        localStorage.setItem("dark-mode", "true");
-      } else {
-        document.documentElement.classList.remove("dark");
-        localStorage.setItem("dark-mode", "false");
-      }
-    },
   },
 };
 </script>
@@ -1093,29 +1014,6 @@ export default {
 
 .saved-trigger-wrapper {
   position: relative;
-}
-
-.btn-darkmode {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: #f1f5f9;
-  border: 1.5px solid #e2e8f0;
-  color: #64748b;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  flex-shrink: 0;
-}
-.btn-darkmode:hover {
-  background: #e0e7ff;
-  border-color: #818cf8;
-  color: #4f46e5;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.2);
 }
 
 .btn-saved {
