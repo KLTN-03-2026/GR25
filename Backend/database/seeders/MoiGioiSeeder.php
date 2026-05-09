@@ -16,7 +16,7 @@ class MoiGioiSeeder extends Seeder
         DB::table('moi_giois')->insertOrIgnore([
             [
                 'ten' => 'Nguyễn Văn An',
-                'email' => 'vannhan130504@gmail.com',
+                'email' => 'songviet011@gmail.com',
                 'so_dien_thoai' => '0901234567',
                 'password' => bcrypt('123456'),
                 'avatar' => null,

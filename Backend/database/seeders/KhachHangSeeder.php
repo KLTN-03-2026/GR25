@@ -16,7 +16,7 @@ class KhachHangSeeder extends Seeder
         DB::table('khach_hangs')->insertOrIgnore([
             [
                 'ten' => 'Hoàng Văn A',
-                'email' => 'vannhan130504@gmail.com',
+                'email' => 'songviet011@gmail.com',
                 'so_dien_thoai' => '0987654321',
                 'password' => bcrypt('123456'),
                 'is_active' => true,

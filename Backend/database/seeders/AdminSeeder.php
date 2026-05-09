@@ -16,7 +16,7 @@ class AdminSeeder extends Seeder
         DB::table('admins')->insert([
             [
                 'ten' => 'Admin Super',
-                'email' => 'vannhan130504@gmail.com',
+                'email' => 'songviet011@gmail.com',
                 'password' => bcrypt('123456'),
                 'is_super' => true,
                 'created_at' => now(),
