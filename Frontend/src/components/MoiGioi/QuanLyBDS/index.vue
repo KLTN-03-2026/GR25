@@ -169,6 +169,9 @@
             <p class="text-muted small mb-3 text-truncate" :title="item.dia_chi_id">
               <span class="me-1">📍</span> {{ item.dia_chi_id }}
             </p>
+            <p class="text-muted small mb-3">
+              <span class="me-1">📅</span> Đăng ngày: {{ item.ngay_dang }}
+            </p>
             <div class="d-flex gap-3 text-muted small fw-medium">
               <span v-if="item.dien_tich">📐 {{ item.dien_tich }} m²</span>
               <span v-if="item.so_phong_ngu">🛏️ {{ item.so_phong_ngu }} PN</span>
@@ -275,51 +278,6 @@
           <button type="button" class="btn-close" @click="cancelEdit"></button>
         </div>
 
-<<<<<<< HEAD
-        <div class="modal-body px-4 py-4">
-          <div class="row g-4">
-            <div class="col-12">
-              <label class="form-label text-muted fw-bold small text-uppercase">📌 Tiêu Đề</label>
-              <input v-model="editingProperty.title" type="text"
-                class="form-control form-control-lg bg-light border-0 rounded-3 fs-6"
-                placeholder="Ví dụ: Căn hộ cao cấp..." />
-            </div>
-
-            <div class="col-12">
-              <label class="form-label text-muted fw-bold small text-uppercase">📌 Địa Chỉ</label>
-              <input v-model="editingProperty.dia_chi_id" type="text"
-                class="form-control form-control-lg bg-light border-0 rounded-3 fs-6" placeholder="123 Đường ABC..." />
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label text-muted fw-bold small text-uppercase">💰 Giá (VNĐ)</label>
-              <input v-model="editingProperty.gia" type="number"
-                class="form-control form-control-lg bg-light border-0 rounded-3 fs-6 fw-bold text-primary" />
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label text-muted fw-bold small text-uppercase">📐 Diện Tích (m²)</label>
-              <input v-model="editingProperty.dien_tich" type="number"
-                class="form-control form-control-lg bg-light border-0 rounded-3 fs-6" />
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label text-muted fw-bold small text-uppercase">🛏️ Phòng Ngủ</label>
-              <input v-model.number="editingProperty.so_phong_ngu" type="number"
-                class="form-control form-control-lg bg-light border-0 rounded-3 fs-6" />
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label text-muted fw-bold small text-uppercase">🚿 Phòng Tắm</label>
-              <input v-model.number="editingProperty.so_phong_tam" type="number"
-                class="form-control form-control-lg bg-light border-0 rounded-3 fs-6" />
-            </div>
-
-            <div class="col-12">
-              <label class="form-label text-muted fw-bold small text-uppercase">📝 Mô Tả</label>
-              <textarea v-model="editingProperty.mo_ta" rows="4" class="form-control bg-light border-0 rounded-3 fs-6"
-                placeholder="Mô tả ưu điểm..."></textarea>
-=======
         
         <div class="modal-body px-4 py-4">
           <div v-if="isLoadingDetail" class="text-center py-5 text-muted">
@@ -404,7 +362,6 @@
             <div class="col-12 mt-4"><h6 class="fw-bold text-primary border-bottom pb-2">4. Mô tả chi tiết</h6></div>
             <div class="col-12">
               <textarea v-model="editingProperty.mo_ta" rows="6" class="form-control bg-light border-0 rounded-3 fs-6"></textarea>
->>>>>>> qlkh-login
             </div>
           </div>
         </div>
@@ -500,8 +457,6 @@ const deleteProperty = ref(null);
 const editingProperty = ref(null);
 const isSubmitting = ref(false);
 
-<<<<<<< HEAD
-=======
 const isLoadingDetail = ref(false);
 const loaiBDSList = ref([]);
 const tinhThanhList = ref([]);
@@ -513,7 +468,6 @@ const deletedImages = ref([]);
 const imagePreviewUrls = ref([]);
 
 
->>>>>>> qlkh-login
 // CHECK AUTH
 const token =
   localStorage.getItem("moi_gioi_auth_token");
@@ -539,18 +493,11 @@ const loadBatDongSan = async (page = 1) => {
         if (item.status === "draft") {
           displayStatus = "Nháp";
         } else {
-<<<<<<< HEAD
-          if (item.trang_thai_id == 3) displayStatus = "Đã bán";
-          else if (item.is_duyet == 0) displayStatus = "Chờ duyệt";
-          else if (item.is_duyet == 1) displayStatus = "Đã đăng";
-          else if (item.is_duyet == 2) displayStatus = "Bị từ chối";
-=======
           if (item.trang_thai_id == 1) displayStatus = "Chờ duyệt";
           else if (item.trang_thai_id == 2) displayStatus = "Đã đăng";
           else if (item.trang_thai_id == 3) displayStatus = "Đã bán";
           else if (item.trang_thai_id == 6) displayStatus = "Bị từ chối";
           else displayStatus = "Khác";
->>>>>>> qlkh-login
         }
 
         return {
@@ -564,6 +511,7 @@ const loadBatDongSan = async (page = 1) => {
           dien_tich: item.dien_tich,
           so_phong_ngu: item.so_phong_ngu,
           so_phong_tam: item.so_phong_tam,
+          ngay_dang: formatNgayDang(item.created_at),
           raw: item,
         };
       });
@@ -588,6 +536,17 @@ const loadBatDongSan = async (page = 1) => {
 
 
 // Helper: Format địa chỉ
+const formatNgayDang = (dateString) => {
+  if (!dateString) return "—";
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
+
 const formatDiaChi = (item) => {
   if (!item.dia_chi) return `Địa chỉ ID: ${item.dia_chi_id}`;
   const quan =
@@ -601,11 +560,7 @@ const formatDiaChi = (item) => {
 // Helper: Lấy ảnh đại diện
 const getImageUrl = (item) => {
   if (!item) return "/no-image.png";
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> qlkh-login
   // Lấy URL thô từ object hoặc string
   let url = "";
   if (typeof item === 'string') {
@@ -613,16 +568,6 @@ const getImageUrl = (item) => {
   } else {
     url = item.anh_dai_dien_url || (item.hinh_anh?.[0]?.url) || (item.anh_dai_dien?.url) || "";
   }
-<<<<<<< HEAD
-  
-  if (!url) return "/no-image.png";
-  if (url.startsWith("http")) return url;
-  
-  const base = import.meta.env.VITE_API_URL?.replace('/api','') || 'http://localhost:8000';
-  const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
-  const finalUrl = cleanUrl.startsWith('storage/') ? cleanUrl : `storage/${cleanUrl}`;
-  
-=======
 
   if (!url) return "/no-image.png";
   if (url.startsWith("http")) return url;
@@ -631,7 +576,6 @@ const getImageUrl = (item) => {
   const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
   const finalUrl = cleanUrl.startsWith('storage/') ? cleanUrl : `storage/${cleanUrl}`;
 
->>>>>>> qlkh-login
   return `${base}/${finalUrl}`;
 };
 
@@ -659,31 +603,17 @@ const filteredProperties = computed(() => {
 });
 
 // ACTIONS
-<<<<<<< HEAD
-const handleEdit = (property) => {
-  editingProperty.value = {
-    id: property.id,
-    title: property.title,
-    dia_chi_id: property.dia_chi_id,
-=======
 
 const handleEdit = async (property) => {
   editingProperty.value = {
     id: property.id,
     title: property.title,
     dia_chi_id: "",
->>>>>>> qlkh-login
     gia: parseInt(property.raw?.gia) || 0,
     dien_tich: parseInt(property.raw?.dien_tich) || 0,
     so_phong_ngu: parseInt(property.raw?.so_phong_ngu) || 0,
     so_phong_tam: parseInt(property.raw?.so_phong_tam) || 0,
     mo_ta: property.raw?.mo_ta || "",
-<<<<<<< HEAD
-  };
-  showEditModal.value = true;
-};
-
-=======
     loai_id: property.raw?.loai_id ? String(property.raw.loai_id) : "",
     tinh_id: "",
     quan_id: "",
@@ -709,20 +639,30 @@ const handleEdit = async (property) => {
       editingProperty.value.mo_ta = detail.mo_ta || "";
       
       if (detail.dia_chi) {
-        editingProperty.value.tinh_id = detail.dia_chi.tinh_id ? String(detail.dia_chi.tinh_id) : "";
-        editingProperty.value.quan_id = detail.dia_chi.quan_id ? String(detail.dia_chi.quan_id) : "";
-        editingProperty.value.phuong_id = detail.dia_chi.phuong_xa_id ? String(detail.dia_chi.phuong_xa_id) : "";
+        const t_id = detail.dia_chi.tinh_id ? String(detail.dia_chi.tinh_id) : "";
+        const q_id = detail.dia_chi.quan_id ? String(detail.dia_chi.quan_id) : "";
+        const p_id = detail.dia_chi.phuong_xa_id ? String(detail.dia_chi.phuong_xa_id) : "";
+
+        // 1. Gán Tỉnh và load Quận
+        editingProperty.value.tinh_id = t_id;
+        if (t_id) {
+          await onTinhChange(false);
+          
+          // 2. Sau khi có danh sách Quận, gán Quận và load Phường
+          if (q_id) {
+            editingProperty.value.quan_id = q_id;
+            await onQuanChange(false);
+            
+            // 3. Sau khi có danh sách Phường, gán Phường
+            if (p_id) {
+              editingProperty.value.phuong_id = p_id;
+            }
+          }
+        }
+        
         editingProperty.value.dia_chi_chi_tiet = detail.dia_chi.dia_chi_chi_tiet || "";
         editingProperty.value.latitude = detail.dia_chi.latitude;
         editingProperty.value.longitude = detail.dia_chi.longitude;
-
-        if (editingProperty.value.tinh_id) await onTinhChange();
-        if (editingProperty.value.quan_id) await onQuanChange();
-        
-        // Gán lại sau khi load xong list để đảm bảo v-model mapping đúng
-        editingProperty.value.tinh_id = detail.dia_chi.tinh_id ? String(detail.dia_chi.tinh_id) : "";
-        editingProperty.value.quan_id = detail.dia_chi.quan_id ? String(detail.dia_chi.quan_id) : "";
-        editingProperty.value.phuong_id = detail.dia_chi.phuong_xa_id ? String(detail.dia_chi.phuong_xa_id) : "";
       }
 
       if (detail.hinh_anh) {
@@ -739,10 +679,12 @@ const handleEdit = async (property) => {
 
 
 
-const onTinhChange = async () => {
+const onTinhChange = async (shouldReset = true) => {
   quanHuyenList.value = [];
-  editingProperty.value.quan_id = "";
-  editingProperty.value.phuong_id = "";
+  if (shouldReset) {
+    editingProperty.value.quan_id = "";
+    editingProperty.value.phuong_id = "";
+  }
   if (!editingProperty.value.tinh_id) return;
   try {
     const res = await api.get(`/quan-huyen-by-tinh`, { params: { tinh_id: editingProperty.value.tinh_id } });
@@ -750,14 +692,22 @@ const onTinhChange = async () => {
   } catch (error) {}
 };
 
-const onQuanChange = async () => {
+const onQuanChange = async (shouldReset = true) => {
   phuongList.value = [];
-  editingProperty.value.phuong_id = "";
+  if (shouldReset) {
+    editingProperty.value.phuong_id = "";
+  }
   if (!editingProperty.value.quan_id) return;
   try {
-    const res = await api.get(`/phuong-xa-by-quan`, { params: { quan_id: editingProperty.value.quan_id } });
-    if (res.data?.status) phuongList.value = res.data.data.map(x => ({...x, id: String(x.id)}));
-  } catch (error) {}
+    const res = await api.get(`/phuong-xa-by-quan-huyen`, { 
+      params: { quan_huyen_id: editingProperty.value.quan_id } 
+    });
+    if (res.data?.status === 'success' || res.data?.status === true) {
+      phuongList.value = res.data.data.map(x => ({...x, id: String(x.id)}));
+    }
+  } catch (error) {
+    console.error("Lỗi lấy danh sách phường xã:", error);
+  }
 };
 
 const handleFileSelect = (event) => {
@@ -782,7 +732,6 @@ const removeImage = (index) => {
 };
 
 
->>>>>>> qlkh-login
 const submitEdit = async () => {
   if (!editingProperty.value.title.trim()) {
     alert("⚠️ Vui lòng nhập tiêu đề");
@@ -792,19 +741,6 @@ const submitEdit = async () => {
   errorMessage.value = "";
 
   try {
-<<<<<<< HEAD
-    const updatePayload = {
-      id: editingProperty.value.id,
-      tieu_de: editingProperty.value.title,
-      gia: parseInt(editingProperty.value.gia) || 0,
-      dien_tich: parseInt(editingProperty.value.dien_tich) || 0,
-      so_phong_ngu: parseInt(editingProperty.value.so_phong_ngu),
-      so_phong_tam: parseInt(editingProperty.value.so_phong_tam),
-      mo_ta: editingProperty.value.mo_ta,
-    };
-
-    const res = await api.post("/moi-gioi/bds/update", updatePayload);
-=======
     const formData = new FormData();
     formData.append("id", editingProperty.value.id);
     formData.append("tieu_de", editingProperty.value.title);
@@ -832,39 +768,26 @@ const submitEdit = async () => {
     const res = await api.post("/moi-gioi/bds/update", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
->>>>>>> qlkh-login
 
     if (res.data.status) {
       successMessage.value = "✅ Cập nhật thành công! Đang chờ duyệt lại...";
       showEditModal.value = false;
       setTimeout(() => {
         loadBatDongSan();
-<<<<<<< HEAD
-        loadStats();
-=======
->>>>>>> qlkh-login
         successMessage.value = "";
       }, 2000);
     } else {
       errorMessage.value = `❌ ${res.data.message || "Cập nhật thất bại"}`;
     }
   } catch (error) {
-<<<<<<< HEAD
-    const message =
-      error.response?.data?.message || error.message || "Lỗi không xác định";
-=======
     const message = error.response?.data?.message || error.message || "Lỗi không xác định";
->>>>>>> qlkh-login
     errorMessage.value = `❌ Cập nhật thất bại: ${message}`;
   } finally {
     isSubmitting.value = false;
   }
 };
 
-<<<<<<< HEAD
-=======
 
->>>>>>> qlkh-login
 const cancelEdit = () => {
   showEditModal.value = false;
   editingProperty.value = null;
@@ -957,11 +880,7 @@ const handleMarkSold = async (item) => {
       id: item.id,
       trang_thai_id: 3 // ID của 'Đã bán'
     });
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> qlkh-login
     if (res.data.status) {
       Swal.fire({
         toast: true,
@@ -1008,9 +927,6 @@ watch(activeTab, () => {
   loadBatDongSan();
 });
 
-<<<<<<< HEAD
-onMounted(() => {
-=======
 
 const loadInitialData = async () => {
   try {
@@ -1027,7 +943,6 @@ const loadInitialData = async () => {
 
 onMounted(() => {
   loadInitialData();
->>>>>>> qlkh-login
   loadBatDongSan();
 });
 </script>

@@ -241,9 +241,6 @@
       </div>
     </section>
 
-<<<<<<< HEAD
-    <!-- 5. CTA SECTION -->
-=======
     <!-- 5. RECENTLY VIEWED SECTION -->
     <section v-if="recentlyViewed.length > 0" class="py-16 px-6 bg-slate-50">
       <div class="container mx-auto max-w-7xl">
@@ -304,7 +301,6 @@
     </section>
 
     <!-- 6. CTA SECTION -->
->>>>>>> qlkh-login
     <section class="py-24 px-6">
       <div class="container mx-auto max-w-6xl reveal-item">
         <div class="relative bg-blue-600 rounded-3xl p-12 lg:p-20 overflow-hidden shadow-2xl shadow-blue-600/20 text-center">
@@ -344,10 +340,7 @@
 <script>
 import api from "@/axios/config";
 import { getToken } from "@/js/auth";
-<<<<<<< HEAD
-=======
 import { getRecentlyViewed, clearRecentlyViewed } from "@/js/recentlyViewed";
->>>>>>> qlkh-login
 
 export default {
   name: "HomePage",
@@ -371,10 +364,7 @@ export default {
         timer: null,
       },
       observer: null,
-<<<<<<< HEAD
-=======
       recentlyViewed: [],
->>>>>>> qlkh-login
     };
   },
 
@@ -389,10 +379,7 @@ export default {
   },
 
   mounted() {
-<<<<<<< HEAD
-=======
     this.recentlyViewed = getRecentlyViewed();
->>>>>>> qlkh-login
     this.loadProperties().then(() => {
       if (getToken("khach-hang")) {
         this.syncFavoriteList();
@@ -548,11 +535,7 @@ export default {
           gia: item.gia_display || item.gia,
           image: imageUrl,
           isFavorite: item.is_favorite || false,
-<<<<<<< HEAD
-          isExclusive: Math.random() > 0.8 // Random logic for mockup exclusive badge
-=======
           isExclusive: item.is_noi_bat || false // Random logic for mockup exclusive badge
->>>>>>> qlkh-login
         };
       });
     },
@@ -630,9 +613,6 @@ export default {
       if (gia >= 1_000_000_000) return Math.floor(gia / 1_000_000_000) + " Tỷ";
       if (gia >= 1_000_000) return Math.floor(gia / 1_000_000) + " Triệu";
       return "Liên hệ";
-<<<<<<< HEAD
-    }
-=======
     },
 
     clearRecent() {
@@ -653,19 +633,15 @@ export default {
       const diffD = Math.floor(diffH / 24);
       return `${diffD} ngày trước`;
     },
->>>>>>> qlkh-login
   },
 };
 </script>
 
 <style scoped>
-<<<<<<< HEAD
-=======
 /* Hide scrollbar for recently viewed row */
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
->>>>>>> qlkh-login
 /* 1. Scroll Reveal Animations */
 .reveal-item {
   opacity: 0;

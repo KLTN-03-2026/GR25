@@ -20,11 +20,7 @@
         </div>
 
         <div v-else class="admin-notif-list">
-<<<<<<< HEAD
-          <div v-for="(n, i) in adminNotifs" :key="i" class="admin-notif-item" :class="{ unread: !n.read }">
-=======
           <div v-for="(n, i) in adminNotifs" :key="i" class="admin-notif-item" :class="{ unread: !n.read }" @click="goToNotifLink(n)">
->>>>>>> qlkh-login
             <div class="notif-icon">
               <span class="material-symbols-outlined">info</span>
             </div>
@@ -34,8 +30,6 @@
                 <span class="notif-time">{{ formatTime(n.thoi_gian) }}</span>
               </div>
               <div class="notif-body">{{ n.noi_dung }}</div>
-<<<<<<< HEAD
-=======
               
               <!-- ⚡ Action Buttons for New Post Pending -->
               <div v-if="n.type === 'new_post_pending' && !n.handled" class="notif-actions" @click.stop>
@@ -51,7 +45,6 @@
               <div v-else-if="n.handled" class="notif-status-tag" :class="n.handledStatus">
                 {{ n.handledStatus === 'approved' ? 'Đã duyệt' : 'Đã từ chối' }}
               </div>
->>>>>>> qlkh-login
             </div>
             <div v-if="!n.read" class="unread-dot"></div>
           </div>
@@ -103,20 +96,13 @@
 </template>
 
 <script setup>
-<<<<<<< HEAD
-import { ref, onMounted, onUnmounted } from "vue";
-=======
 import { ref, onMounted, onUnmounted, watch } from "vue";
->>>>>>> qlkh-login
 import { useRouter } from "vue-router";
 import { getCurrentInstance } from "vue";
 import { subscribeAdmin, leaveAllChannels } from '@/js/services/echo';
 import { clearAuth } from "@/js/auth";
-<<<<<<< HEAD
-=======
 import Swal from "sweetalert2";
 import api from "@/axios/config";
->>>>>>> qlkh-login
 
 const router = useRouter();
 const { appContext } = getCurrentInstance();
@@ -129,8 +115,6 @@ const unreadCount   = ref(0);
 const adminNotifs   = ref([]);
 const showNotifPanel = ref(false);
 
-<<<<<<< HEAD
-=======
 const fetchNotifications = async () => {
   try {
     const res = await api.get('/admin/notifications');
@@ -154,16 +138,10 @@ const fetchNotifications = async () => {
   }
 };
 
->>>>>>> qlkh-login
 const toggleNotifPanel = () => {
   showNotifPanel.value = !showNotifPanel.value;
 };
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> qlkh-login
 // Toggle dropdown
 const toggleProfileDropdown = () => {
   showProfileDropdown.value = !showProfileDropdown.value;
@@ -206,11 +184,6 @@ const formatTime = (isoString) => {
   return date.toLocaleDateString("vi-VN");
 };
 
-<<<<<<< HEAD
-const markAllRead = () => {
-  adminNotifs.value.forEach(n => n.read = true);
-  unreadCount.value = 0;
-=======
 const markAllRead = async () => {
   try {
     await api.post('/admin/notifications/mark-read');
@@ -291,7 +264,6 @@ const handleAction = async (notif, isDuyet) => {
     console.error("Action error:", error);
     toast.error("Không thể thực hiện thao tác");
   }
->>>>>>> qlkh-login
 };
 
 // Logout
@@ -308,40 +280,27 @@ const logout = () => {
 };
 
 // ========== AUTH HANDLERS ==========
-<<<<<<< HEAD
-const checkLogin = () => {
-  const token = localStorage.getItem("admin_auth_token");
-  const savedUserInfo = localStorage.getItem("admin_user_info");
-  if (savedUserInfo) {
-=======
 const checkLogin = async () => {
   const token = localStorage.getItem("admin_auth_token");
   const savedUserInfo = localStorage.getItem("admin_user_info");
   
   if (savedUserInfo && savedUserInfo !== "undefined" && savedUserInfo !== "null") {
->>>>>>> qlkh-login
     try {
       const ui = JSON.parse(savedUserInfo);
       if (ui.ten || ui.name) adminName.value = ui.ten || ui.name;
       adminId.value = ui.id;
-<<<<<<< HEAD
-    } catch (_) {}
-=======
     } catch (_) {
       fetchAdminProfile();
     }
   } else if (token) {
     // Nếu có token mà không có info -> Fetch từ server
     fetchAdminProfile();
->>>>>>> qlkh-login
   } else {
     adminName.value = "Admin";
     adminId.value = null;
   }
 };
 
-<<<<<<< HEAD
-=======
 const fetchAdminProfile = async () => {
   try {
     const res = await api.get('/admin/profile');
@@ -406,7 +365,6 @@ const initEcho = () => {
   }
 };
 
->>>>>>> qlkh-login
 const onStorageChange = (event) => {
   if (event.key === "admin_auth_token" || event.key === "admin_user_info") {
     checkLogin();
@@ -417,12 +375,6 @@ const onAuthChanged = () => {
   checkLogin();
 };
 
-<<<<<<< HEAD
-  // Load admin info from token or admin_user_info
-onMounted(() => {
-  checkLogin();
-
-=======
 watch(adminId, (newId) => {
   if (newId) {
     initEcho();
@@ -433,31 +385,15 @@ watch(adminId, (newId) => {
 onMounted(() => {
   checkLogin();
   
->>>>>>> qlkh-login
   // Add listeners
   document.addEventListener("click", handleClickOutside);
   window.addEventListener("storage", onStorageChange);
   window.addEventListener("admin-auth-changed", onAuthChanged);
 
-<<<<<<< HEAD
-  // ✅ Subscribe Echo admin channel
-  if (adminId.value) {
-    subscribeAdmin(adminId.value, (data) => {
-      console.log('SUBSCRIBED ADMIN RECEIVED NOTIFICATION:', adminId.value, data);
-      adminNotifs.value.unshift({
-        tieu_de: data.tieu_de || 'Thông báo mới',
-        noi_dung: data.noi_dung || '',
-        thoi_gian: new Date().toISOString(),
-        read: false,
-      });
-      unreadCount.value += 1;
-    });
-=======
   // Khởi tạo lần đầu
   if (adminId.value) {
     initEcho();
     fetchNotifications();
->>>>>>> qlkh-login
   }
 });
 
@@ -602,8 +538,6 @@ onUnmounted(() => {
 }
 .view-all-btn:hover { background: #eef2ff; }
 
-<<<<<<< HEAD
-=======
 /* ⚡ Action Buttons in Notif */
 .notif-actions {
   display: flex;
@@ -657,7 +591,6 @@ onUnmounted(() => {
   color: white;
 }
 
->>>>>>> qlkh-login
 .admin-topbar {
   position: fixed;
   top: 0;

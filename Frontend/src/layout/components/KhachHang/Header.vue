@@ -30,8 +30,6 @@
           <router-link to="/khach-hang/ban-do" class="nav-link">
             <span class="nav-label">Bản đồ</span>
           </router-link>
-<<<<<<< HEAD
-=======
 
           <router-link to="/khach-hang/dinh-gia-ai" class="nav-link">
             <span class="nav-label"><i class="bi bi-robot text-warning me-1"></i> Định giá AI</span>
@@ -40,27 +38,21 @@
           <router-link to="/khach-hang/tinh-vay" class="nav-link">
             <span class="nav-label"><i class="fa-solid fa-calculator" style="color:#10b981;margin-right:4px"></i> Tính Vay</span>
           </router-link>
->>>>>>> qlkh-login
         </nav>
 
         <!-- Actions -->
         <div class="actions">
-<<<<<<< HEAD
-=======
           <!-- 🌙 Dark Mode Toggle -->
           <button @click="toggleDarkMode" class="btn-darkmode" :title="isDarkMode ? 'Chuyển sáng' : 'Chuyển tối'" :aria-label="isDarkMode ? 'Light mode' : 'Dark mode'">
             <i v-if="isDarkMode" class="fa-solid fa-sun"></i>
             <i v-else class="fa-solid fa-moon"></i>
           </button>
 
->>>>>>> qlkh-login
           <!-- Nút Đăng tin -->
           <button @click="handlePostListing" class="btn-post">
             <span class="label">Đăng tin</span>
           </button>
 
-<<<<<<< HEAD
-=======
           <!-- 🔔 Nút Thông báo lịch hẹn -->
           <div class="notif-trigger-wrapper" v-if="isLoggedIn">
             <button @click.stop="toggleAppointmentNotifPanel" class="btn-notif" aria-label="Thông báo lịch hẹn">
@@ -106,7 +98,6 @@
             </transition>
           </div>
 
->>>>>>> qlkh-login
           <!-- ✅ Nút Tin đã lưu -->
           <div class="saved-trigger-wrapper" v-if="isLoggedIn">
             <button @click.stop="toggleNotifPanel" class="btn-saved" aria-label="Tin đã lưu">
@@ -284,8 +275,6 @@
                     <span class="item-arrow-new">→</span>
                   </router-link>
 
-<<<<<<< HEAD
-=======
                   <!-- Lịch hẹn xem nhà -->
                   <router-link to="/khach-hang/lich-hen" class="dropdown-item-new" @click="showMenu = false">
                     <span class="item-icon-new material-symbols-outlined text-emerald-500">calendar_month</span>
@@ -293,7 +282,6 @@
                     <span class="item-arrow-new">→</span>
                   </router-link>
 
->>>>>>> qlkh-login
                   <!-- Chat với môi giới -->
                   <div class="dropdown-item-new chat-broker-item" @click="handleChatWithBroker">
                     <span class="item-icon-new">💬</span>
@@ -375,12 +363,9 @@ export default {
 
   data() {
     return {
-<<<<<<< HEAD
-=======
       // Dark mode
       isDarkMode: false,
 
->>>>>>> qlkh-login
       // User Auth
       user: null,
       token: null,
@@ -408,8 +393,6 @@ export default {
       conversations: [],
       unreadCount: 0,
       loadingChat: false,
-<<<<<<< HEAD
-=======
       
       // 📅 Appointment Notifications
       appointmentNotifs: [],
@@ -417,7 +400,6 @@ export default {
       appointmentPollInterval: null,
       showAppointmentNotifPanel: false,
       appointmentNotifUnreadCount: 0,
->>>>>>> qlkh-login
     };
   },
 
@@ -469,11 +451,6 @@ export default {
   },
 
   async mounted() {
-<<<<<<< HEAD
-    const isLogged = this.checkLogin();
-    if (isLogged) {
-      await this.loadSavedNotifications();
-=======
     // Dark mode: restore from localStorage
     const saved = localStorage.getItem("dark-mode");
     if (saved === "true" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
@@ -485,7 +462,6 @@ export default {
     if (isLogged) {
       await this.loadSavedNotifications();
       this.startAppointmentPolling(); // 📅 Start polling for appointment notifications
->>>>>>> qlkh-login
     }
 
     // Event Listeners
@@ -515,15 +491,12 @@ export default {
       clearTimeout(this.menuTimer);
       this.menuTimer = null;
     }
-<<<<<<< HEAD
-=======
     
     // 📅 Cleanup appointment polling
     if (this.appointmentPollInterval) {
       clearInterval(this.appointmentPollInterval);
       this.appointmentPollInterval = null;
     }
->>>>>>> qlkh-login
   },
 
   methods: {
@@ -544,8 +517,6 @@ export default {
           this.token = token;
           this.user = JSON.parse(userStr);
           this.userType = "khach-hang";
-<<<<<<< HEAD
-=======
           
           import("@/js/services/echo").then((module) => {
             const { updateEchoToken, subscribeCustomer } = module;
@@ -555,7 +526,6 @@ export default {
             }
           }).catch(err => console.log('Echo service not available:', err));
           
->>>>>>> qlkh-login
           return true;
         } catch (e) {
           console.error("Parse user error:", e);
@@ -566,8 +536,6 @@ export default {
         this.token = token;
         this.userType = "khach-hang";
         this.user = this.user || { ten: "Khách hàng" };
-<<<<<<< HEAD
-=======
         
         import("@/js/services/echo").then((module) => {
           const { updateEchoToken, subscribeCustomer } = module;
@@ -577,48 +545,49 @@ export default {
           }
         }).catch(err => console.log('Echo service not available:', err));
         
->>>>>>> qlkh-login
         return true;
       } else {
         this.clearData();
       }
       return false;
     },
-<<<<<<< HEAD
-=======
     
     subscribeEchoCustomer(subscribeCustomer) {
       const userId = this.user?.id;
       if (!userId) return;
 
+      console.log('[Echo] Subscribing customer:', userId);
+      // 🔥 Truyền true để dùng channel 'khach-hang.{id}'
       subscribeCustomer(userId, (data) => {
+        console.log('[Echo] Customer received notification:', data);
+        
         // Nếu là tin nhắn của chính mình gửi (từ tab khác) thì bỏ qua
-        if (data.loai === 'tin_nhan' && data.sender_type === 'khach_hang') {
+        if (data.sender_type === 'khach_hang') {
           return;
         }
 
-        if (this.$toast && data.loai === 'tin_nhan') {
-          this.$toast.info(data.tieu_de || "Tin nhắn mới", { 
-            position: 'top-right', 
-            duration: 6000,
-            onClick: () => {
-              // Dispatch event to open chat panel
-              this.showMenu = false;
-              this.showChatPanel = true;
-              this.loadConversations().then(() => {
-                const conv = this.conversations.find(c => Number(c.id) === Number(data.conversation_id));
-                if (conv) {
-                  this.openChat(conv);
-                }
-              });
-            }
-          });
-          // Update unread chat badge
+        const isChat = data.loai === 'tin_nhan';
+        
+        if (isChat) {
+          if (this.$toast) {
+            const msgContent = data.content || data.noi_dung || "Bạn có tin nhắn mới";
+            const senderName = data.sender_name || "Môi giới";
+            
+            this.$toast.info(`${senderName}: ${msgContent}`, { 
+              position: 'top-right', 
+              duration: 7000,
+              onClick: () => {
+                this.showChatPanel = true;
+                this.openChat({ id: data.conversation_id });
+              }
+            });
+          }
           this.unreadCount += 1;
+        } else if (this.$toast) {
+          this.$toast.success(data.tieu_de || "Thông báo mới", { position: 'top-right' });
         }
-      });
+      }, true);
     },
->>>>>>> qlkh-login
 
     // ✅ Handler khi có auth thay đổi trong cùng tab
     async onAuthChanged() {
@@ -661,13 +630,10 @@ export default {
       if (!e.target.closest(".chat-trigger-wrapper")) {
         this.showChatPanel = false;
       }
-<<<<<<< HEAD
-=======
       // 📅 Close appointment notification panel when clicking outside
       if (!e.target.closest(".notif-trigger-wrapper")) {
         this.showAppointmentNotifPanel = false;
       }
->>>>>>> qlkh-login
     },
 
     preventSelect(e) {
@@ -804,8 +770,6 @@ export default {
       }
     },
 
-<<<<<<< HEAD
-=======
     // 📅 Fetch appointment notifications
     async fetchAppointmentNotifications() {
       const token = localStorage.getItem("khach_hang_auth_token");
@@ -895,7 +859,6 @@ export default {
       }
     },
 
->>>>>>> qlkh-login
     formatTime(dateStr) {
       if (!dateStr) return "Vừa xong";
       const now = new Date();
@@ -928,21 +891,12 @@ export default {
       this.showNotifPanel = !this.showNotifPanel;
       this.showMenu = false;
       this.showChatPanel = false;
-<<<<<<< HEAD
-=======
       this.showAppointmentNotifPanel = false;
->>>>>>> qlkh-login
       if (this.showNotifPanel && this.isLoggedIn) {
         this.loadSavedNotifications();
       }
     },
 
-<<<<<<< HEAD
-    handleNotifClick(item) {
-      if (item.swipeOffset < -80) return;
-      this.showNotifPanel = false;
-      this.$router.push(`/khach-hang/chi-tiet-bat-dong-san/${item.propertyId}`);
-=======
     // 📅 Appointment Notification Panel
     toggleAppointmentNotifPanel() {
       this.showAppointmentNotifPanel = !this.showAppointmentNotifPanel;
@@ -973,7 +927,6 @@ export default {
       } else {
         this.$router.push(`/khach-hang/chi-tiet-bat-dong-san/${item.propertyId}`);
       }
->>>>>>> qlkh-login
     },
 
     handleMouseDown(e, item) {
@@ -1126,8 +1079,6 @@ export default {
         this.unreadCount++;
       }
     },
-<<<<<<< HEAD
-=======
 
     toggleDarkMode() {
       this.isDarkMode = !this.isDarkMode;
@@ -1139,7 +1090,6 @@ export default {
         localStorage.setItem("dark-mode", "false");
       }
     },
->>>>>>> qlkh-login
   },
 };
 </script>
@@ -1342,8 +1292,6 @@ export default {
   position: relative;
 }
 
-<<<<<<< HEAD
-=======
 .btn-darkmode {
   display: flex;
   align-items: center;
@@ -1367,7 +1315,6 @@ export default {
   box-shadow: 0 6px 16px rgba(99, 102, 241, 0.2);
 }
 
->>>>>>> qlkh-login
 .btn-saved {
   display: flex;
   align-items: center;
@@ -1409,8 +1356,6 @@ export default {
   }
 }
 
-<<<<<<< HEAD
-=======
 /* 🔔 Notification Button */
 .notif-trigger-wrapper {
   position: relative;
@@ -1487,7 +1432,6 @@ export default {
   background: linear-gradient(135deg, #059669, #047857);
 }
 
->>>>>>> qlkh-login
 .btn-login {
   padding: 10px 22px;
   border-radius: 999px;

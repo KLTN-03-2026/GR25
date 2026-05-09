@@ -103,11 +103,7 @@
                 <option value="">Tất cả trạng thái</option>
                 <option value="1">Chờ duyệt</option>
                 <option value="2">Đã duyệt</option>
-<<<<<<< HEAD
-                <option value="3">Từ chối</option>
-=======
                 <option value="6">Từ chối</option>
->>>>>>> qlkh-login
                 <option value="4">Đã bán</option>
               </select>
             </div>
@@ -199,6 +195,7 @@
                     <span class="d-flex align-items-center"><i class="bi bi-hash me-1"></i>RE-{{ String(bds.id).padStart(4, "0") }}</span>
                     <span class="d-flex align-items-center"><i class="bi bi-house me-1"></i>{{ bds.loai?.ten_loai || "—" }}</span>
                     <span class="d-flex align-items-center text-truncate" style="max-width:300px;"><i class="bi bi-geo-alt me-1"></i>{{ bds.dia_chi?.dia_chi_chi_tiet || bds.dia_chi || "—" }}</span>
+                    <span class="d-flex align-items-center"><i class="bi bi-calendar-event me-1"></i>{{ formatDate(bds.created_at) }}</span>
                   </div>
                 </div>
 
@@ -218,9 +215,6 @@
                     </div>
                   </div>
                   <div class="col-md-3 text-end" v-if="bds.trang_thai_id == 1">
-<<<<<<< HEAD
-                     <button @click="viewProperty(bds.id)" class="btn btn-warning fw-bold px-4 rounded-pill shadow-sm w-100 text-dark">Duyệt ngay</button>
-=======
                      <div class="d-flex gap-2 justify-content-end">
                        <button @click="approveProperty(bds.id)" class="btn btn-success fw-bold px-3 rounded-pill shadow-sm text-white" title="Duyệt ngay">
                          <i class="bi bi-check-circle-fill me-1"></i>Duyệt
@@ -234,7 +228,6 @@
                     <button @click="viewProperty(bds.id)" class="btn btn-outline-primary fw-bold px-3 rounded-pill" title="Xem chi tiết">
                       <i class="bi bi-eye-fill me-1"></i>Chi tiết
                     </button>
->>>>>>> qlkh-login
                   </div>
                 </div>
               </div>
@@ -446,11 +439,7 @@ export default {
         { value: "", label: "Tất cả", activeClass: "btn-primary text-white" },
         { value: "1", label: "Chờ duyệt", activeClass: "btn-warning text-dark" },
         { value: "2", label: "Đã duyệt", activeClass: "btn-success text-white" },
-<<<<<<< HEAD
-        { value: "3", label: "Từ chối", activeClass: "btn-danger text-white" },
-=======
         { value: "6", label: "Từ chối", activeClass: "btn-danger text-white" },
->>>>>>> qlkh-login
       ],
       selectedProperty: null,
       showModal: false,
@@ -656,9 +645,6 @@ export default {
             to: response.data.data.to || data.length,
             total: response.data.data.total || data.length,
           };
-<<<<<<< HEAD
-          this.updateStatistics();
-=======
           if (response.data.stats) {
             this.statistics.total = response.data.stats.total || this.pagination.total;
             this.statistics.pending = response.data.stats.pending || 0;
@@ -667,7 +653,6 @@ export default {
           } else {
             this.updateStatistics();
           }
->>>>>>> qlkh-login
           this.urgentApprovals = response.data.data.urgent_count || 0;
         }
       } catch (error) {
@@ -793,11 +778,7 @@ export default {
       try {
         const response = await api.post(`/admin/bds/duyet`, { 
           id: bdsId, 
-<<<<<<< HEAD
-          is_duyet: 2, 
-=======
           is_duyet: 0, 
->>>>>>> qlkh-login
           ly_do: this.rejectReason 
         });
 
@@ -958,6 +939,17 @@ export default {
         6: 'Bị từ chối'
       };
       return map[statusId] || 'Không xác định';
+    },
+
+    formatDate(dateString) {
+      if (!dateString) return "—";
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
     },
   },
 };
